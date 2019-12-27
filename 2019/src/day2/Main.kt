@@ -17,7 +17,7 @@ fun main() {
     val memoryAtPointOfCrash = memory.setup(12, 2)
     val memoryAfterRun = runProgram(memoryAtPointOfCrash)
     println("Part 1: Memory Address 0 = ${memoryAfterRun[0]}")
-
+    assertEquals(3224742, memoryAfterRun[0])
 
     val target = 19690720
 
@@ -30,6 +30,7 @@ fun main() {
         }.first()
 
     println("Part 2: noun = $noun, verb = $verb, 100*noun+verb = ${100 * noun + verb}")
+    assertEquals(7960, 100 * noun + verb)
 
 }
 

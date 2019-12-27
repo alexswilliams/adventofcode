@@ -12,9 +12,11 @@ fun main() {
 
     val fuelForModules = moduleMasses.map { massToFuel(it) }.sum()
     println("Part 1: Sum = $fuelForModules")
+    assertEquals(3239890, fuelForModules)
 
     val totalFuel = moduleMasses.map { totalFuelNeeded(it) }.sum()
     println("Part 2: Sum = $totalFuel")
+    assertEquals(4856963, totalFuel)
 }
 
 private fun massToFuel(it: Long) = Math.floorDiv(it, 3) - 2
