@@ -65,8 +65,6 @@ private data class RunState(
 
 private fun IntArray.withValue(address: Int, value: Int) = this.clone().apply { this[address] = value }
 
-@Suppress("TAILREC_WITH_DEFAULTS") // this is a bug in kotlin < 1.4, but this function's default
-// params are initialised with values which may as well be static, so not an issue.
 private tailrec fun runProgram(state: RunState): RunState {
     val (memory, inputs, outputs, ip) = state
     val (opcode, modes) = decodeInstruction(memory[ip])
