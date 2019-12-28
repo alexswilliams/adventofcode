@@ -11,4 +11,11 @@ fun String.fromClasspathFileToLines(): List<String> {
         .filter { it.isNotEmpty() }
 }
 
+fun String.fromClasspathFileToProgram(): IntArray = this.fromClasspathFileToLines()
+    .asSequence()
+    .map { it.split(',') }.flatten()
+    .map(String::trim).filter(String::isNotEmpty)
+    .map(String::toInt)
+    .toList().toIntArray()
+
 object Loader

@@ -1,18 +1,13 @@
 package day5
 
-import common.fromClasspathFileToLines
+import common.fromClasspathFileToProgram
 import kotlin.test.assertEquals
 
 
 fun main() {
     runTests()
 
-    val memory = "day5/input.txt".fromClasspathFileToLines()
-        .asSequence()
-        .map { it.split(',') }.flatten()
-        .map(String::trim).filter(String::isNotEmpty)
-        .map(String::toInt)
-        .toList().toIntArray()
+    val memory = "day5/input.txt".fromClasspathFileToProgram()
 
     val airConditionerId = 1
     val (_, outputs) = runProgram(memory, listOf(airConditionerId))

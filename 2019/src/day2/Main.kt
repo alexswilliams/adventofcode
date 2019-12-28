@@ -1,18 +1,13 @@
 package day2
 
-import common.fromClasspathFileToLines
+import common.fromClasspathFileToProgram
 import kotlin.test.assertEquals
 
 
 fun main() {
     runTests()
 
-    val memory = "day2/input.txt".fromClasspathFileToLines()
-        .asSequence()
-        .map { it.split(',') }.flatten()
-        .map(String::trim).filter(String::isNotEmpty)
-        .map(String::toInt)
-        .toList().toIntArray()
+    val memory = "day2/input.txt".fromClasspathFileToProgram()
 
     val memoryAtPointOfCrash = memory.setup(12, 2)
     val memoryAfterRun = runProgram(memoryAtPointOfCrash)
