@@ -42,10 +42,10 @@ private fun paint(memory: LongArray, startingPanel: Colour): Map<XY, Long> {
     )
 }
 
-private tailrec fun paint(state: RobotState): Map<XY, Long> =
-    with(advanceRobot(state, ::runProgram)) {
-        return@paint if (this.intComputer.state == MachineState.HALTED) this.visitedNodes else paint(this)
-    }
+private tailrec fun paint(state: RobotState): Map<XY, Long> {
+    val newState = advanceRobot(state, ::runProgram)
+    return if (newState.intComputer.state == MachineState.HALTED) newState.visitedNodes else paint(newState)
+}
 
 private fun advanceRobot(state: RobotState, programRunner: (RunState) -> RunState = ::runProgram): RobotState {
     val initialColour = state.visitedNodes[state.position] ?: 0
