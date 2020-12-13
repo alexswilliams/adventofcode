@@ -5,10 +5,10 @@
 (defn parse-input [input] (->> (string/split input #"\r?\n\r?\n")))
 
 (defonce problem-input (delay (slurp "src/day6/input.txt")))
-(defonce parsed-problem-input (delay (parse-input @problem-input)))
+(def parsed-problem-input (delay (parse-input @problem-input)))
 
 (defonce example-input (delay (slurp "src/day6/example.txt")))
-(defonce parsed-example-input (delay (parse-input @example-input)))
+(def parsed-example-input (delay (parse-input @example-input)))
 
 
 (defn sum-of-distinct-answers-per-group [input]
@@ -28,8 +28,16 @@
 
 
 (comment
+  ; Part 1
+  (= (sum-of-distinct-answers-per-group @parsed-example-input)
+     11)
+
   (= (sum-of-distinct-answers-per-group @parsed-problem-input)
      7120)
+
+  ; Part 2
+  (= (sum-of-common-answers-per-group @parsed-example-input)
+     6)
 
   (= (sum-of-common-answers-per-group @parsed-problem-input)
      3570))

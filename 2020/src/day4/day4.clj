@@ -1,18 +1,21 @@
 (ns day4.day4
   (:require [clojure.string :as string]
             [clojure.set :as set]))
-
-(def problem-input (delay (slurp "src/day4/input.txt")))
+;
+; Not happy with this one - feels like a little more indirection will yield something much more concise
+;
+;
 (defn parse-input [input] (->> (string/split input #"\r?\n\r?\n")
                                (map #(string/split % #"[\n ]"))
                                (map (fn [passport] (->> (map #(string/split % #"[:]") passport)
                                                         (map (fn [[k v]] [(keyword k) v])))))
                                (map #(into {} %))))
-(def parsed-problem-input (parse-input @problem-input))
 
-(def example-input (delay (slurp "src/day4/example.txt")))
-(def parsed-example-input (parse-input @example-input))
+(defonce problem-input (delay (slurp "src/day4/input.txt")))
+(def parsed-problem-input (delay (parse-input @problem-input)))
 
+(defonce example-input (delay (slurp "src/day4/example.txt")))
+(def parsed-example-input (delay (parse-input @example-input)))
 
 
 (defn has-all-required-fields? [passport]
@@ -26,7 +29,7 @@
 
 (defn has-valid-height? [passport]
   (let [height (:hgt passport)
-        height-val (.substring height 0 (min 0  (- (count height) 2)))]
+        height-val (.substring height 0 (max 0  (- (count height) 2)))]
     (and (not (string/blank? height-val))
          (or (and (string/includes? height "in")
                   (<= 59 (Long/valueOf height-val) 76))
@@ -53,8 +56,16 @@
                               (filter has-valid-passport-number?)))
 
 (comment
-  (count (filter has-all-required-fields? parsed-problem-input))
-  (count (sequence is-valid-passport? parsed-problem-input))
+  ; Part 1
+  (= (count (filter has-all-required-fields? @parsed-example-input))
+     2)
+
+  (= (count (filter has-all-required-fields? @parsed-problem-input))
+     226)
+
+  ; Part 2
+  (= (count (sequence is-valid-passport? @parsed-problem-input))
+     160)
 
   (has-valid-birth-year? {:byr 2003})
   (has-valid-height? {:hgt "190ab"})

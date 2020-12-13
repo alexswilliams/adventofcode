@@ -3,10 +3,11 @@
             [clojure.set :as set]))
 
 (defn parse-input [input] (string/split-lines input))
+
 (defonce problem-input (delay (slurp "src/day5/input.txt")))
+(def parsed-problem-input (delay (parse-input @problem-input)))
 (defonce example-input (delay (slurp "src/day5/example.txt")))
-(def parsed-problem-input (parse-input @problem-input))
-(def parsed-example-input (parse-input @example-input))
+(def parsed-example-input (delay (parse-input @example-input)))
 
 
 (defn whittle [code remaining]
@@ -32,15 +33,13 @@
                  missing))))
 
 (comment
-  (whittle [\F \B \F \B \B \F \F] (range 0 128))
-  (whittle [\R \L \R] (range 0 8))
-  (seat-id 44 5)
-  (seat-id "FBFBBFFRLR")
-  (reduce max (map seat-id parsed-example-input))
-  (missing-seats (set (map seat-id parsed-problem-input)))
-
   ; Part 1
-  (reduce max (map seat-id parsed-problem-input))
+  (= (map seat-id @parsed-example-input)
+     [567 119 820])
+
+  (= (reduce max (map seat-id @parsed-problem-input))
+     996)
 
   ; Part 2
-  (missing-seats-with-adjacent-filled-seats (set (map seat-id parsed-problem-input))))
+  (= (missing-seats-with-adjacent-filled-seats (set (map seat-id @parsed-problem-input)))
+     #{671}))
