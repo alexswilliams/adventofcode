@@ -20,10 +20,9 @@
          ["faded blue"])))
 
 (with-test
-  (defn grammar-to-bags-struct [parser-output]
-    [(first parser-output)
-     (->> (drop 1 parser-output)
-          (partition 2)
+  (defn grammar-to-bags-struct [[colour & rules]]
+    [colour
+     (->> (partition 2 rules)
           (map (fn [[bag-count colour]] [colour (Long/valueOf bag-count)]))
           (into {}))])
 
@@ -51,21 +50,15 @@ faded blue bags contain no other bags.")
 
 (deftest parsed-example
   (is (= @parsed-example-input
-         {"muted yellow" {"shiny gold" 2
-                          "faded blue" 9}
-          "light red"    {"bright white" 1
-                          "muted yellow" 2}
+         {"muted yellow" {"shiny gold" 2, "faded blue" 9}
+          "light red"    {"bright white" 1, "muted yellow" 2}
           "dotted black" {}
-          "dark orange"  {"bright white" 3
-                          "muted yellow" 4}
+          "dark orange"  {"bright white" 3, "muted yellow" 4}
           "bright white" {"shiny gold" 1}
-          "shiny gold"   {"dark olive"   1
-                          "vibrant plum" 2}
+          "shiny gold"   {"dark olive"   1, "vibrant plum" 2}
           "faded blue"   {}
-          "vibrant plum" {"faded blue"   5
-                          "dotted black" 6}
-          "dark olive"   {"faded blue"   3
-                          "dotted black" 4}})))
+          "vibrant plum" {"faded blue"   5, "dotted black" 6}
+          "dark olive"   {"faded blue"   3, "dotted black" 4}})))
 
 (with-test
   (defn transitive-parents-of
@@ -82,9 +75,7 @@ faded blue bags contain no other bags.")
          #{}
          (first (reduce
                  (fn collect-parents [[all-parents-so-far seen-so-far] parent-colour]
-                   (let [result (transitive-parents-of rules
-                                                       seen-so-far
-                                                       parent-colour)]
+                   (let [result (transitive-parents-of rules seen-so-far parent-colour)]
                      [(set/union all-parents-so-far result)
                       (set/union seen-so-far result)]))
                  [direct-parents now-seen]
