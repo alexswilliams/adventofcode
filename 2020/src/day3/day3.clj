@@ -23,6 +23,9 @@
                                    (map cycle)))
 
 (comment
+  ; Part 1
+  (path-through 2 1 parsed-example-input)
+  
   (number-of-trees (path-through 1 1 parsed-example-input))
   (number-of-trees (path-through 1 3 parsed-example-input))
   (number-of-trees (path-through 1 5 parsed-example-input))
