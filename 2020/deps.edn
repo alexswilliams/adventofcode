@@ -1,4 +1,3 @@
-{
- :deps
- {instaparse/instaparse {:mvn/version "1.4.10"}}
-}
+{:deps
+ {instaparse/instaparse {:mvn/version "1.4.10"}
+  org.clojure/math.combinatorics {:mvn/version "0.1.6"}}}
