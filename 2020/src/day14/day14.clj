@@ -93,6 +93,7 @@
                                  7 101}))))
 
 (comment
-  (->> (all-steps @parsed-problem-input)
-       (:memory)
-       (sum-of-all-memory)))
+  (= 14722016054794
+     (->> (all-steps @parsed-problem-input)
+          (:memory)
+          (sum-of-all-memory))))
