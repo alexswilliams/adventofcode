@@ -6,3 +6,6 @@ target
 .nrepl-port
 .clj-kondo
 .lsp
+out
+.gradle
+build
