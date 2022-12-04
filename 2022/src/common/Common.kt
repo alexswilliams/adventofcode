@@ -8,4 +8,7 @@ fun String.fromClasspathFileToLines(): List<String> {
     return File(url.toURI()).readLines()
 }
 
+infix fun IntRange.fullyContains(other: IntRange) = this.contains(other.first) && this.contains(other.last)
+infix fun IntRange.overlaps(other: IntRange) = this.intersect(other).isNotEmpty()
+
 object Common
