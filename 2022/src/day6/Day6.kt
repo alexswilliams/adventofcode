@@ -17,7 +17,7 @@ fun main() {
     println("Part 1: " + part1(puzzleInput)) // 1142
 
     exampleInputs.forEach { (input, expectedOutput) -> assertEquals(expectedOutput.second, part2(input)) }
-    println("Part 2: " + part2(puzzleInput)) //
+    println("Part 2: " + part2(puzzleInput)) // 2803
 }
 
 private fun part1(input: String) = solveForRunLength(input, 4)
@@ -25,10 +25,5 @@ private fun part2(input: String) = solveForRunLength(input, 14)
 
 private fun solveForRunLength(input: String, runLength: Int) = input
     .windowedSequence(runLength, 1).withIndex()
-    .first { window -> allDifferent(window.value) }
+    .first { it.value.toSet().size == it.value.length }
     .index + runLength
-
-private fun allDifferent(it: String): Boolean = if (it.length <= 1) true else {
-    val cdr = it.drop(1)
-    it[0] !in cdr && allDifferent(cdr)
-}
