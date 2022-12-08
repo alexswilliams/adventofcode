@@ -34,4 +34,14 @@ tailrec fun <T> List<T>.startsWith(other: List<T>): Boolean {
     return this.drop(1).startsWith(other.drop(1))
 }
 
+fun <T> List<T>.takeUntilIncludingItemThatBreaksCondition(predicate: (T) -> Boolean): List<T> = ArrayList<T>().also {
+    for (item in this) {
+        it.add(item)
+        if (predicate(item)) break
+    }
+}
+
+fun cartesianProductOf(x: IntRange, y: IntRange): List<Pair<Int, Int>> = x.flatMap { row -> y.map { col -> row to col } }
+fun List<Int>.product() = this.fold(1) { acc, i -> acc * i }
+
 object Common
