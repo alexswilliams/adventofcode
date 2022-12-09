@@ -14,12 +14,14 @@ fun String.fromClasspathFile(): String {
     return File(url.toURI()).readText()
 }
 
+fun List<String>.splitOnSpaces() = map { it.split(' ') }
+
 infix fun IntRange.fullyContains(other: IntRange) = this.contains(other.first) && this.contains(other.last)
 infix fun IntRange.overlaps(other: IntRange) = this.intersect(other).isNotEmpty()
 
 fun <T> List<List<T>>.transpose(): List<List<T>> =
-    List(this.first().size) { col ->
-        List(this.size) { row ->
+    List(first().size) { col ->
+        List(size) { row ->
             this[row][col]
         }
     }
@@ -31,17 +33,19 @@ tailrec fun <T> List<T>.startsWith(other: List<T>): Boolean {
     if (other.isEmpty()) return true
     if (this.isEmpty()) return false
     if (this.first() != other.first()) return false
-    return this.drop(1).startsWith(other.drop(1))
+    return subList(1, size).startsWith(other.subList(1, other.size))
 }
 
-fun <T> List<T>.takeUntilIncludingItemThatBreaksCondition(predicate: (T) -> Boolean): List<T> = ArrayList<T>().also {
+inline fun <T> List<T>.takeUntilIncludingItemThatBreaksCondition(predicate: (T) -> Boolean): List<T> = ArrayList<T>().also {
     for (item in this) {
         it.add(item)
         if (predicate(item)) break
     }
 }
 
-fun cartesianProductOf(x: IntRange, y: IntRange): List<Pair<Int, Int>> = x.flatMap { row -> y.map { col -> row to col } }
-fun List<Int>.product() = this.fold(1) { acc, i -> acc * i }
+fun <T> List<T>.tail(): List<T> = if (isEmpty()) emptyList() else subList(1, size)
+
+fun <R, C> cartesianProductOf(rows: Iterable<R>, cols: Iterable<C>): List<Pair<R, C>> = rows.flatMap { row -> cols.map { col -> row to col } }
+fun Iterable<Int>.product() = this.reduce { acc, i -> acc * i }
 
 object Common
