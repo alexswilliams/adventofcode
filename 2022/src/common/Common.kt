@@ -46,6 +46,8 @@ inline fun <T> List<T>.takeUntilIncludingItemThatBreaksCondition(predicate: (T) 
 fun <T> List<T>.tail(): List<T> = if (isEmpty()) emptyList() else subList(1, size)
 
 fun <R, C> cartesianProductOf(rows: Iterable<R>, cols: Iterable<C>): List<Pair<R, C>> = rows.flatMap { row -> cols.map { col -> row to col } }
+
 fun Iterable<Int>.product() = this.reduce { acc, i -> acc * i }
+fun Iterable<Int>.runningTotal(start: Int): List<Int> = this.runningFold(start) { acc, i -> acc + i }
 
 object Common
