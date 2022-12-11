@@ -48,6 +48,10 @@ fun <T> List<T>.tail(): List<T> = if (isEmpty()) emptyList() else subList(1, siz
 fun <R, C> cartesianProductOf(rows: Iterable<R>, cols: Iterable<C>): List<Pair<R, C>> = rows.flatMap { row -> cols.map { col -> row to col } }
 
 fun Iterable<Int>.product() = this.reduce { acc, i -> acc * i }
+fun Iterable<Long>.product() = this.reduce { acc, i -> acc * i }
 fun Iterable<Int>.runningTotal(start: Int): List<Int> = this.runningFold(start) { acc, i -> acc + i }
+
+tailrec fun gcd(a: Int, b: Int): Int = if (b == 0) a else gcd(b, a % b)
+fun lcm(input: List<Int>) = input.fold(1) { acc, i -> acc * (i / gcd(acc, i)) }
 
 object Common
