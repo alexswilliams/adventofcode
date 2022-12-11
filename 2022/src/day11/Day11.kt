@@ -24,23 +24,21 @@ private fun part2(input: String) = runPuzzle(parseInput(input), 10_000, 1)
 
 private fun runPuzzle(monkeys: List<Monkey>, iterations: Int, boredomDivisor: Int): Long {
     val modulus = lcm(monkeys.map { it.divisor })
-    val heldItems = List(monkeys.size) { _ -> ArrayList<Long>(monkeys.sumOf { it.initialItems.size }) }
-    monkeys.forEachIndexed { index, monkey -> heldItems[index].addAll(monkey.initialItems) }
-
-    val inspectionsByEachMonkey = (1..iterations).fold(List(monkeys.size) { 0L }) { acc, _ ->
-        val countsForRound = monkeys.mapIndexed { index, monkey ->
-            val count = heldItems[index].size
-            for (item in heldItems[index]) {
-                val newValue = (monkey.worry(item) / boredomDivisor) % modulus
-                heldItems[monkey.next(newValue)].add(newValue)
-            }
-            heldItems[index].clear()
-            count
+    val counts = Array(monkeys.size) { 0L }
+    val allItems = monkeys.flatMapIndexed { index, monkey -> monkey.initialItems.map { it to index } }
+    allItems.forEach { (initialValue, startingMonkey) ->
+        var round = 1
+        var value = initialValue
+        var thisMonkey = startingMonkey
+        while (round <= iterations) {
+            counts[thisMonkey]++
+            value = (monkeys[thisMonkey].worry(value) / boredomDivisor) % modulus
+            val nextMonkey = monkeys[thisMonkey].next(value)
+            if (nextMonkey < thisMonkey) round++
+            thisMonkey = nextMonkey
         }
-        List(monkeys.size) { index -> acc[index] + countsForRound[index] }
     }
-
-    return inspectionsByEachMonkey.sortedDescending().take(2).product()
+    return counts.sortedArrayDescending().take(2).product()
 }
 
 
