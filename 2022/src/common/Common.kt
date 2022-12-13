@@ -54,4 +54,19 @@ fun Iterable<Int>.runningTotal(start: Int): List<Int> = this.runningFold(start) 
 tailrec fun gcd(a: Int, b: Int): Int = if (b == 0) a else gcd(b, a % b)
 fun lcm(input: List<Int>) = input.fold(1) { acc, i -> acc * (i / gcd(acc, i)) }
 
+fun String.linesAsCharArrays(): List<CharArray> {
+    if (this.isEmpty()) return emptyList()
+    val list = ArrayList<CharArray>()
+    val s = this.toCharArray()
+    var start = 0;
+    var i = -1
+    while (++i < s.lastIndex)
+        if (s[i] == '\n') {
+            if (i == start) list.add(CharArray(0)) else list.add(s.copyOfRange(start, i))
+            start = i + 1
+        }
+    if (start > s.lastIndex) list.add(CharArray(0)) else list.add(s.copyOfRange(start, s.lastIndex + 1))
+    return list
+}
+
 object Common
