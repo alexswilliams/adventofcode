@@ -18,8 +18,8 @@ fun main() {
     part2(puzzleInput).also { println("Part 2: $it") } // 386
 }
 
-fun part1(input: String) = distanceByDijkstra(input, startAtAny = 'S', endAtAny = 'E') { next, now -> next - now <= 1 }
-fun part2(input: String) = distanceByDijkstra(input, startAtAny = 'E', endAtAny = 'a') { next, now -> next - now >= -1 }
+private fun part1(input: String) = distanceByDijkstra(input, startAtAny = 'S', endAtAny = 'E') { next, now -> next - now <= 1 }
+private fun part2(input: String) = distanceByDijkstra(input, startAtAny = 'E', endAtAny = 'a') { next, now -> next - now >= -1 }
 
 
 private fun distanceByDijkstra(input: String, startAtAny: Char, endAtAny: Char, isMoveAllowed: (Char, Char) -> Boolean): Int {
