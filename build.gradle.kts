@@ -34,6 +34,7 @@ kotlin {
 
 tasks.withType<KotlinCompile> {
     kotlinOptions {
+        freeCompilerArgs += "-opt-in=kotlin.time.ExperimentalTime"
         jvmTarget = "17"
     }
 }
