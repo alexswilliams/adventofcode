@@ -18,13 +18,13 @@ fun main() {
 
 private fun part1(input: String) = input
     .linesAsCharArrays().chunked(3)
-    .map { packetComparator(it[0], it[1]) }.withIndex()
-    .sumOf { if (it.value < 0) it.index + 1 else 0 }
+    .mapIndexed { index, it -> if (packetComparator(it[0], it[1]) < 0) index + 1 else 0 }
+    .sum()
 
 private val beacon2 = "[[2]]".toCharArray()
 private val beacon6 = "[[6]]".toCharArray()
 private fun part2(input: String) = input
-    .linesAsCharArrays().filter { it.isNotEmpty() }
+    .linesAsCharArrays(skipEmptyLines = true)
     .plus(listOf(beacon2, beacon6))
     .sortedWith(::packetComparator)
     .let { (it.indexOf(beacon2) + 1) * (it.indexOf(beacon6) + 1) }
@@ -42,9 +42,9 @@ private fun packetComparator(sL: CharArray, sR: CharArray): Int {
         val right = if (openR > 0) '[' else if (closeR > 0 && sR[rightIndex] !in '0'..'9') ']' else sR[rightIndex]
         when {
             left in '0'..'9' && right in '0'..'9' -> {
-                val lInt = consumeNumber(sL, leftIndex).also { leftIndex = it and 0xffff }
-                val rInt = consumeNumber(sR, rightIndex).also { rightIndex = it and 0xffff }
-                if ((lInt shr 16) != (rInt shr 16)) return (if (lInt < rInt) -1 else 1)
+                val lInt = consumeNumber(sL, leftIndex + 1, left).also { leftIndex = it and 0xffff } shr 16
+                val rInt = consumeNumber(sR, rightIndex + 1, right).also { rightIndex = it and 0xffff } shr 16
+                if (lInt != rInt) return lInt - rInt
             }
 
             left == right -> {
@@ -55,17 +55,19 @@ private fun packetComparator(sL: CharArray, sR: CharArray): Int {
             left == '[' && right in '0'..'9' -> openR++.also { closeR++ }
             right == '[' && left in '0'..'9' -> openL++.also { closeL++ }
 
-            left == ']' || right == ']' -> return (if (left == ']') -1 else 1)
+            left == ']' || right == ']' -> return if (left == ']') -1 else 1
         }
     }
 }
 
-// Evaluate the currently referenced number, and return it in the top half of the return value; the next index to continue from is stored in the lsw
-// Assumes that none of the lines are > 64k characters long, and none of the values are > 64k
-private fun consumeNumber(s: CharArray, startAt: Int): Int {
-    var value = 0
-    var i = startAt
-    while (s[i] in '0'..'9') value = value * 10 + (s[i++] - '0')
-    return (value shl 16) + i
+// Consumes a ONE- or TWO-digit number (which is all the puzzle seems to present) into the upper 2 bytes of the return value.
+// The index to resume from is given in the lower 2 bytes.  Could be generalised by turning the `if` into `while` with the same condition and
+// accumulating with x = x * 10 + v
+// Assumes that none of the lines are > 64k characters long, and none of the values are > 99
+private fun consumeNumber(s: CharArray, nextIndex: Int, firstDigit: Char): Int {
+    val next = s[nextIndex]
+    if (next in '0'..'9')
+        return (firstDigit.code shl 24) + (next.code shl 16) + nextIndex + 1
+    return (firstDigit.code shl 16) + nextIndex
 }
 
