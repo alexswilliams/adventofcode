@@ -30,72 +30,34 @@ private fun part2(input: String) = input
     .let { (it.indexOf(beacon2) + 1) * (it.indexOf(beacon6) + 1) }
 
 
-private fun packetComparator(s0: CharArray, s1: CharArray): Int {
-    var sL = s0
-    var sR = s1
-    var l = 0
-    var r = 0
-    var xR = false;
-    var xL = false
+private fun packetComparator(sL: CharArray, sR: CharArray): Int {
+    var leftIndex = 0
+    var rightIndex = 0
+    var openL = 0 // extra bracket pairs only wrap a single token, so they can be tracked with just a count
+    var closeL = 0
+    var openR = 0
+    var closeR = 0
     while (true) {
-        val left = sL[l]
-        val right = sR[r]
+        val left = if (openL > 0) '[' else if (sL[leftIndex] !in '0'..'9' && closeL > 0) ']' else sL[leftIndex]
+        val right = if (openR > 0) '[' else if (sR[rightIndex] !in '0'..'9' && closeR > 0) ']' else sR[rightIndex]
         when {
             left in '0'..'9' && right in '0'..'9' -> {
-                val lInt = consumeNumber(sL, l).also { l = it and 0xffff }
-                val rInt = consumeNumber(sR, r).also { r = it and 0xffff }
-                if ((lInt shr 16) != (rInt shr 16)) return if (lInt < rInt) -1 else 1
+                val lInt = consumeNumber(sL, leftIndex).also { leftIndex = it and 0xffff }
+                val rInt = consumeNumber(sR, rightIndex).also { rightIndex = it and 0xffff }
+                if ((lInt shr 16) != (rInt shr 16)) return (if (lInt < rInt) -1 else 1)
             }
 
             left == right -> {
-                l++;r++
+                if (openL > 0) openL-- else if (closeL > 0) closeL-- else leftIndex++
+                if (openR > 0) openR-- else if (closeR > 0) closeR-- else rightIndex++
             }
 
-            left == '[' && right in '0'..'9' -> sR = surroundNumberAt(sR, r, xR, bufferR).also { r = idxAfterExtend(xR, r, it, sR); xR = true }
-            right == '[' && left in '0'..'9' -> sL = surroundNumberAt(sL, l, xL, bufferL).also { l = idxAfterExtend(xL, l, it, sL); xL = true }
+            left == '[' && right in '0'..'9' -> openR++.also { closeR++ }
+            right == '[' && left in '0'..'9' -> openL++.also { closeL++ }
 
-            left == ']' || right == ']' -> return if (left == ']') -1 else 1
+            left == ']' || right == ']' -> return (if (left == ']') -1 else 1)
         }
     }
-}
-
-private fun idxAfterExtend(expanded: Boolean, oldIdx: Int, newString: CharArray, oldString: CharArray) =
-    if (expanded) oldIdx - 2
-    else newString.size - (oldString.size - oldIdx) - 2
-
-// Shunts the currently referenced number earlier by 1 character, and adds [ and ] around it.
-// If the array is too small to accommodate this, explode it into a static buffer (to avoid runtime allocation)
-//
-// i = 3, growBy = 4
-//idx  0 1 2 3 4 5 6 7 8 9 a b
-//  s: [ 1 , 2 3 , 4 ]
-//  A: _ _ _ _ _ _ _ _ _ _ _ _
-//  B: _ _ _ _ _ _ _ 2 3 , 4 ]
-//  C: _ _ _ _ _ [ 2 3 ] , 4 ]
-// newI = 5
-//
-// i = 7, prevXp = true
-//idx  0 1 2 3 4 5 6 7 8 9 a b
-//  s: _ _ _ [ 1 ] , 2 3 , 4 ]
-//  D: _ _ _ _ _ [ 2 3 ] , 4 ]
-// newI = 5
-private val bufferL = CharArray(512)
-private val bufferR = CharArray(512)
-private fun surroundNumberAt(s: CharArray, i: Int, previouslyExpanded: Boolean, newBuffer: CharArray): CharArray {
-    if (previouslyExpanded) {
-        var idx = i
-        s[idx - 2] = '['
-        while (s[idx] in '0'..'9') s[idx - 1] = s[idx++]
-        s[idx - 1] = ']' // D
-        return s
-    }
-    val lengthToEnd = s.size - i
-    System.arraycopy(s, i, newBuffer, newBuffer.size - lengthToEnd, lengthToEnd) // B
-    var toA = newBuffer.size - lengthToEnd
-    newBuffer[toA - 2] = '['
-    while (newBuffer[toA] in '0'..'9') newBuffer[toA - 1] = newBuffer[toA++]
-    newBuffer[toA - 1] = ']' // C
-    return newBuffer
 }
 
 // Evaluate the currently referenced number, and return it in the top half of the return value; the next index to continue from is stored in the lsw
