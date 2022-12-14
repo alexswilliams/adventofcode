@@ -38,8 +38,8 @@ private fun packetComparator(sL: CharArray, sR: CharArray): Int {
     var openR = 0
     var closeR = 0
     while (true) {
-        val left = if (openL > 0) '[' else if (sL[leftIndex] !in '0'..'9' && closeL > 0) ']' else sL[leftIndex]
-        val right = if (openR > 0) '[' else if (sR[rightIndex] !in '0'..'9' && closeR > 0) ']' else sR[rightIndex]
+        val left = if (openL > 0) '[' else if (closeL > 0 && sL[leftIndex] !in '0'..'9') ']' else sL[leftIndex]
+        val right = if (openR > 0) '[' else if (closeR > 0 && sR[rightIndex] !in '0'..'9') ']' else sR[rightIndex]
         when {
             left in '0'..'9' && right in '0'..'9' -> {
                 val lInt = consumeNumber(sL, leftIndex).also { leftIndex = it and 0xffff }
