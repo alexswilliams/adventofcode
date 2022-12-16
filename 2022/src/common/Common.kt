@@ -1,6 +1,7 @@
 package common
 
 import java.io.*
+import kotlin.math.*
 
 fun String.fromClasspathFileToLines(): List<String> {
     val url = Common::class.java.classLoader.getResource(this)
@@ -17,7 +18,29 @@ fun String.fromClasspathFile(): String {
 fun List<String>.splitOnSpaces() = map { it.split(' ') }
 
 infix fun IntRange.fullyContains(other: IntRange) = this.contains(other.first) && this.contains(other.last)
-infix fun IntRange.overlaps(other: IntRange) = this.intersect(other).isNotEmpty()
+infix fun IntRange.overlaps(other: IntRange) = other.first in this || other.last in this || this.first in other || this.last in other
+infix fun IntRange.overlapsOrIsAdjacentTo(other: IntRange) = this.overlaps(other) || (this.last == other.first - 1) || (other.last == this.first - 1)
+fun List<IntRange>.simplifyAdjacent(): List<IntRange> {
+    tailrec fun simplifyRanges(ranges: List<IntRange>): List<IntRange> {
+        val a = ranges.find { a -> ranges.any { b -> a != b && a overlapsOrIsAdjacentTo b } } ?: return ranges
+        val b = ranges.first { b -> a != b && a overlapsOrIsAdjacentTo b }
+        val newRange = IntRange(min(a.first, b.first), max(a.last, b.last))
+        return simplifyRanges(ranges.minus(setOf(a, b)).plus(listOf(newRange)))
+    }
+    return fold(emptyList()) { acc, intRange -> simplifyRanges(acc + listOf(intRange)) }
+}
+
+fun List<IntRange>.clampTo(minInclusive: Int, maxInclusive: Int) = this
+    .mapNotNull {
+        when {
+            it.last < minInclusive -> null
+            it.first > maxInclusive -> null
+            it.first >= minInclusive && it.last <= maxInclusive -> it
+            else -> IntRange(it.first.coerceAtLeast(minInclusive), it.last.coerceAtMost(maxInclusive))
+        }
+    }
+
+val IntRange.size: Int get() = this.last - this.first + 1
 
 fun <T> List<List<T>>.transpose(): List<List<T>> =
     List(first().size) { col ->
