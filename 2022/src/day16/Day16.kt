@@ -19,26 +19,26 @@ fun main() {
 
 private fun part1(input: List<String>): Int {
     val valves = parseInput(input)
-    val targetValves = valves.values.filter { it.rate > 0 }.map { it.id }.toSet()
+    val targetValves = valves.values.filter { it.rate > 0 }.map { it.id }
     val timeToReachCache = (targetValves + "AA")
         .associateWith { from -> targetValves.associateWith { target -> timeToReach(target, from, valves) } }
 
     fun maxFlowFromVisitingDownstreamValves(thisValve: String, elapsed: Int, flowPerMinute: Int, valvesOpen: List<String>): Int {
-        val valvesRemaining = targetValves.minus(valvesOpen.toSet())
-        if (valvesRemaining.isEmpty())
+        if (valvesOpen.size == targetValves.size)
             return ((30 - elapsed) * flowPerMinute)
-        return valvesRemaining.maxOf { nextValve ->
-            val movementTime = timeToReachCache[thisValve]!![nextValve]!!
+
+        val pathsDistancesFromValve = timeToReachCache[thisValve]!!
+        return targetValves.filter { it !in valvesOpen }.maxOf { nextValve ->
+            val movementTime = pathsDistancesFromValve[nextValve]!!
             if (movementTime + 1 + elapsed >= 30)
                 (30 - elapsed) * flowPerMinute
-            else {
+            else
                 flowPerMinute * (movementTime + 1) + maxFlowFromVisitingDownstreamValves(
                     nextValve,
                     elapsed = elapsed + movementTime + 1,
                     flowPerMinute = flowPerMinute + valves[nextValve]!!.rate,
                     valvesOpen = valvesOpen.plus(nextValve)
                 )
-            }
         }
     }
     return maxFlowFromVisitingDownstreamValves("AA", 0, 0, emptyList())
