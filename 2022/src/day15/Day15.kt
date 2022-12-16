@@ -1,6 +1,7 @@
 package day15
 
 import common.*
+import kotlinx.coroutines.*
 import kotlin.math.*
 import kotlin.test.*
 
@@ -28,19 +29,24 @@ private fun part1(input: List<String>, rowOfInterest: Int): Int {
 
 private fun part2(input: List<String>, maxSize: Int): Long {
     val sensors = InputParsing.parseAllSensors(input)
-    (0..maxSize)
-        // all rows in this range take part in sensor data at some point, so can't filter any out
-        .forEach { row ->
-            val ranges = sensorRangesForRow(sensors, row).clampTo(0, maxSize)
-            if (ranges.size > 1) {
-                val beaconsOnRow = sensors.filter { sensor -> sensor.yB == row }.map { it.xB }.toSet()
-                val gaps = ranges.allValuesMissingBetween(0, maxSize).minus(beaconsOnRow)
-                if (gaps.isNotEmpty()) {
-                    return row + gaps.single() * 4_000_000L
+    return runBlocking(Dispatchers.Default) {
+        (1..128).let { workers -> workers.map { (it - 1) * maxSize / workers.size..it * maxSize / workers.size } }
+            .map { rowRange ->
+                async {
+                    rowRange.forEach { row ->
+                        val ranges = sensorRangesForRow(sensors, row).clampTo(0, maxSize)
+                        if (ranges.size > 1) {
+                            val beaconsOnRow = sensors.filter { sensor -> sensor.yB == row }.map { it.xB }.toSet()
+                            val gaps = ranges.allValuesMissingBetween(0, maxSize).minus(beaconsOnRow)
+                            if (gaps.isNotEmpty()) {
+                                return@async row + gaps.single() * 4_000_000L
+                            }
+                        }
+                    }
+                    return@async 0L
                 }
-            }
-        }
-    throw Exception("Pattern had no gaps")
+            }.awaitAll()
+    }.first { it > 0 }
 }
 
 private fun List<IntRange>.allValuesMissingBetween(minInclusive: Int, maxInclusive: Int): List<Int> {
