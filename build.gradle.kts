@@ -13,7 +13,8 @@ repositories {
 
 dependencies {
     implementation(kotlin("test"))
-    implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.5") // One day...
+    implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.5")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
 }
 
 tasks.getByName<Test>("test") {

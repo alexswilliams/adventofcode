@@ -14,7 +14,7 @@ fun main() {
     part1(puzzleInput, rowOfInterest = 2_000_000).also { println("Part 1: $it") } // 4665948
 
     assertEquals(PART_2_EXPECTED_EXAMPLE_ANSWER, part2(exampleInput, maxSize = 20))
-    part2(puzzleInput, maxSize = 4_000_000).also { println("Part 2: $it") } //
+    part2(puzzleInput, maxSize = 4_000_000).also { println("Part 2: $it") } // 13543690671045
 }
 
 private fun part1(input: List<String>, rowOfInterest: Int): Int {
@@ -28,47 +28,56 @@ private fun part1(input: List<String>, rowOfInterest: Int): Int {
 
 private fun part2(input: List<String>, maxSize: Int): Long {
     val sensors = InputParsing.parseAllSensors(input)
-    (0..maxSize).forEach { row ->
-        val ranges = sensorRangesForRow(sensors, row).clampTo(0, maxSize).sortedBy { it.first }
-        if (ranges.size > 1 && ranges[0] != 0..maxSize) {
-            val beaconsOnRow = sensors.filter { sensor -> sensor.yB == row }.map { it.xB }.toSet()
-            val gaps = ranges.allValuesMissingBetween(0, maxSize).minus(beaconsOnRow)
-            return row + gaps.single() * 4_000_000L
+    (0..maxSize)
+        // all rows in this range take part in sensor data at some point, so can't filter any out
+        .forEach { row ->
+            val ranges = sensorRangesForRow(sensors, row).clampTo(0, maxSize)
+            if (ranges.size > 1) {
+                val beaconsOnRow = sensors.filter { sensor -> sensor.yB == row }.map { it.xB }.toSet()
+                val gaps = ranges.allValuesMissingBetween(0, maxSize).minus(beaconsOnRow)
+                if (gaps.isNotEmpty()) {
+                    return row + gaps.single() * 4_000_000L
+                }
+            }
         }
-    }
     throw Exception("Pattern had no gaps")
 }
 
 private fun List<IntRange>.allValuesMissingBetween(minInclusive: Int, maxInclusive: Int): List<Int> {
-    tailrec fun itr(soFar: List<Int>, startAt: Int = minInclusive): List<Int> {
+    tailrec fun itr(range: List<IntRange>, soFar: List<Int>, startAt: Int = minInclusive): List<Int> {
+        val iInAny = this.find { startAt in it }
         return when {
             startAt >= maxInclusive -> soFar
-            this.any { startAt in it } -> itr(soFar, this.first { startAt in it }.last + 1)
-            else -> itr(soFar + startAt, startAt + 1)
+            iInAny != null -> itr(range, soFar, iInAny.last + 1)
+            else -> itr(range, soFar + startAt, startAt + 1)
         }
     }
-    return itr(emptyList())
+    return itr(this.sortedBy { it.first }, emptyList())
 }
 
 
-private fun sensorRangesForRow(sensors: List<SensorData>, row: Int): List<IntRange> = sensors
-    .filter { sensor ->
-        sensor.yS == row
-                || sensor.yS < row && sensor.yS + sensor.distanceToBeacon >= row
-                || sensor.yS > row && sensor.yS - sensor.distanceToBeacon <= row
-    }.map {
-        val horizontalOffsetFromCentreOfSensor = it.distanceToBeacon - (it.yS - row).absoluteValue
-        val xMin = it.xS - horizontalOffsetFromCentreOfSensor
-        val xMax = it.xS + horizontalOffsetFromCentreOfSensor
-        xMin..xMax
-    }.simplifyAdjacent()
+private fun sensorRangesForRow(sensors: List<SensorData>, row: Int): List<IntRange> =
+    buildList(sensors.size + 1) {
+        for (s in sensors) {
+            if (sensorAffectsRow(s, row)) {
+                val horizontalOffsetFromCentreOfSensor = s.distanceToBeacon - (s.yS - row).absoluteValue
+                val xMin = s.xS - horizontalOffsetFromCentreOfSensor
+                val xMax = s.xS + horizontalOffsetFromCentreOfSensor
+                this.add(xMin..xMax)
+            }
+        }
+    }.mergeAdjacent()
+
+private fun sensorAffectsRow(s: SensorData, row: Int) = (s.yS == row
+        || s.yS < row && s.yS + s.distanceToBeacon >= row
+        || s.yS > row && s.yS - s.distanceToBeacon <= row)
 
 
 private object InputParsing {
     private val inputPattern = Regex("Sensor at x=(-?\\d+), y=(-?\\d+): closest beacon is at x=(-?\\d+), y=(-?\\d+)")
     fun parseAllSensors(input: List<String>): List<SensorData> = input
         .mapMatching(inputPattern)
-        .map { (xS, yS, xB, yB) -> SensorData(xS.toInt(), yS.toInt(), xB.toInt(), yB.toInt()) }
+        .mapTo(ArrayList(input.size + 1)) { (xS, yS, xB, yB) -> SensorData(xS.toInt(), yS.toInt(), xB.toInt(), yB.toInt()) }
 }
 
 private data class SensorData(val xS: Int, val yS: Int, val xB: Int, val yB: Int) {

@@ -17,17 +17,37 @@ fun String.fromClasspathFile(): String {
 
 fun List<String>.splitOnSpaces() = map { it.split(' ') }
 
-infix fun IntRange.fullyContains(other: IntRange) = this.contains(other.first) && this.contains(other.last)
-infix fun IntRange.overlaps(other: IntRange) = other.first in this || other.last in this || this.first in other || this.last in other
-infix fun IntRange.overlapsOrIsAdjacentTo(other: IntRange) = this.overlaps(other) || (this.last == other.first - 1) || (other.last == this.first - 1)
-fun List<IntRange>.simplifyAdjacent(): List<IntRange> {
-    tailrec fun simplifyRanges(ranges: List<IntRange>): List<IntRange> {
-        val a = ranges.find { a -> ranges.any { b -> a != b && a overlapsOrIsAdjacentTo b } } ?: return ranges
-        val b = ranges.first { b -> a != b && a overlapsOrIsAdjacentTo b }
-        val newRange = IntRange(min(a.first, b.first), max(a.last, b.last))
-        return simplifyRanges(ranges.minus(setOf(a, b)).plus(listOf(newRange)))
+infix fun IntRange.fullyContains(other: IntRange) = other.first in this && other.last in this
+infix fun IntRange.overlaps(other: IntRange) = other.first in this || this.first in other
+infix fun IntRange.overlapsOrIsAdjacentTo(other: IntRange) = (this.last == other.first - 1) || (other.last == this.first - 1) || this.overlaps(other)
+
+fun List<IntRange>.mergeAdjacent(): List<IntRange> {
+    var nulls = 0
+    val ranges = Array(this.size) { if (this[it].isEmpty()) null.also { nulls++ } else this[it] }
+    while (true) {
+        var aIdx = -1
+        var bIdx = -1
+        var a = -1
+        found@ while (++a <= ranges.lastIndex) {
+            var b = -1
+            while (++b <= ranges.lastIndex) {
+                if ((a != b) && ranges[a] != null && ranges[b] != null && ranges[a]!! overlapsOrIsAdjacentTo ranges[b]!!) {
+                    aIdx = a
+                    bIdx = b
+                    break@found
+                }
+            }
+        }
+        if (aIdx == -1) return ranges.filterNotNullTo(ArrayList(ranges.size + 1 - nulls))
+        val aVal = ranges[aIdx]!!
+        val bVal = ranges[bIdx]!!
+        ranges[aIdx] = when {
+            aVal fullyContains bVal -> aVal
+            bVal fullyContains aVal -> bVal
+            else -> IntRange(min(aVal.first, bVal.first), max(aVal.last, bVal.last))
+        }
+        ranges[bIdx] = null.also { nulls++ }
     }
-    return fold(emptyList()) { acc, intRange -> simplifyRanges(acc + listOf(intRange)) }
 }
 
 fun List<IntRange>.clampTo(minInclusive: Int, maxInclusive: Int) = this
