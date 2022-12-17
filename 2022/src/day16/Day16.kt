@@ -14,24 +14,59 @@ fun main() {
     part1(puzzleInput).also { println("Part 1: $it") } // 1940
 
     assertEquals(PART_2_EXPECTED_EXAMPLE_ANSWER, part2(exampleInput))
-//    part2(puzzleInput).also { println("Part 2: $it") } //
+    part2(puzzleInput).also { println("Part 2: $it") } // 2469
 }
 
 private fun part1(input: List<String>): Int {
     val valves = parseInput(input)
     val targetValves = valves.values.filter { it.rate > 0 }.map { it.id }
-    val timeToReachCache = (targetValves + "AA")
-        .associateWith { from -> targetValves.associateWith { target -> timeToReach(target, from, valves) } }
+    val timeToReachCache = (targetValves + "AA").associateWith { from -> targetValves.associateWith { target -> timeToReach(target, from, valves) } }
+    return maxFlowPossibleForValveSet(
+        valves = valves,
+        timeLimit = 30,
+        targetValves = targetValves.toSet(),
+        timeToReachCache = timeToReachCache
+    )
+}
 
+private fun part2(input: List<String>): Int {
+    val valves = parseInput(input)
+    val targetValves = valves.values.filter { it.rate > 0 }.map { it.id }.toSet()
+    val timeToReachCache = (targetValves + "AA").associateWith { from -> targetValves.associateWith { target -> timeToReach(target, from, valves) } }
+
+    val allCombinations = allCombinationsOf(targetValves)
+    return allCombinations
+        .associateWith { maxFlowPossibleForValveSet(valves, 26, it, timeToReachCache) }
+        .let { it.mapValues { (set, maxFlow) -> maxFlow + it[targetValves.minus(set)]!! } }
+        .values.max()
+}
+
+private fun allCombinationsOf(inputs: Set<String>): Set<Set<String>> {
+    return buildSet {
+        this.add(emptySet()) // length 0
+        repeat((1 until inputs.size).count()) {
+            this.toList().forEach { prefix -> inputs.filter { it !in prefix }.forEach { suffix -> this.add(prefix + suffix) } }
+        }
+        this.add(inputs)
+    }
+}
+
+
+private fun maxFlowPossibleForValveSet(
+    valves: Map<String, Valve>,
+    timeLimit: Int,
+    targetValves: Set<String>,
+    timeToReachCache: Map<String, Map<String, Int>> // it[from][to]=distance
+): Int {
     fun maxFlowFromVisitingDownstreamValves(thisValve: String, elapsed: Int, flowPerMinute: Int, valvesOpen: List<String>): Int {
         if (valvesOpen.size == targetValves.size)
-            return ((30 - elapsed) * flowPerMinute)
+            return ((timeLimit - elapsed) * flowPerMinute)
 
         val pathsDistancesFromValve = timeToReachCache[thisValve]!!
         return targetValves.filter { it !in valvesOpen }.maxOf { nextValve ->
             val movementTime = pathsDistancesFromValve[nextValve]!!
-            if (movementTime + 1 + elapsed >= 30)
-                (30 - elapsed) * flowPerMinute
+            if (movementTime + 1 + elapsed >= timeLimit)
+                (timeLimit - elapsed) * flowPerMinute
             else
                 flowPerMinute * (movementTime + 1) + maxFlowFromVisitingDownstreamValves(
                     nextValve,
@@ -43,18 +78,6 @@ private fun part1(input: List<String>): Int {
     }
     return maxFlowFromVisitingDownstreamValves("AA", 0, 0, emptyList())
 }
-
-private fun part2(input: List<String>): Int {
-    return 0
-}
-
-
-private val inputPattern = Regex("Valve ([A-Z]{2}) has flow rate=([0-9]+); tunnels? leads? to valves? ([, A-Z]+)")
-private fun parseInput(input: List<String>): Map<String, Valve> = input
-    .mapMatching(inputPattern)
-    .map { (id, rate, links) -> Valve(id, rate.toInt(), links.split(", ")) }
-    .associateBy { it.id }
-
 
 private fun timeToReach(nextValve: String, from: String, withGraph: Map<String, Valve>): Int {
     fun distanceByDijkstra(valves: Map<String, Valve>, start: String, target: String): Int {
@@ -81,5 +104,11 @@ private fun timeToReach(nextValve: String, from: String, withGraph: Map<String, 
     return distanceByDijkstra(withGraph, from, nextValve)
 }
 
+
+private val inputPattern = Regex("Valve ([A-Z]{2}) has flow rate=([0-9]+); tunnels? leads? to valves? ([, A-Z]+)")
+private fun parseInput(input: List<String>): Map<String, Valve> = input
+    .mapMatching(inputPattern)
+    .map { (id, rate, links) -> Valve(id, rate.toInt(), links.split(", ")) }
+    .associateBy { it.id }
 
 private data class Valve(val id: String, val rate: Int, val others: List<String>)
