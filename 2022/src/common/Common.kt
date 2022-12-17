@@ -116,4 +116,7 @@ fun String.linesAsCharArrays(skipEmptyLines: Boolean = false): List<CharArray> {
     return list
 }
 
+fun factorial(num: Int): Long =
+    (2..num).fold(1L) { acc, i -> acc * i }
+
 object Common

@@ -1,9 +1,9 @@
 package day16
 
 import common.*
+import common.BitSet
 import java.util.*
 import kotlin.test.*
-import kotlin.time.*
 
 private val exampleInput = "day16/example.txt".fromClasspathFileToLines()
 private val puzzleInput = "day16/input.txt".fromClasspathFileToLines()
@@ -12,119 +12,95 @@ private const val PART_2_EXPECTED_EXAMPLE_ANSWER = 1707
 
 fun main() {
     assertEquals(PART_1_EXPECTED_EXAMPLE_ANSWER, part1(exampleInput))
-    part1(puzzleInput).also { println("Part 1: $it") } // 1940
+    part1(puzzleInput).also { println("Part 1: $it") } // 1940, took 16ms
 
-//    assertEquals(PART_2_EXPECTED_EXAMPLE_ANSWER, part2(exampleInput))
-//    part2(puzzleInput).also { println("Part 2: $it") } // 2469
-
-//    repeat(20) { part1(puzzleInput) }
-    println(measureTime { repeat(20) { part1(puzzleInput) } }.div(20))
-//    repeat(20) { part2(puzzleInput) }
-//    println(measureTime { repeat(20) { part2(puzzleInput) } }.div(20))
+    assertEquals(PART_2_EXPECTED_EXAMPLE_ANSWER, part2(exampleInput))
+    part2(puzzleInput).also { println("Part 2: $it") } // 2469, took 2.6s
 }
 
 private fun part1(input: List<String>): Int {
     val valves = parseInput(input)
-    val targetValves = valves.values.filter { it.rate > 0 }.map { it.ref }.toSet().asBitSet()
-    val refOfAA = valves.values.first { it.id == "AA" }.ref
-    val timeToReachCache = buildDistanceCache(targetValves plusItem refOfAA, valves)
+    val targetValves = valves.filter { it.rate > 0 }.map { it.ref }.toSet().asBitSet()
+    val aa = valves.first { it.id == "AA" }
+    val timeToReachCache = buildDistanceCache(targetValves plusItem aa.ref, valves)
 
-    return maxFlowPossibleForValveSet(
-        startAt = refOfAA,
-        valves = valves,
-        timeLimit = 30,
-        targetValves = targetValves,
-        timeToReachCache = timeToReachCache
-    )
+    return maxFlowPossibleForValveSet(valves, timeLimit = 30, targetValves, timeToReachCache, startAt = aa.idx)
 }
 
 private fun part2(input: List<String>): Int {
     val valves = parseInput(input)
-    val targetValves = valves.values.filter { it.rate > 0 }.map { it.ref }.toSet().asBitSet()
-    val refOfAA = valves.values.first { it.id == "AA" }.ref
-    val timeToReachCache = buildDistanceCache(targetValves plusItem refOfAA, valves)
+    val targetValves = valves.filter { it.rate > 0 }.map { it.ref }.toSet().asBitSet()
+    val aa = valves.first { it.id == "AA" }
+    val timeToReachCache = buildDistanceCache(targetValves plusItem aa.ref, valves)
 
-    val allCombinations = allCombinationsOf(targetValves)
-    return allCombinations
-        .associateWith { maxFlowPossibleForValveSet(valves, 26, it.asBitSet(), timeToReachCache, refOfAA) }
-        .let { it.mapValues { (set, maxFlow) -> maxFlow + it[targetValves.excluding(set.asBitSet()).asList().toSet()]!! } }
+    return allCombinationsOf(targetValves)
+        .associateWith { maxFlowPossibleForValveSet(valves, timeLimit = 26, targets = it, timeToReachCache, startAt = aa.idx) }
+        .let { it.mapValues { (set, maxFlow) -> maxFlow + it[targetValves.excluding(set)]!! } }
         .values.max()
 }
 
 
-private fun allCombinationsOf(inputsTmp: BitSet): Set<Set<Long>> {
-    val inputs = inputsTmp.asList().toSet()
-    return buildSet {
-        this.add(emptySet()) // length 0
-        repeat((1 until inputs.size).count()) {
-            this.toList().forEach { prefix -> inputs.filter { it !in prefix }.forEach { suffix -> this.add(prefix + suffix) } }
+private fun allCombinationsOf(inputs: BitSet): Set<BitSet> {
+    val n = inputs.countOneBits()
+    val size = 3 + (1 until n).sumOf { r -> factorial(n) / (factorial(r) * factorial(n - r)) }.toInt()
+    return buildSet((size * 4) / 3) {
+        this.add(EMPTY_BITSET) // length 0
+        repeat(inputs.countOneBits()) {
+            this.toList().forEach { prefix -> inputs.excluding(prefix).forEach { suffix -> this.add(prefix plusItem suffix) } }
         }
         this.add(inputs)
     }
 }
 
 
-private fun maxFlowPossibleForValveSet(
-    valves: Map<Long, Valve>,
-    timeLimit: Int,
-    targetValves: BitSet,
-    timeToReachCache: Map<Long, Map<Long, Int>>, // it[from][to]=distance
-    startAt: Long
-): Int {
-    fun maxFlowFromVisitingDownstreamValves(thisValve: Long, elapsed: Int, flowPerMinute: Int, valvesOpen: BitSet): Int {
-        if (valvesOpen == targetValves)
+private fun maxFlowPossibleForValveSet(valves: Array<Valve>, timeLimit: Int, targets: BitSet, timeToReach: Array<IntArray?>, startAt: Int): Int {
+    fun maxFlowFromVisitingDownstreamValves(thisValve: Int, elapsed: Int, flowPerMinute: Int, valvesOpen: BitSet): Int {
+        if (valvesOpen == targets)
             return ((timeLimit - elapsed) * flowPerMinute)
 
-        val pathsDistancesFromValve = timeToReachCache[thisValve]!!
-        return targetValves.excluding(valvesOpen).asList().maxOf { nextValve ->
-            val movementTime = pathsDistancesFromValve[nextValve]!!
+        val pathsDistancesFromValve = timeToReach[thisValve]!!
+        return targets.excluding(valvesOpen).maxOf { nextValve ->
+            val nextIdx = nextValve.toIndex()
+            val movementTime: Int = pathsDistancesFromValve[nextIdx]
+
             if (movementTime + 1 + elapsed >= timeLimit)
                 (timeLimit - elapsed) * flowPerMinute
             else
                 flowPerMinute * (movementTime + 1) + maxFlowFromVisitingDownstreamValves(
-                    nextValve,
+                    nextIdx,
                     elapsed = elapsed + movementTime + 1,
-                    flowPerMinute = flowPerMinute + valves[nextValve]!!.rate,
+                    flowPerMinute = flowPerMinute + valves[nextIdx].rate,
                     valvesOpen = valvesOpen plusItem nextValve
                 )
         }
     }
-    return maxFlowFromVisitingDownstreamValves(startAt, 0, 0, EMPTY)
+    return maxFlowFromVisitingDownstreamValves(startAt, 0, 0, EMPTY_BITSET)
 }
 
-private const val EMPTY = 0L
-typealias BitSet = Long
 
-operator fun BitSet.contains(other: Long): Boolean = (this and other) == other
-infix fun BitSet.plusItem(other: Long): BitSet = (this or other)
-fun BitSet.excluding(other: BitSet): BitSet = (this and other) xor this
-
-fun Collection<Long>.asBitSet(): BitSet = this.sum()
-fun BitSet.asList(): List<Long> {
-    var x = this
-    return buildList(x.countOneBits() + 1) {
-        while (x != 0L) x = x.takeHighestOneBit().also { add(it) }.let { x xor it }
+private fun buildDistanceCache(targetValves: BitSet, valves: Array<Valve>) =
+    Array(valves.size) { fromIdx ->
+        if (1L shl (fromIdx + 1) in targetValves)
+            IntArray(valves.size) { toIdx ->
+                if (1L shl (toIdx + 1) in targetValves) timeToReach(fromIdx, toIdx, valves)
+                else 0
+            } else null
     }
-}
 
-
-private fun buildDistanceCache(targetValves: BitSet, valves: Map<Long, Valve>) =
-    targetValves.asList().associateWith { from -> targetValves.asList().associateWith { target -> timeToReach(target, from, valves) } }
-
-private fun timeToReach(nextValve: Long, from: Long, withGraph: Map<Long, Valve>): Int {
-    fun distanceByDijkstra(valves: Map<Long, Valve>, start: Long, target: Long): Int {
+private fun timeToReach(nextValve: Int, from: Int, withGraph: Array<Valve>): Int {
+    fun distanceByDijkstra(valves: Array<Valve>, start: Int, target: Int): Int {
         val smallestDistance = buildMap {
-            valves.keys.forEach { id -> put(id, Int.MAX_VALUE) }
+            valves.indices.forEach { idx -> put(idx, Int.MAX_VALUE) }
             put(start, 0)
         }.toMutableMap()
-        val priorityQueue = PriorityQueue<Long> { s1, s2 -> smallestDistance[s1]!!.compareTo(smallestDistance[s2]!!) }
-            .apply { valves.keys.forEach(::offer) }
+        val priorityQueue = PriorityQueue<Int> { s1, s2 -> smallestDistance[s1]!!.compareTo(smallestDistance[s2]!!) }
+            .apply { valves.indices.forEach(::offer) }
 
         while (true) {
             val u = priorityQueue.poll()
             if (u == target) return smallestDistance[u]!!
             val distanceViaU = smallestDistance[u]!! + 1
-            for (n in valves[u]!!.otherRefs) {
+            for (n in valves[u].otherIndexes) {
                 if (distanceViaU < smallestDistance[n]!!) {
                     smallestDistance[n] = distanceViaU
                     priorityQueue.remove(n)
@@ -138,10 +114,18 @@ private fun timeToReach(nextValve: Long, from: Long, withGraph: Map<Long, Valve>
 
 
 private val inputPattern = Regex("Valve ([A-Z]{2}) has flow rate=([0-9]+); tunnels? leads? to valves? ([, A-Z]+)")
-private fun parseInput(input: List<String>): Map<Long, Valve> = input
+private fun parseInput(input: List<String>): Array<Valve> = input
     .mapMatching(inputPattern)
-    .mapIndexed { index, (id, rate, links) -> Valve(id, 1L shl (index + 1), rate.toInt(), links.split(", ")) }
-    .associateBy { it.ref }
-    .apply { values.forEach { valve -> valve.otherRefs.addAll(valve.others.map { id -> values.first { it.id == id }.ref }) } }
+    .let { matches ->
+        matches.mapIndexed { index, (id, rate, links) ->
+            Valve(
+                id = id,
+                ref = 1L shl (index + 1),
+                idx = index,
+                rate = rate.toInt(),
+                otherIndexes = links.split(", ").map { needle -> matches.indexOfFirst { (otherId) -> otherId == needle } }.toSet()
+            )
+        }
+    }.toTypedArray()
 
-private data class Valve(val id: String, val ref: Long, val rate: Int, val others: List<String>, val otherRefs: MutableList<Long> = mutableListOf())
+private data class Valve(val id: String, val ref: Long, val idx: Int, val rate: Int, val otherIndexes: Set<Int>)
