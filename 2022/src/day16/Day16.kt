@@ -11,8 +11,8 @@ private const val PART_1_EXPECTED_EXAMPLE_ANSWER = 1651
 private const val PART_2_EXPECTED_EXAMPLE_ANSWER = 1707
 
 fun main() {
-//    assertEquals(PART_1_EXPECTED_EXAMPLE_ANSWER, part1(exampleInput))
-//    part1(puzzleInput).also { println("Part 1: $it") } // 1940
+    assertEquals(PART_1_EXPECTED_EXAMPLE_ANSWER, part1(exampleInput))
+    part1(puzzleInput).also { println("Part 1: $it") } // 1940
 
 //    assertEquals(PART_2_EXPECTED_EXAMPLE_ANSWER, part2(exampleInput))
 //    part2(puzzleInput).also { println("Part 2: $it") } // 2469
@@ -25,9 +25,9 @@ fun main() {
 
 private fun part1(input: List<String>): Int {
     val valves = parseInput(input)
-    val targetValves = valves.values.filter { it.rate > 0 }.map { it.ref }.toSet()
+    val targetValves = valves.values.filter { it.rate > 0 }.map { it.ref }.toSet().asBitSet()
     val refOfAA = valves.values.first { it.id == "AA" }.ref
-    val timeToReachCache = buildDistanceCache(targetValves, refOfAA, valves)
+    val timeToReachCache = buildDistanceCache(targetValves plusItem refOfAA, valves)
 
     return maxFlowPossibleForValveSet(
         startAt = refOfAA,
@@ -40,19 +40,20 @@ private fun part1(input: List<String>): Int {
 
 private fun part2(input: List<String>): Int {
     val valves = parseInput(input)
-    val targetValves = valves.values.filter { it.rate > 0 }.map { it.ref }.toSet()
+    val targetValves = valves.values.filter { it.rate > 0 }.map { it.ref }.toSet().asBitSet()
     val refOfAA = valves.values.first { it.id == "AA" }.ref
-    val timeToReachCache = buildDistanceCache(targetValves, refOfAA, valves)
+    val timeToReachCache = buildDistanceCache(targetValves plusItem refOfAA, valves)
 
     val allCombinations = allCombinationsOf(targetValves)
     return allCombinations
-        .associateWith { maxFlowPossibleForValveSet(valves, 26, it, timeToReachCache, refOfAA) }
-        .let { it.mapValues { (set, maxFlow) -> maxFlow + it[targetValves.minus(set)]!! } }
+        .associateWith { maxFlowPossibleForValveSet(valves, 26, it.asBitSet(), timeToReachCache, refOfAA) }
+        .let { it.mapValues { (set, maxFlow) -> maxFlow + it[targetValves.excluding(set.asBitSet()).asList().toSet()]!! } }
         .values.max()
 }
 
 
-private fun <T> allCombinationsOf(inputs: Set<T>): Set<Set<T>> {
+private fun allCombinationsOf(inputsTmp: BitSet): Set<Set<Long>> {
+    val inputs = inputsTmp.asList().toSet()
     return buildSet {
         this.add(emptySet()) // length 0
         repeat((1 until inputs.size).count()) {
@@ -66,16 +67,16 @@ private fun <T> allCombinationsOf(inputs: Set<T>): Set<Set<T>> {
 private fun maxFlowPossibleForValveSet(
     valves: Map<Long, Valve>,
     timeLimit: Int,
-    targetValves: Set<Long>,
+    targetValves: BitSet,
     timeToReachCache: Map<Long, Map<Long, Int>>, // it[from][to]=distance
     startAt: Long
 ): Int {
-    fun maxFlowFromVisitingDownstreamValves(thisValve: Long, elapsed: Int, flowPerMinute: Int, valvesOpen: List<Long>): Int {
-        if (valvesOpen.size == targetValves.size)
+    fun maxFlowFromVisitingDownstreamValves(thisValve: Long, elapsed: Int, flowPerMinute: Int, valvesOpen: BitSet): Int {
+        if (valvesOpen == targetValves)
             return ((timeLimit - elapsed) * flowPerMinute)
 
         val pathsDistancesFromValve = timeToReachCache[thisValve]!!
-        return targetValves.filter { it !in valvesOpen }.maxOf { nextValve ->
+        return targetValves.excluding(valvesOpen).asList().maxOf { nextValve ->
             val movementTime = pathsDistancesFromValve[nextValve]!!
             if (movementTime + 1 + elapsed >= timeLimit)
                 (timeLimit - elapsed) * flowPerMinute
@@ -84,16 +85,31 @@ private fun maxFlowPossibleForValveSet(
                     nextValve,
                     elapsed = elapsed + movementTime + 1,
                     flowPerMinute = flowPerMinute + valves[nextValve]!!.rate,
-                    valvesOpen = valvesOpen.plus(nextValve)
+                    valvesOpen = valvesOpen plusItem nextValve
                 )
         }
     }
-    return maxFlowFromVisitingDownstreamValves(startAt, 0, 0, emptyList())
+    return maxFlowFromVisitingDownstreamValves(startAt, 0, 0, EMPTY)
+}
+
+private const val EMPTY = 0L
+typealias BitSet = Long
+
+operator fun BitSet.contains(other: Long): Boolean = (this and other) == other
+infix fun BitSet.plusItem(other: Long): BitSet = (this or other)
+fun BitSet.excluding(other: BitSet): BitSet = (this and other) xor this
+
+fun Collection<Long>.asBitSet(): BitSet = this.sum()
+fun BitSet.asList(): List<Long> {
+    var x = this
+    return buildList(x.countOneBits() + 1) {
+        while (x != 0L) x = x.takeHighestOneBit().also { add(it) }.let { x xor it }
+    }
 }
 
 
-private fun buildDistanceCache(targetValves: Set<Long>, refOfAA: Long, valves: Map<Long, Valve>) =
-    (targetValves + refOfAA).associateWith { from -> targetValves.associateWith { target -> timeToReach(target, from, valves) } }
+private fun buildDistanceCache(targetValves: BitSet, valves: Map<Long, Valve>) =
+    targetValves.asList().associateWith { from -> targetValves.asList().associateWith { target -> timeToReach(target, from, valves) } }
 
 private fun timeToReach(nextValve: Long, from: Long, withGraph: Map<Long, Valve>): Int {
     fun distanceByDijkstra(valves: Map<Long, Valve>, start: Long, target: Long): Int {
