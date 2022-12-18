@@ -119,4 +119,14 @@ fun String.linesAsCharArrays(skipEmptyLines: Boolean = false): List<CharArray> {
 fun factorial(num: Int): Long =
     (2..num).fold(1L) { acc, i -> acc * i }
 
+fun String.cyclicIterator() = object : Iterator<Char> {
+    private var index = 0;
+    override fun hasNext() = true
+    override fun next(): Char {
+        if (index > this@cyclicIterator.lastIndex) index = 0
+        return this@cyclicIterator[index++]
+    }
+}
+
+
 object Common
