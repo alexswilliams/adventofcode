@@ -22,9 +22,44 @@ fun main() {
 private fun part1(input: String) = playTetris(input, 2022).first - 1 // (1 for the ground row)
 
 private fun part2(input: String): Long {
-    val (highestRow, tower) = playTetris(input, 4000) // An arbitrarily large tower - number chosen with trial and error
-    // now to find repeated lines in the tower...
+    // The number of rows the form a cycle is not directly linked to the number of blocks it took - it varies with the input pattern (so the
+    // relationship will be different between the example input and the puzzle input.)
+    // But, you don't need to eliminate every cycle in order to make the problem tractable - just... most of them.  Which relaxes the constraints on
+    // finding the cycle considerably - you don't need to know the full cycle, just:
+    //  - how long it is, and
+    //  - a position somewhere inside the first repetition
+    //
+    // So e.g. in a tower where the contents of each row happens to conveniently be the english alphabet:
+    //  0 1 2 3  4 5 6 7 8 9 10 1 2 3 4 5 6 7  8 9 201 2 3 4  5 6 7 8 9 301  2 3 4 ...
+    //  W X Y Z  a b c d e f g  a b c d e f g  a b c d e f g  a b c d e f g  a b c ... c d e f g  a b  Q R S T U V
+    //  =======                 =============                 =============        ...==========       ===========
+    //    |      =============       |         =============        |        ======...     |      ===       |
+    //  preamble    rep 1          rep 2           rep 3          rep 4      rep 5 ...   rep n    tail   partials
+    // There is a pre-amble (which accounts for the base of the tower not forming part of the sequence), followed by a number of repetitions of each
+    // row, then a tail (which is a partial repetition), followed by "partials", which are rows which are still "under construction".
+    //
+    // The algorithm below does the following:
+    //  1 Play tetris for an arbitrary but tractable number of blocks - enough to form a few cycles in the output
+    //  2 Guess how long the length of "partials" is - so that we can exclude this from the search
+    //  3 Look from the end of the tail backwards by a small amount (e.g. 5 rows) - this is the pattern that anchors the cycle
+    //    - in this case, the run length is 5 rows, giving the pattern "e f g  a b"
+    //  4 Walk backwards from before the pattern, looking for positions where the pattern repeats - record all these positions in a set.
+    //  5 Count the gaps between the ordered members of the positions set - if there is a unique stride length, then we've found the cycle
+    //    - If there are multiple stride lengths, it's possible that there are red herrings that matched, meaning that the pattern was too short - so
+    //      repeat the search with a longer run length until there is a single common stride distance between each member of the set.
+    //  6 Find the first two times the pattern appears (the smallest two elements of the set), in this example would be indexes 8 and 15
+    //  7 Play tetris again, but request that the game reports on how many blocks (rocks) need to drop before each of the first two "checkpoint" rows
+    //    are reached.
+    //  8 From this you now have:
+    //    - a maximum estimate for the size of the rows pre-amble (the first member of the position set)
+    //    - row cycle size: (difference between first and second member of position set)
+    //    - a maximum estimate for the size of the blocks pre-amble (the first reported checkpoint block)
+    //    - block cycle size: (difference between block counts, as reported by the previous game of tetris)
+    //    You can use these to calculate how many repeats would take place within 10e12 dropped rocks (`repeatCount * blockStride` below)
+    //  9 Play the game a final time, requesting only the number of blocks that make up the preamble and the span between the last cycle and 10e12
+    // 10 Add on the size of the omitted repeated section and return.
 
+    val (highestRow, tower) = playTetris(input, 4000) // An arbitrarily large tower - number chosen with trial and error
     val endOfMatchRange = highestRow - 50 // trim the top (by a finger-in-air amount), so that partially complete rows are ignored
     var runLength = 5 // also chosen arbitrarily, but wants to be small, so that `byteArraysMatch` can afford to be naïve
     val matches = mutableListOf<Int>()
@@ -54,13 +89,13 @@ private fun part2(input: String): Long {
     // One more round - this time with the correct number of blocks omitted such that the repeated section in the middle never happens.  This gives
     // the combined size of the head and tail of the tower, which can then be added to the (calculated) size of the repeated section.
     val (blocksToReachRepeat, blocksToReachSecondRepeat) = blocksToReachCheckpoints.sorted()
-    val blockStride = blocksToReachSecondRepeat - blocksToReachRepeat
+    val blockStride = blocksToReachSecondRepeat - blocksToReachRepeat // for the example, this is 35; for my input this is 1710
     val repeatCount = (1_000_000_000_000L - blocksToReachRepeat) / blockStride
     val blocksBetweenEndOfRepeatAndTarget = (1_000_000_000_000L - repeatCount * blockStride - blocksToReachRepeat).toInt()
     val (allRowsWithoutRepeat) = playTetris(input, blocksToReachRepeat + blocksBetweenEndOfRepeatAndTarget)
 
     // Now re-inflate the number of rows generated in the final game with the missing repeated section.
-    val rowStride = rowsToCheckpoint[1] - rowsToCheckpoint[0]
+    val rowStride = rowsToCheckpoint[1] - rowsToCheckpoint[0] // for the example this is 53; for my input this is 2647
     return (rowStride * repeatCount) + allRowsWithoutRepeat
 }
 
@@ -117,7 +152,13 @@ private fun playTetris(input: String, stopAfterBlocks: Int, checkpoints: Set<Int
     return Triple(rowAboveTopOfHighestShape - 1, tower, blocksForCheckpoints)
 }
 
-private fun tryShift(shape: ByteArray, tower: ByteArray, horizontalOffset: Int, verticalOffsetOfLowestRowInShape: Int, shiftDirection: Char): Boolean {
+private fun tryShift(
+    shape: ByteArray,
+    tower: ByteArray,
+    horizontalOffset: Int,
+    verticalOffsetOfLowestRowInShape: Int,
+    shiftDirection: Char
+): Boolean {
     val newHozOffset = horizontalOffset + (if (shiftDirection == '<') -1 else +1)
     var shapeRow = shape.lastIndex
     var towerRow = verticalOffsetOfLowestRowInShape
