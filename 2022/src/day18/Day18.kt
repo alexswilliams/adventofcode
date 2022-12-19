@@ -2,7 +2,6 @@ package day18
 
 import common.*
 import kotlin.test.*
-import kotlin.time.*
 
 private val exampleInput = "day18/example.txt".fromClasspathFileToLines()
 private val puzzleInput = "day18/input.txt".fromClasspathFileToLines()
@@ -15,11 +14,6 @@ fun main() {
 
     assertEquals(PART_2_EXPECTED_EXAMPLE_ANSWER, part2(exampleInput))
     part2(puzzleInput).also { println("Part 2: $it") } // 2556, took 8.7ms
-
-    repeat(20) { part1(puzzleInput) }
-    println(measureTime { repeat(100) { part1(puzzleInput) } }.div(100))
-    repeat(20) { part2(puzzleInput) }
-    println(measureTime { repeat(100) { part2(puzzleInput) } }.div(100))
 }
 
 private fun part1(input: List<String>): Int {
