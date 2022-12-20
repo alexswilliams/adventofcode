@@ -128,5 +128,9 @@ fun String.cyclicIterator() = object : Iterator<Char> {
     }
 }
 
+fun <Y> List<Y>.cyclicSequence() = sequence<Y> { while (true) yieldAll(this@cyclicSequence) }
+
+fun max(vararg x: Int): Int = x.max()
+
 
 object Common
