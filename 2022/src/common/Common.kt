@@ -132,5 +132,6 @@ fun <Y> List<Y>.cyclicSequence() = sequence<Y> { while (true) yieldAll(this@cycl
 
 fun max(vararg x: Int): Int = x.max()
 
+infix fun Int.divideRoundingUp(divisor: Int): Int = (this + divisor - 1) / divisor
 
 object Common
