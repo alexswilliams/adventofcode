@@ -134,4 +134,14 @@ fun max(vararg x: Int): Int = x.max()
 
 infix fun Int.divideRoundingUp(divisor: Int): Int = (this + divisor - 1) / divisor
 
+inline fun <T> Array<out T?>.forEachNotNullIndexed(action: (index: Int, T) -> Unit) {
+    var index = 0
+    @Suppress("UseWithIndex")
+    for (item in this) {
+        if (item != null) action(index, item)
+        index++
+    }
+}
+
+
 object Common
