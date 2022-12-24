@@ -4,6 +4,7 @@ import common.*
 import java.util.*
 import kotlin.math.*
 import kotlin.test.*
+import kotlin.time.*
 
 private val exampleInput = "day24/example.txt".fromClasspathFileToLines()
 private val puzzleInput = "day24/input.txt".fromClasspathFileToLines()
@@ -12,10 +13,13 @@ private const val PART_2_EXPECTED_EXAMPLE_ANSWER = 54
 
 fun main() {
     assertEquals(PART_1_EXPECTED_EXAMPLE_ANSWER, part1(exampleInput))
-    part1(puzzleInput).also { println("Part 1: $it") } // 301, took 262.52ms
+    part1(puzzleInput).also { println("Part 1: $it") } // 301, took 182.77ms
 
     assertEquals(PART_2_EXPECTED_EXAMPLE_ANSWER, part2(exampleInput))
-    part2(puzzleInput).also { println("Part 2: $it") } // 859, took 624.33ms
+    part2(puzzleInput).also { println("Part 2: $it") } // 859, took 393.45ms
+
+    println(measureTime { repeat(10) { part1(puzzleInput) } }.div(10))
+    println(measureTime { repeat(10) { part2(puzzleInput) } }.div(10))
 }
 
 private fun part1(input: List<String>): Int {
@@ -60,10 +64,14 @@ private fun turnsForRoute(input: List<String>, start: Point2D, target: Point2D, 
         )
             .filter { it == start || it == target || (it.row in allRows && it.col in allCols) }
             .filter { toTest ->
-                !leftMoving[toTest.row].any { rotatedDown(it, time, width) == toTest.col }
-                        && !rightMoving[toTest.row].any { rotatedUp(it, time, width) == toTest.col }
-                        && !upwardMoving[toTest.col].any { rotatedDown(it, time, height) == toTest.row }
-                        && !downwardMoving[toTest.col].any { rotatedUp(it, time, height) == toTest.row }
+                val colRotatedLeft = (toTest.col - 1 + time + width) % width
+                val colRotatedRight = (toTest.col - 1 - (time % width) + width) % width
+                val rowRotatedUp = (toTest.row - 1 + time + height) % height
+                val rowRotatedDown = (toTest.row - 1 - (time % height) + height) % height
+                !leftMoving[toTest.row].any { it == colRotatedLeft }
+                        && !rightMoving[toTest.row].any { it == colRotatedRight }
+                        && !upwardMoving[toTest.col].any { it == rowRotatedUp }
+                        && !downwardMoving[toTest.col].any { it == rowRotatedDown }
             }.filter { ((time to it) !in seen) }
 
         proposals.forEach {
@@ -74,10 +82,6 @@ private fun turnsForRoute(input: List<String>, start: Point2D, target: Point2D, 
     } while (workQueue.isNotEmpty())
     throw Exception("No solution found")
 }
-
-private fun rotatedUp(it: Int, time: Int, width: Int) = (it + time) % width + 1
-
-private fun rotatedDown(it: Int, time: Int, width: Int) = (it - (time % width) + width) % width + 1
 
 private fun heuristic(o1: Pair<Int, Point2D>, target: Point2D) = o1.first + manhattan(o1.second, target)
 
