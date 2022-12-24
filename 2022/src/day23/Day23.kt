@@ -16,10 +16,6 @@ fun main() {
 
     assertEquals(PART_2_EXPECTED_EXAMPLE_ANSWER, part2(exampleInput))
     part2(puzzleInput).also { println("Part 2: $it") } // 995, took 426.31ms
-
-    repeat(20) { part1(puzzleInput) }
-    println(measureTime { repeat(100) { part1(puzzleInput) } }.div(100))
-    println(measureTime { repeat(10) { part2(puzzleInput) } }.div(10))
 }
 
 private fun part1(input: List<String>): Int {
