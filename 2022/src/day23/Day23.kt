@@ -3,6 +3,7 @@ package day23
 import common.*
 import day23.Direction.*
 import kotlin.test.*
+import kotlin.time.*
 
 private val exampleInput = "day23/example.txt".fromClasspathFileToLines()
 private val puzzleInput = "day23/input.txt".fromClasspathFileToLines()
@@ -11,14 +12,18 @@ private const val PART_2_EXPECTED_EXAMPLE_ANSWER = 20
 
 fun main() {
     assertEquals(PART_1_EXPECTED_EXAMPLE_ANSWER, part1(exampleInput))
-    part1(puzzleInput).also { println("Part 1: $it") } // 3849, took 21.27ms
+    part1(puzzleInput).also { println("Part 1: $it") } // 3849, took 6.59ms
 
     assertEquals(PART_2_EXPECTED_EXAMPLE_ANSWER, part2(exampleInput))
-    part2(puzzleInput).also { println("Part 2: $it") } // 995, took 2.38s
+    part2(puzzleInput).also { println("Part 2: $it") } // 995, took 560.90ms
+
+    repeat(20) { part1(puzzleInput) }
+    println(measureTime { repeat(100) { part1(puzzleInput) } }.div(100))
+    println(measureTime { repeat(10) { part2(puzzleInput) } }.div(10))
 }
 
 private fun part1(input: List<String>): Int {
-    val initialElfPositions = parseInput(input).toLongArray()
+    val initialElfPositions = parseInput(input).toIntArray()
     val (after10Rounds, _) = positionsAfterTurns(initialElfPositions, 10)
 
     val width = after10Rounds.maxOf { it.col } - after10Rounds.minOf { it.col } + 1
@@ -27,7 +32,7 @@ private fun part1(input: List<String>): Int {
 }
 
 private fun part2(input: List<String>): Int {
-    val initialElfPositions = parseInput(input).toLongArray()
+    val initialElfPositions = parseInput(input).toIntArray()
     val (_, turnsNeeded) = positionsAfterTurns(initialElfPositions, Int.MAX_VALUE)
     return Int.MAX_VALUE - turnsNeeded + 1
 }
@@ -48,10 +53,10 @@ private val preferences = listOf(
 )
 
 private tailrec fun positionsAfterTurns(
-    elfPositions: LongArray,
+    elfPositions: IntArray,
     remainingRounds: Int,
     preferenceIndex: Int = 0,
-): Pair<LongArray, Int> {
+): Pair<IntArray, Int> {
     if (remainingRounds == 0) return elfPositions to 0
     val elfPositionSet = elfPositions.toSet()
 
@@ -85,7 +90,7 @@ private tailrec fun positionsAfterTurns(
     }
     if (needsToMove == 0) return elfPositions to remainingRounds
 
-    elvesNeedingToMove.forEachNotNullIndexed { index, it -> if (it !in clashes) elfPositions[index] = it }
+    elvesNeedingToMove.forEachIndexed { index, it -> if (it != null && it !in clashes) elfPositions[index] = it else seen.add(elfPositions[index]) }
 
     return positionsAfterTurns(elfPositions, remainingRounds - 1, (preferenceIndex + 1) % 4)
 }
@@ -113,9 +118,9 @@ private inline fun allWestOfMatches(row: Int, col: Int, crossinline function: (P
     function(Point2D(row - 1, col - 1)) && function(Point2D(row, col - 1)) && function(Point2D(row + 1, col - 1))
 
 
-typealias Point2D = Long
+typealias Point2D = Int
 
-val Point2D.row get():Int = (this shr 32).toInt()
-val Point2D.col get():Int = this.toInt()
+val Point2D.row get():Int = this shr 8
+val Point2D.col get():Int = this.toByte().toInt()
 fun Point2D.copy(row: Int = this.row, col: Int = this.col): Point2D = Point2D(row, col)
-fun Point2D(row: Int, col: Int): Point2D = (row.toLong() shl 32) or (col.toLong() and 0xffffffff)
+fun Point2D(row: Int, col: Int): Point2D = (row shl 8) or (col and 0x000000ff)
