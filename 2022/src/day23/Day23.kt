@@ -3,7 +3,6 @@ package day23
 import common.*
 import day23.Direction.*
 import kotlin.test.*
-import kotlin.time.*
 
 private val exampleInput = "day23/example.txt".fromClasspathFileToLines()
 private val puzzleInput = "day23/input.txt".fromClasspathFileToLines()
