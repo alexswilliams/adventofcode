@@ -11,10 +11,10 @@ private const val PART_2_EXPECTED_EXAMPLE_ANSWER = 1623178306L
 
 fun main() {
     assertEquals(PART_1_EXPECTED_EXAMPLE_ANSWER, part1(exampleInput))
-    part1(puzzleInput).also { println("Part 1: $it") } // 4151
+    part1(puzzleInput).also { println("Part 1: $it") } // 4151, took 12.73ms
 
     assertEquals(PART_2_EXPECTED_EXAMPLE_ANSWER, part2(exampleInput))
-    part2(puzzleInput).also { println("Part 2: $it") } // 7848878698663
+    part2(puzzleInput).also { println("Part 2: $it") } // 7848878698663, took 186.60ms
 }
 
 private fun part1(input: List<String>): Long {
@@ -42,7 +42,12 @@ private fun rotateList(
         val currentIndex = soFar.indexOfFirst { it.index == initialIndex }
         val item = soFar[currentIndex]
         val newIndex = ((currentIndex + item.value + modulus * item.value.absoluteValue) % modulus).toInt()
-        soFar.removeAt(currentIndex)
-        soFar.add(newIndex, item)
+        soFar.shift(currentIndex, newIndex)
     }
+}
+
+private fun <T> MutableList<T>.shift(currentIndex: Int, newIndex: Int) {
+    if (currentIndex == newIndex) return
+    val item = removeAt(currentIndex)
+    add(newIndex, item)
 }
