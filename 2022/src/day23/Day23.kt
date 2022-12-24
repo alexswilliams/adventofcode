@@ -12,10 +12,10 @@ private const val PART_2_EXPECTED_EXAMPLE_ANSWER = 20
 
 fun main() {
     assertEquals(PART_1_EXPECTED_EXAMPLE_ANSWER, part1(exampleInput))
-    part1(puzzleInput).also { println("Part 1: $it") } // 3849, took 5.99ms
+    part1(puzzleInput).also { println("Part 1: $it") } // 3849, took 5.63ms
 
     assertEquals(PART_2_EXPECTED_EXAMPLE_ANSWER, part2(exampleInput))
-    part2(puzzleInput).also { println("Part 2: $it") } // 995, took 437.67ms
+    part2(puzzleInput).also { println("Part 2: $it") } // 995, took 426.31ms
 
     repeat(20) { part1(puzzleInput) }
     println(measureTime { repeat(100) { part1(puzzleInput) } }.div(100))
@@ -61,7 +61,7 @@ private tailrec fun positionsAfterTurns(
     if (remainingRounds == 0) return elfPositions to 0
 
     val seen = HashSet<Point2D>(elfPositions.size * 2, 0.75f)
-    val clashes = HashSet<Point2D>(elfPositions.size)
+    val clashes = HashSet<Point2D>(elfPositions.size / 4)
 
     var needsToMove = 0
     val elvesNeedingToMove = Array(elfPositions.size) { index ->
@@ -83,15 +83,17 @@ private tailrec fun positionsAfterTurns(
                     EAST -> current.copy(col = current.col + 1)
                 }
             }?.also {
-                if (it in seen) clashes.add(it)
-                seen.add(it)
+                if (!seen.add(it)) clashes.add(it)
             }
         }
     }
     if (needsToMove == 0) return elfPositions to remainingRounds
     seen.removeAll(clashes)
 
-    elvesNeedingToMove.forEachIndexed { index, it -> if (it != null && it !in clashes) elfPositions[index] = it else seen.add(elfPositions[index]) }
+    elvesNeedingToMove.forEachIndexed { index, it ->
+        if (it != null && it !in clashes) elfPositions[index] = it
+        else seen.add(elfPositions[index])
+    }
 
     return positionsAfterTurns(elfPositions, remainingRounds - 1, (preferenceIndex + 1) % 4, seen)
 }
