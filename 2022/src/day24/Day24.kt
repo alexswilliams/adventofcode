@@ -13,10 +13,10 @@ private const val PART_2_EXPECTED_EXAMPLE_ANSWER = 54
 
 fun main() {
     assertEquals(PART_1_EXPECTED_EXAMPLE_ANSWER, part1(exampleInput))
-    part1(puzzleInput).also { println("Part 1: $it") } // 301, took 182.77ms
+    part1(puzzleInput).also { println("Part 1: $it") } // 301, took 133.54ms
 
     assertEquals(PART_2_EXPECTED_EXAMPLE_ANSWER, part2(exampleInput))
-    part2(puzzleInput).also { println("Part 2: $it") } // 859, took 393.45ms
+    part2(puzzleInput).also { println("Part 2: $it") } // 859, took 267.42ms
 
     println(measureTime { repeat(10) { part1(puzzleInput) } }.div(10))
     println(measureTime { repeat(10) { part2(puzzleInput) } }.div(10))
@@ -40,18 +40,18 @@ private fun turnsForRoute(input: List<String>, start: Point2D, target: Point2D, 
     val allRows = 1..height
     val allCols = 1..width
 
-    val leftMoving = input.map { row -> row.mapIndexedNotNull { index, c -> if (c == '<') index - 1 else null } }
-    val rightMoving = input.map { row -> row.mapIndexedNotNull { index, c -> if (c == '>') index - 1 else null } }
+    val leftMoving = input.map { row -> BooleanArray(row.length) { row[it] == '<' } }
+    val rightMoving = input.map { row -> BooleanArray(row.length) { row[it] == '>' } }
     val inputTransposed = input.transposeToChars()
-    val upwardMoving = inputTransposed.map { col -> col.mapIndexedNotNull { index, c -> if (c == '^') index - 1 else null } }
-    val downwardMoving = inputTransposed.map { col -> col.mapIndexedNotNull { index, c -> if (c == 'v') index - 1 else null } }
+    val upwardMoving = inputTransposed.map { col -> BooleanArray(col.size) { col[it] == '^' } }
+    val downwardMoving = inputTransposed.map { col -> BooleanArray(col.size) { col[it] == 'v' } }
 
     val workQueue = PriorityQueue<Pair<Int, Point2D>> { o1, o2 -> (heuristic(o1, target) - heuristic(o2, target)).sign }
-    val seen = HashSet<Pair<Int, Point2D>>()
+    val seen = HashSet<Pair<Int, Point2D>>(2000)
     workQueue.offer(startTime to start)
 
     do {
-        val (oldTime, pos) = workQueue.poll()
+        val (oldTime, pos) = workQueue.poll() ?: throw Exception("No solution found")
         if (pos == target) return oldTime
         val time = oldTime + 1
 
@@ -64,14 +64,14 @@ private fun turnsForRoute(input: List<String>, start: Point2D, target: Point2D, 
         )
             .filter { it == start || it == target || (it.row in allRows && it.col in allCols) }
             .filter { toTest ->
-                val colRotatedLeft = (toTest.col - 1 + time + width) % width
-                val colRotatedRight = (toTest.col - 1 - (time % width) + width) % width
-                val rowRotatedUp = (toTest.row - 1 + time + height) % height
-                val rowRotatedDown = (toTest.row - 1 - (time % height) + height) % height
-                !leftMoving[toTest.row].any { it == colRotatedLeft }
-                        && !rightMoving[toTest.row].any { it == colRotatedRight }
-                        && !upwardMoving[toTest.col].any { it == rowRotatedUp }
-                        && !downwardMoving[toTest.col].any { it == rowRotatedDown }
+                val colRotatedLeft = (toTest.col - 1 + time + width) % width + 1
+                val colRotatedRight = (toTest.col - 1 - (time % width) + width) % width + 1
+                val rowRotatedUp = (toTest.row - 1 + time + height) % height + 1
+                val rowRotatedDown = (toTest.row - 1 - (time % height) + height) % height + 1
+                !leftMoving[toTest.row][colRotatedLeft]
+                        && !rightMoving[toTest.row][colRotatedRight]
+                        && !upwardMoving[toTest.col][rowRotatedUp]
+                        && !downwardMoving[toTest.col][rowRotatedDown]
             }.filter { ((time to it) !in seen) }
 
         proposals.forEach {
@@ -79,8 +79,7 @@ private fun turnsForRoute(input: List<String>, start: Point2D, target: Point2D, 
             workQueue.offer(time to it)
             seen.add(time to it)
         }
-    } while (workQueue.isNotEmpty())
-    throw Exception("No solution found")
+    } while (true)
 }
 
 private fun heuristic(o1: Pair<Int, Point2D>, target: Point2D) = o1.first + manhattan(o1.second, target)
