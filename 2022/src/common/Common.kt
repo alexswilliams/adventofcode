@@ -68,6 +68,12 @@ fun <T> List<List<T>>.transpose(): List<List<T>> =
             this[row][col]
         }
     }
+fun List<String>.transposeToChars(): List<List<Char>> =
+    List(first().length) { col ->
+        List(size) { row ->
+            this[row][col]
+        }
+    }
 
 fun <T : CharSequence> List<T>.filterNotBlank() = this.filter { it.isNotBlank() }
 fun <T : CharSequence> List<T>.mapMatching(regex: Regex) = this.mapNotNull { regex.matchEntire(it)?.destructured }

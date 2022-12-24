@@ -116,9 +116,9 @@ private inline fun allWestOfMatches(row: Int, col: Int, crossinline function: (P
     function(Point2D(row - 1, col - 1)) && function(Point2D(row, col - 1)) && function(Point2D(row + 1, col - 1))
 
 
-typealias Point2D = Int
+private typealias Point2D = Int
 
-val Point2D.row get():Int = this shr 8
-val Point2D.col get():Int = this.toByte().toInt()
-fun Point2D.copy(row: Int = this.row, col: Int = this.col): Point2D = Point2D(row, col)
-fun Point2D(row: Int, col: Int): Point2D = (row shl 8) or (col and 0x000000ff)
+private val Point2D.row get():Int = this shr 8
+private val Point2D.col get():Int = this.toByte().toInt()
+private fun Point2D.copy(row: Int = this.row, col: Int = this.col): Point2D = Point2D(row, col)
+private fun Point2D(row: Int, col: Int): Point2D = (row shl 8) or (col and 0x000000ff)
