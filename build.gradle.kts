@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.*
 
 plugins {
-    kotlin("jvm") version "1.7.21"
+    kotlin("jvm") version "1.9.10"
 }
 
 group = "io.github.alexswilliams"
@@ -14,7 +14,7 @@ repositories {
 dependencies {
     implementation(kotlin("test"))
     implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.5")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 }
 
 tasks.getByName<Test>("test") {
@@ -29,13 +29,13 @@ sourceSets.main {
 
 kotlin {
     jvmToolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
+        languageVersion.set(JavaLanguageVersion.of(20))
     }
 }
 
 tasks.withType<KotlinCompile> {
     kotlinOptions {
-        freeCompilerArgs += "-opt-in=kotlin.time.ExperimentalTime"
-        jvmTarget = "17"
+//        freeCompilerArgs += "-opt-in=kotlin.time.ExperimentalTime"
+        jvmTarget = "20"
     }
 }

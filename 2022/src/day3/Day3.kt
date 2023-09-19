@@ -18,6 +18,7 @@ fun main() {
 
 private fun part1(input: List<String>) = input
     .map { it.chunked(it.length / 2) }
+
     .map { (left, right) -> left.first { it in right } }
     .sumOf { it.priority }
 
