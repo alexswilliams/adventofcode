@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.*
 
 plugins {
-    kotlin("jvm") version "1.9.10"
+    kotlin("jvm") version "1.9.20"
 }
 
 group = "io.github.alexswilliams"
@@ -13,7 +13,7 @@ repositories {
 
 dependencies {
     implementation(kotlin("test"))
-    implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.5")
+    implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.6")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 }
 
@@ -22,20 +22,25 @@ tasks.getByName<Test>("test") {
 }
 
 sourceSets.main {
-    kotlin.srcDirs("2022/src")
-    resources.srcDirs("2022/src")
-    kotlin.exclude("2019")
+    kotlin.srcDirs("2022/src", "2023/src")
+    resources.srcDirs("2022/src", "2023/src")
+    kotlin.exclude("2019", "2020")
 }
 
 kotlin {
     jvmToolchain {
-        languageVersion.set(JavaLanguageVersion.of(20))
+        languageVersion.set(JavaLanguageVersion.of(21))
+    }
+    sourceSets.all {
+        languageSettings {
+            this.languageVersion = "2.0"
+        }
     }
 }
 
 tasks.withType<KotlinCompile> {
     kotlinOptions {
 //        freeCompilerArgs += "-opt-in=kotlin.time.ExperimentalTime"
-        jvmTarget = "20"
+        jvmTarget = "21"
     }
 }
