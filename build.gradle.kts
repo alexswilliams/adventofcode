@@ -22,8 +22,8 @@ tasks.getByName<Test>("test") {
 }
 
 sourceSets.main {
-    kotlin.srcDirs("2022/src", "2023/src")
-    resources.srcDirs("2022/src", "2023/src")
+    kotlin.srcDirs("2022", "2023", "common")
+    resources.srcDirs("2022", "2023")
     kotlin.exclude("2019", "2020")
 }
 
