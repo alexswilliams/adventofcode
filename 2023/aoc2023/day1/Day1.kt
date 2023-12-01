@@ -21,8 +21,8 @@ fun main() {
 }
 
 private fun part1(input: List<String>) = input.sumOf { line ->
-    line.first { it.isDigit() }.digitToInt() * 10 +
-            line.last { it.isDigit() }.digitToInt()
+    line.first { it in digits }.digitToInt() * 10 +
+            line.last { it in digits }.digitToInt()
 }
 
 private fun part2(input: List<String>) = input.sumOf { line ->
@@ -30,7 +30,7 @@ private fun part2(input: List<String>) = input.sumOf { line ->
             line.lastNotNullOfIndexed { index, c -> getDigitFromWordOrNull(line, c, index) }
 }
 
-private val digits = '1'..'9'
+private val digits = '1'..'9' // note 0 is missing, so .isDigit() may give wrong answer
 private fun getDigitFromWordOrNull(s: String, c: Char, index: Int): Int? =
         when {
             c in digits -> c.digitToInt()
