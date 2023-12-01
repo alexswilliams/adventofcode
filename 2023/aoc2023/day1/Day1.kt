@@ -1,6 +1,9 @@
 package aoc2023.day1
 
+import common.benchmark
+import common.firstNotNullOfIndexed
 import common.fromClasspathFileToLines
+import common.lastNotNullOfIndexed
 import kotlin.test.assertEquals
 
 private val exampleInput1 = "aoc2023/day1/example1.txt".fromClasspathFileToLines()
@@ -13,29 +16,32 @@ fun main() {
 
     part2(exampleInput2).also { println("[Example] Part 2: $it") }.also { assertEquals(281, it) }
     part2(puzzleInput).also { println("[Puzzle] Part 2: $it") }.also { assertEquals(54431, it) }
+
+    benchmark { part2(puzzleInput) } // ~85µs
 }
 
-private fun part1(input: List<String>) = input.sumOf { line -> line.firstAndLastDigitAsInt() }
-private fun part2(input: List<String>) = input.sumOf { line -> line.mapOverlappingWordsToDigits().firstAndLastDigitAsInt() }
-
-private fun String.firstAndLastDigitAsInt() = filter { it.isDigit() }
-        .let { it.first().digitToInt() * 10 + it.last().digitToInt() }
-
-private fun String.mapOverlappingWordsToDigits(): String {
-    if (isEmpty()) return ""
-    val digit = when {
-        startsWith("one") -> '1'
-        startsWith("two") -> '2'
-        startsWith("three") -> '3'
-        startsWith("four") -> '4'
-        startsWith("five") -> '5'
-        startsWith("six") -> '6'
-        startsWith("seven") -> '7'
-        startsWith("eight") -> '8'
-        startsWith("nine") -> '9'
-        else -> first()
-    }
-    // For overlapping (e.g. eightwo = 82) use `drop(1)`; for non-overlapping (e.g. eightwo = 8wo) use `drop(name.length)` to advance over the word.
-    // Puzzle instructions don't indicate which version is correct - trial and error says they can overlap
-    return digit + drop(1).mapOverlappingWordsToDigits()
+private fun part1(input: List<String>) = input.sumOf { line ->
+    line.first { it.isDigit() }.digitToInt() * 10 +
+            line.last { it.isDigit() }.digitToInt()
 }
+
+private fun part2(input: List<String>) = input.sumOf { line ->
+    line.firstNotNullOfIndexed { index, c -> getDigitFromWordOrNull(line, c, index) } * 10 +
+            line.lastNotNullOfIndexed { index, c -> getDigitFromWordOrNull(line, c, index) }
+}
+
+private val digits = '1'..'9'
+private fun getDigitFromWordOrNull(s: String, c: Char, index: Int): Int? =
+        when {
+            c in digits -> c.digitToInt()
+            c == 'o' && s.regionMatches(index, "one", 0, 3) -> 1
+            c == 't' && s.regionMatches(index, "two", 0, 3) -> 2
+            c == 't' && s.regionMatches(index, "three", 0, 5) -> 3
+            c == 'f' && s.regionMatches(index, "four", 0, 4) -> 4
+            c == 'f' && s.regionMatches(index, "five", 0, 4) -> 5
+            c == 's' && s.regionMatches(index, "six", 0, 3) -> 6
+            c == 's' && s.regionMatches(index, "seven", 0, 5) -> 7
+            c == 'e' && s.regionMatches(index, "eight", 0, 5) -> 8
+            c == 'n' && s.regionMatches(index, "nine", 0, 4) -> 9
+            else -> null
+        }

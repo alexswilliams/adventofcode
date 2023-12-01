@@ -5,13 +5,13 @@ import kotlin.math.*
 
 fun String.fromClasspathFileToLines(): List<String> {
     val url = Common::class.java.classLoader.getResource(this)
-        ?: throw Exception("Could not find file '$this'")
+            ?: throw Exception("Could not find file '$this'")
     return File(url.toURI()).readLines()
 }
 
 fun String.fromClasspathFile(): String {
     val url = Common::class.java.classLoader.getResource(this)
-        ?: throw Exception("Could not find file '$this'")
+            ?: throw Exception("Could not find file '$this'")
     return File(url.toURI()).readText()
 }
 
@@ -51,29 +51,30 @@ fun List<IntRange>.mergeAdjacent(): List<IntRange> {
 }
 
 fun List<IntRange>.clampTo(minInclusive: Int, maxInclusive: Int) = this
-    .mapNotNull {
-        when {
-            it.last < minInclusive -> null
-            it.first > maxInclusive -> null
-            it.first >= minInclusive && it.last <= maxInclusive -> it
-            else -> IntRange(it.first.coerceAtLeast(minInclusive), it.last.coerceAtMost(maxInclusive))
+        .mapNotNull {
+            when {
+                it.last < minInclusive -> null
+                it.first > maxInclusive -> null
+                it.first >= minInclusive && it.last <= maxInclusive -> it
+                else -> IntRange(it.first.coerceAtLeast(minInclusive), it.last.coerceAtMost(maxInclusive))
+            }
         }
-    }
 
 val IntRange.size: Int get() = this.last - this.first + 1
 
 fun <T> List<List<T>>.transpose(): List<List<T>> =
-    List(first().size) { col ->
-        List(size) { row ->
-            this[row][col]
+        List(first().size) { col ->
+            List(size) { row ->
+                this[row][col]
+            }
         }
-    }
+
 fun List<String>.transposeToChars(): List<List<Char>> =
-    List(first().length) { col ->
-        List(size) { row ->
-            this[row][col]
+        List(first().length) { col ->
+            List(size) { row ->
+                this[row][col]
+            }
         }
-    }
 
 fun <T : CharSequence> List<T>.filterNotBlank() = this.filter { it.isNotBlank() }
 fun <T : CharSequence> List<T>.mapMatching(regex: Regex) = this.mapNotNull { regex.matchEntire(it)?.destructured }
@@ -123,7 +124,7 @@ fun String.linesAsCharArrays(skipEmptyLines: Boolean = false): List<CharArray> {
 }
 
 fun factorial(num: Int): Long =
-    (2..num).fold(1L) { acc, i -> acc * i }
+        (2..num).fold(1L) { acc, i -> acc * i }
 
 fun String.cyclicIterator() = object : Iterator<Char> {
     private var index = 0;
@@ -147,6 +148,25 @@ inline fun <T> Array<out T?>.forEachNotNullIndexed(action: (index: Int, T) -> Un
         if (item != null) action(index, item)
         index++
     }
+}
+
+
+inline fun <R> CharSequence.firstNotNullOfIndexed(transform: (Int, Char) -> R?): R {
+    var index = 0;
+    for (element in this) {
+        val result = transform(index++, element)
+        if (result != null) return result
+    }
+    throw Exception("No non-null result found")
+}
+
+inline fun <R> CharSequence.lastNotNullOfIndexed(transform: (Int, Char) -> R?): R {
+    for (index in indices.reversed()) {
+        val element = this[index]
+        val result = transform(index, element)
+        if (result != null) return result
+    }
+    throw Exception("No non-null result found")
 }
 
 
