@@ -5,13 +5,13 @@ import kotlin.math.*
 
 fun String.fromClasspathFileToLines(): List<String> {
     val url = Common::class.java.classLoader.getResource(this)
-            ?: throw Exception("Could not find file '$this'")
+        ?: throw Exception("Could not find file '$this'")
     return File(url.toURI()).readLines()
 }
 
 fun String.fromClasspathFile(): String {
     val url = Common::class.java.classLoader.getResource(this)
-            ?: throw Exception("Could not find file '$this'")
+        ?: throw Exception("Could not find file '$this'")
     return File(url.toURI()).readText()
 }
 
@@ -19,7 +19,8 @@ fun List<String>.splitOnSpaces() = map { it.split(' ') }
 
 infix fun IntRange.fullyContains(other: IntRange) = other.first in this && other.last in this
 infix fun IntRange.overlaps(other: IntRange) = other.first in this || this.first in other
-infix fun IntRange.overlapsOrIsAdjacentTo(other: IntRange) = (this.last == other.first - 1) || (other.last == this.first - 1) || this.overlaps(other)
+infix fun IntRange.overlapsOrIsAdjacentTo(other: IntRange) =
+    (this.last == other.first - 1) || (other.last == this.first - 1) || this.overlaps(other)
 
 fun List<IntRange>.mergeAdjacent(): List<IntRange> {
     var nulls = 0
@@ -51,30 +52,30 @@ fun List<IntRange>.mergeAdjacent(): List<IntRange> {
 }
 
 fun List<IntRange>.clampTo(minInclusive: Int, maxInclusive: Int) = this
-        .mapNotNull {
-            when {
-                it.last < minInclusive -> null
-                it.first > maxInclusive -> null
-                it.first >= minInclusive && it.last <= maxInclusive -> it
-                else -> IntRange(it.first.coerceAtLeast(minInclusive), it.last.coerceAtMost(maxInclusive))
-            }
+    .mapNotNull {
+        when {
+            it.last < minInclusive -> null
+            it.first > maxInclusive -> null
+            it.first >= minInclusive && it.last <= maxInclusive -> it
+            else -> IntRange(it.first.coerceAtLeast(minInclusive), it.last.coerceAtMost(maxInclusive))
         }
+    }
 
 val IntRange.size: Int get() = this.last - this.first + 1
 
 fun <T> List<List<T>>.transpose(): List<List<T>> =
-        List(first().size) { col ->
-            List(size) { row ->
-                this[row][col]
-            }
+    List(first().size) { col ->
+        List(size) { row ->
+            this[row][col]
         }
+    }
 
 fun List<String>.transposeToChars(): List<List<Char>> =
-        List(first().length) { col ->
-            List(size) { row ->
-                this[row][col]
-            }
+    List(first().length) { col ->
+        List(size) { row ->
+            this[row][col]
         }
+    }
 
 fun <T : CharSequence> List<T>.filterNotBlank() = this.filter { it.isNotBlank() }
 fun <T : CharSequence> List<T>.mapMatching(regex: Regex) = this.mapNotNull { regex.matchEntire(it)?.destructured }
@@ -86,16 +87,18 @@ tailrec fun <T> List<T>.startsWith(other: List<T>): Boolean {
     return subList(1, size).startsWith(other.subList(1, other.size))
 }
 
-inline fun <T> List<T>.takeUntilIncludingItemThatBreaksCondition(predicate: (T) -> Boolean): List<T> = ArrayList<T>().also {
-    for (item in this) {
-        it.add(item)
-        if (predicate(item)) break
+inline fun <T> List<T>.takeUntilIncludingItemThatBreaksCondition(predicate: (T) -> Boolean): List<T> =
+    ArrayList<T>().also {
+        for (item in this) {
+            it.add(item)
+            if (predicate(item)) break
+        }
     }
-}
 
 fun <T> List<T>.tail(): List<T> = if (isEmpty()) emptyList() else subList(1, size)
 
-fun <R, C> cartesianProductOf(rows: Iterable<R>, cols: Iterable<C>): List<Pair<R, C>> = rows.flatMap { row -> cols.map { col -> row to col } }
+fun <R, C> cartesianProductOf(rows: Iterable<R>, cols: Iterable<C>): List<Pair<R, C>> =
+    rows.flatMap { row -> cols.map { col -> row to col } }
 
 fun Iterable<Int>.product() = this.reduce { acc, i -> acc * i }
 fun Iterable<Long>.product() = this.reduce { acc, i -> acc * i }
@@ -124,7 +127,7 @@ fun String.linesAsCharArrays(skipEmptyLines: Boolean = false): List<CharArray> {
 }
 
 fun factorial(num: Int): Long =
-        (2..num).fold(1L) { acc, i -> acc * i }
+    (2..num).fold(1L) { acc, i -> acc * i }
 
 fun String.cyclicIterator() = object : Iterator<Char> {
     private var index = 0;
