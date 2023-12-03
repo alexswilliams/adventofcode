@@ -9,3 +9,4 @@ target
 out
 .gradle
 build
+.attach_pid*
