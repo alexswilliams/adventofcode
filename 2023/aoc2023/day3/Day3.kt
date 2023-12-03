@@ -14,64 +14,65 @@ fun main() {
     part2(exampleInput).also { println("[Example] Part 2: $it") }.also { assertEquals(467835, it) }
     part2(puzzleInput).also { println("[Puzzle] Part 2: $it") }.also { assertEquals(79842967, it) }
 
-    benchmark { part1(puzzleInput) } // 530µs
-    benchmark { part2(puzzleInput) } // 542µs
+    benchmark { part1(puzzleInput) } // 234µs
+    benchmark { part2(puzzleInput) } // 276µs
 }
 
 private sealed interface ItemAtCoordinate
 private data class SymbolAtCoordinate(val symbol: Char, val row: Int, val col: Int) : ItemAtCoordinate
 private data class IntAtCoordinate(val value: Int, val row: Int, val colFirst: Int, val colLast: Int) :
     ItemAtCoordinate {
-    fun isAdjacentTo(symbol: SymbolAtCoordinate): Boolean =
-        symbol.row in (row - 1..row + 1) && symbol.col in (colFirst - 1..colLast + 1)
+    fun isColumnAdjacentTo(symbol: SymbolAtCoordinate) = symbol.col in (colFirst - 1..colLast + 1)
 }
 
 private fun part1(input: List<CharArray>): Int {
     val (symbols, numbers) = tokeniseInput(input)
-    return numbers
-        .filter { number ->
-            symbols.any {
-                number.isAdjacentTo(it)
-            }
-        }
+    val symbolsBoundingRow = Array(symbols.size) { row ->
+        symbols[row] +
+                (if (row > 0) symbols[row - 1] else listOf()) +
+                (if (row < symbols.lastIndex) symbols[row + 1] else listOf())
+    }
+    return numbers.asSequence().flatten()
+        .filter { number -> symbolsBoundingRow[number.row].any { number.isColumnAdjacentTo(it) } }
         .sumOf { it.value }
 }
 
 private fun part2(input: List<CharArray>): Int {
     val (symbols, numbers) = tokeniseInput(input)
-    return symbols
+    val numbersBoundingRow = Array(numbers.size) { row ->
+        numbers[row] +
+                (if (row > 0) numbers[row - 1] else listOf()) +
+                (if (row < numbers.lastIndex) numbers[row + 1] else listOf())
+    }
+    return symbols.asSequence().flatten()
         .filter { it.symbol == '*' }
         .sumOf { gear ->
-            val touchingNumbers = numbers.filter {
-                it.isAdjacentTo(gear)
-            }
-            if (touchingNumbers.size == 2)
-                touchingNumbers[0].value * touchingNumbers[1].value
+            val touchingNumbers = numbersBoundingRow[gear.row].filter { it.isColumnAdjacentTo(gear) }
+            if (touchingNumbers.size == 2) touchingNumbers[0].value * touchingNumbers[1].value
             else 0
         }
 }
 
-private fun tokeniseInput(input: List<CharArray>): Pair<List<SymbolAtCoordinate>, List<IntAtCoordinate>> {
-    val result = ArrayList<SymbolAtCoordinate>(1000) to ArrayList<IntAtCoordinate>(1500)
+private fun tokeniseInput(input: List<CharArray>): Pair<List<List<SymbolAtCoordinate>>, List<List<IntAtCoordinate>>> {
+    val symbols = List<MutableList<SymbolAtCoordinate>>(input.size) { ArrayList(15) }
+    val numbers = List<MutableList<IntAtCoordinate>>(input.size) { ArrayList(15) }
     input.forEachIndexed { row, line ->
         var value = 0
         var startsAt = -1
-        var index = 0
-        for (elem in line) {
+        line.forEachIndexed { col, elem ->
             if (elem in '0'..'9') {
                 value = value * 10 + elem.digitToInt()
-                if (startsAt < 0) startsAt = index
+                if (startsAt < 0) startsAt = col
             } else {
+                if (elem != '.') symbols[row].add(SymbolAtCoordinate(elem, row, col))
                 if (startsAt >= 0) {
-                    result.second.add(IntAtCoordinate(value, row, startsAt, index - 1))
+                    numbers[row].add(IntAtCoordinate(value, row, startsAt, col - 1))
                     value = 0
                     startsAt = -1
                 }
-                if (elem != '.') result.first.add(SymbolAtCoordinate(elem, row, index))
             }
-            index++
         }
-        if (startsAt >= 0) result.second.add(IntAtCoordinate(value, row, startsAt, index - 1))
+        if (startsAt >= 0) numbers[row].add(IntAtCoordinate(value, row, startsAt, line.lastIndex))
     }
-    return result
+    return symbols to numbers
 }
