@@ -2,7 +2,7 @@ package aoc2023.day2
 
 import common.benchmark
 import common.fromClasspathFileToLines
-import common.rangeToInt
+import common.toIntFromIndex
 import common.splitMappingRanges
 import kotlin.test.assertEquals
 
@@ -25,7 +25,7 @@ private data class Game(val id: Int, val rounds: List<Round>)
 private fun parseGame(gameLine: String): Game {
     val idxId = gameLine.indexOf(' ') + 1
     return Game(
-        id = gameLine.rangeToInt(idxId),
+        id = gameLine.toIntFromIndex(idxId),
         rounds = gameLine.splitMappingRanges(
             delimiter = "; ",
             startAt = 2 + gameLine.indexOf(':', startIndex = idxId + 1),
@@ -41,9 +41,9 @@ private fun parseRound(round: String, startAt: Int, endAt: Int): Round {
     var idxNumber = startAt
     do {
         when (round[round.indexOf(' ', idxNumber + 1) + 1]) {
-            'r' -> red = round.rangeToInt(idxNumber)
-            'g' -> green = round.rangeToInt(idxNumber)
-            'b' -> blue = round.rangeToInt(idxNumber)
+            'r' -> red = round.toIntFromIndex(idxNumber)
+            'g' -> green = round.toIntFromIndex(idxNumber)
+            'b' -> blue = round.toIntFromIndex(idxNumber)
         }
         idxNumber = round.indexOf(',', idxNumber + 5) + 2
     } while (idxNumber != 1 && idxNumber < endAt)

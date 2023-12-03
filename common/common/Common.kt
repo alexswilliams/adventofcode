@@ -187,7 +187,7 @@ fun <R> String.splitMappingRanges(delimiter: String, startAt: Int, transform: (S
     return result
 }
 
-fun String.rangeToInt(startAt: Int): Int {
+fun String.toIntFromIndex(startAt: Int): Int {
     var currentOffset = startAt
     val endAt = this.lastIndex
     var value = 0
