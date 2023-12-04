@@ -12,11 +12,10 @@ private val puzzleInput = "aoc2023/day2/input.txt".fromClasspathFileToLines()
 fun main() {
     part1(exampleInput).also { println("[Example] Part 1: $it") }.also { assertEquals(8, it) }
     part1(puzzleInput).also { println("[Puzzle] Part 1: $it") }.also { assertEquals(2204, it) }
-
     part2(exampleInput).also { println("[Example] Part 2: $it") }.also { assertEquals(2286, it) }
     part2(puzzleInput).also { println("[Puzzle] Part 2: $it") }.also { assertEquals(71036, it) }
-
-    benchmark { part2(puzzleInput) } // ~73µs
+    benchmark { part1(puzzleInput) } // 49µs
+    benchmark { part2(puzzleInput) } // 37µs
 }
 
 private data class Round(val red: Int, val green: Int, val blue: Int)

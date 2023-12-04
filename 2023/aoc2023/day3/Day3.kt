@@ -13,9 +13,8 @@ fun main() {
     part1(puzzleInput).also { println("[Puzzle] Part 1: $it") }.also { assertEquals(532445, it) }
     part2(exampleInput).also { println("[Example] Part 2: $it") }.also { assertEquals(467835, it) }
     part2(puzzleInput).also { println("[Puzzle] Part 2: $it") }.also { assertEquals(79842967, it) }
-
-    benchmark { part1(puzzleInput) } // 234µs
-    benchmark { part2(puzzleInput) } // 276µs
+    benchmark { part1(puzzleInput) } // 140µs
+    benchmark { part2(puzzleInput) } // 122µs
 }
 
 private sealed interface ItemAtCoordinate

@@ -13,11 +13,10 @@ private val puzzleInput = "aoc2023/day1/input.txt".fromClasspathFileToLines()
 fun main() {
     part1(exampleInput1).also { println("[Example] Part 1: $it") }.also { assertEquals(142, it) }
     part1(puzzleInput).also { println("[Puzzle] Part 1: $it") }.also { assertEquals(55477, it) }
-
     part2(exampleInput2).also { println("[Example] Part 2: $it") }.also { assertEquals(281, it) }
     part2(puzzleInput).also { println("[Puzzle] Part 2: $it") }.also { assertEquals(54431, it) }
-
-    benchmark { part2(puzzleInput) } // ~85µs
+    benchmark { part1(puzzleInput) } // ~23µs
+    benchmark { part2(puzzleInput) } // ~82µs
 }
 
 private fun part1(input: List<String>) = input.sumOf { line ->

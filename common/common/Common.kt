@@ -172,11 +172,10 @@ inline fun <R> CharSequence.lastNotNullOfIndexed(transform: (Int, Char) -> R?): 
     throw Exception("No non-null result found")
 }
 
-fun <R> String.splitMappingRanges(delimiter: String, startAt: Int, transform: (String, Int, Int) -> R): List<R> {
+fun <R> String.splitMappingRanges(delimiter: String, startAt: Int, lastIndex: Int = this.lastIndex, transform: (String, Int, Int) -> R): List<R> {
     val delimiterLength = delimiter.length
     var currentOffset = startAt
     var nextIndex = indexOf(delimiter, currentOffset)
-    val lastIndex = this.lastIndex
     val result = ArrayList<R>(15)
     while (nextIndex != -1) {
         result.add(transform(this@splitMappingRanges, currentOffset, nextIndex - 1))
