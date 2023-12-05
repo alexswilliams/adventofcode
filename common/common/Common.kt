@@ -17,6 +17,20 @@ fun String.fromClasspathFile(): String {
 
 fun List<String>.splitOnSpaces() = map { it.split(' ') }
 
+fun LongRange.intersecting(other: LongRange) = LongRange(max(this.first, other.first), min(this.last, other.last))
+fun LongRange.shiftedUpBy(other: Long) = LongRange(this.first + other, this.last + other)
+fun LongRange.keepingAbove(lowerBoundExcl: Long) = when {
+    this.first > lowerBoundExcl -> this
+    this.last <= lowerBoundExcl -> LongRange.EMPTY
+    else -> lowerBoundExcl + 1..this.last
+}
+
+fun LongRange.keepingBelow(upperBoundExcl: Long) = when {
+    this.last < upperBoundExcl -> this
+    this.first >= upperBoundExcl -> LongRange.EMPTY
+    else -> this.first..<upperBoundExcl
+}
+
 infix fun IntRange.fullyContains(other: IntRange) = other.first in this && other.last in this
 infix fun IntRange.overlaps(other: IntRange) = other.first in this || this.first in other
 infix fun IntRange.overlapsOrIsAdjacentTo(other: IntRange) =
