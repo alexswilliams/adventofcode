@@ -18,9 +18,9 @@ fun main() {
     benchmark { part2(puzzleInput) } // 476µs
 }
 
-fun part1(input: List<String>) = winsPerCard(input).sumOf { if (it == 0) 0 else 1 shl (it - 1) }
+private fun part1(input: List<String>) = winsPerCard(input).sumOf { if (it == 0) 0 else 1 shl (it - 1) }
 
-fun part2(input: List<String>): Int {
+private fun part2(input: List<String>): Int {
     val cardMultiplier = IntArray(input.size) { 1 }
     winsPerCard(input).forEachIndexed { index, winsForCard ->
         (index + 1..index + winsForCard).forEach {
