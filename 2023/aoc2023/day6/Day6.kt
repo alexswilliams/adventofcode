@@ -20,7 +20,7 @@ fun main() {
     part2(exampleInput).also { println("[Example] Part 2: $it") }.also { assertEquals(71503, it) }
     part2(puzzleInput).also { println("[Puzzle] Part 2: $it") }.also { assertEquals(45128024, it) }
     benchmark { part1(puzzleInput) } // 16µs
-    benchmark { part2(puzzleInput) } // 5µs
+    benchmark { part2(puzzleInput) } // 4µs
 }
 
 private fun part1(input: List<String>) =
@@ -33,8 +33,11 @@ private fun part2(input: List<String>) =
     input.map { it.substringAfter(':').replace(" ", "").toDouble() }
         .let { (time, distance) -> countWinningTimes(time, distance) }
 
+private const val marginToWinBy = 0.001
 private fun countWinningTimes(time: Double, distanceToBeat: Double): Int {
-    val intersectA = (time + sqrt(time * time - 4 * distanceToBeat)) / 2
-    val intersectB = (time - sqrt(time * time - 4 * distanceToBeat)) / 2
-    return floor(intersectA - 0.01).toInt() - ceil(intersectB + 0.01).toInt() + 1
+    val bestHoldTime = time / 2
+    val offsetFromBestHoldTime = sqrt(time * time - 4 * distanceToBeat) / 2
+    val longestHoldTime = bestHoldTime + offsetFromBestHoldTime
+    val shortestHoldTime = bestHoldTime - offsetFromBestHoldTime
+    return floor(longestHoldTime - marginToWinBy).toInt() - ceil(shortestHoldTime + marginToWinBy).toInt() + 1
 }
