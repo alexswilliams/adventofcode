@@ -33,11 +33,9 @@ private fun part2(input: List<String>) =
     input.map { it.substringAfter(':').replace(" ", "").toDouble() }
         .let { (time, distance) -> countWinningTimes(time, distance) }
 
-private const val marginToWinBy = 0.001
 private fun countWinningTimes(time: Double, distanceToBeat: Double): Int {
-    val bestHoldTime = time / 2
-    val offsetFromBestHoldTime = sqrt(time * time - 4 * distanceToBeat) / 2
-    val longestHoldTime = bestHoldTime + offsetFromBestHoldTime
-    val shortestHoldTime = bestHoldTime - offsetFromBestHoldTime
-    return floor(longestHoldTime - marginToWinBy).toInt() - ceil(shortestHoldTime + marginToWinBy).toInt() + 1
+    val offsetFromBestHoldTime = sqrt(time * time - 4 * distanceToBeat)
+    val longestHoldTime = (time + offsetFromBestHoldTime) / 2
+    val shortestHoldTime = (time - offsetFromBestHoldTime) / 2
+    return floor(longestHoldTime - 0.001).toInt() - ceil(shortestHoldTime + 0.001).toInt() + 1
 }
