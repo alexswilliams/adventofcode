@@ -37,5 +37,5 @@ private fun countWinningTimes(time: Double, distanceToBeat: Double): Int {
     val offsetFromBestHoldTime = sqrt(time * time - 4 * distanceToBeat)
     val longestHoldTime = (time + offsetFromBestHoldTime) / 2
     val shortestHoldTime = (time - offsetFromBestHoldTime) / 2
-    return floor(longestHoldTime - 0.001).toInt() - ceil(shortestHoldTime + 0.001).toInt() + 1
+    return ceil(longestHoldTime - 1).toInt() - floor(shortestHoldTime + 1).toInt() + 1
 }
