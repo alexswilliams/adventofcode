@@ -206,4 +206,14 @@ fun String.toIntFromIndex(startAt: Int): Int {
     return if (isNegative) -value else value
 }
 
+fun CharSequence.frequency(): List<Pair<Char, Int>> {
+    val result = arrayListOf<Pair<Char, Int>>()
+    for (element in this) {
+        val index = result.indexOfFirst { it.first == element }
+        if (index == -1) result.add(element to 1)
+        else result[index] = element to (result[index].second + 1)
+    }
+    return result
+}
+
 object Common
