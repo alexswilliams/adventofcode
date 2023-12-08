@@ -109,8 +109,19 @@ fun Iterable<Int>.product() = this.reduce { acc, i -> acc * i }
 fun Iterable<Long>.product() = this.reduce { acc, i -> acc * i }
 fun Iterable<Int>.runningTotal(start: Int): List<Int> = this.runningFold(start) { acc, i -> acc + i }
 
+tailrec fun gcd(a: Long, b: Long): Long = if (b == 0L) a else gcd(b, a % b)
 tailrec fun gcd(a: Int, b: Int): Int = if (b == 0) a else gcd(b, a % b)
+fun extendedGcd(a: Int, b: Int): Triple<Int, Int, Int> {
+    tailrec fun extendedGcd(a0: Int, a1: Int, s0: Int, s1: Int, t0: Int, t1: Int): Triple<Int, Int, Int> =
+        if (a1 == 0) Triple(a0, s0, t0) else {
+            val quotient = a0 / a1
+            extendedGcd(a1, a0 - quotient * a1, s1, s0  - quotient * s1, t1, t0  - quotient * t1)
+        }
+    return extendedGcd(a, b, 1, 0, 0, 1)
+}
+
 fun lcm(input: List<Int>) = input.fold(1) { acc, i -> acc * (i / gcd(acc, i)) }
+fun lcm(input: List<Long>) = input.fold(1L) { acc, i -> acc * (i / gcd(acc, i)) }
 
 fun String.linesAsCharArrays(skipEmptyLines: Boolean = false): List<CharArray> {
     if (this.isEmpty()) return emptyList()
@@ -140,6 +151,15 @@ fun String.cyclicIterator() = object : Iterator<Char> {
     override fun next(): Char {
         if (index > this@cyclicIterator.lastIndex) index = 0
         return this@cyclicIterator[index++]
+    }
+}
+
+fun String.cyclicIteratorIndexed() = object : Iterator<Pair<Int, Char>> {
+    private var index = 0;
+    override fun hasNext() = true
+    override fun next(): Pair<Int, Char> {
+        if (index > this@cyclicIteratorIndexed.lastIndex) index = 0
+        return index to this@cyclicIteratorIndexed[index++]
     }
 }
 
