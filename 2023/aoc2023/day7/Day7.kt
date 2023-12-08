@@ -13,8 +13,8 @@ fun main() {
     part1(puzzleInput).also { println("[Puzzle] Part 1: $it") }.also { assertEquals(249638405, it) }
     part2(exampleInput).also { println("[Example] Part 2: $it") }.also { assertEquals(5905, it) }
     part2(puzzleInput).also { println("[Puzzle] Part 2: $it") }.also { assertEquals(249776650, it) }
-    benchmark { part1(puzzleInput) } // 352µs
-    benchmark { part2(puzzleInput) } // 427µs
+    benchmark { part1(puzzleInput) } // 201µs
+    benchmark { part2(puzzleInput) } // 342µs
 }
 
 

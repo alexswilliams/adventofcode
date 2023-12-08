@@ -16,8 +16,8 @@ fun main() {
     part1(puzzleInput).also { println("[Puzzle] Part 1: $it") }.also { assertEquals(12361, it) }
     part2(exampleInput3).also { println("[Example 3] Part 2: $it") }.also { assertEquals(6, it) }
     part2(puzzleInput).also { println("[Puzzle] Part 2: $it") }.also { assertEquals(18215611419223L, it) }
-    benchmark { part1(puzzleInput) } // 332µs
-    benchmark { part2(puzzleInput) } // 10ms
+    benchmark { part1(puzzleInput) } // 205µs
+    benchmark { part2(puzzleInput) } // 1.2ms
 }
 
 private fun part1(input: List<String>): Int {
@@ -38,7 +38,8 @@ private fun part2(input: List<String>): Long {
     val patternTemplate = input.first()
     val mappings = input.drop(2).associate { it.substring(0, 3) to (it.substring(7, 10) to it.substring(12, 15)) }
     val starts = mappings.keys.filter { it.endsWith('A') }
-    val cycles = starts.map { findCycle(mappings, patternTemplate, it) }
+//    val cycles = starts.map { findCycle(mappings, patternTemplate, it) }
+    val cycles = starts.map { stepsToTerminalState(mappings, patternTemplate, it) }
 
     // Observation: the end state always happens at the end of the cycle.
     // Cycle(startStep=3, length=20777, endState=20777), A
@@ -49,24 +50,36 @@ private fun part2(input: List<String>): Long {
     // Cycle(startStep=2, length=15517, endState=15517)  F
 
     // So it should just be LCM
-    val lcm = lcm(cycles.map { it.length.toLong() })
+    val lcm = lcm(cycles.map { it.toLong() })
     return lcm
 }
 
 private data class Cycle(val startStep: Int, val length: Int)
 
-private fun findCycle(mappings: Map<String, Pair<String, String>>, patternTemplate: String, start: String): Cycle {
-    val alreadyVisited = mutableMapOf((start to 0) to 0)
-    var steps = 0
+private fun stepsToTerminalState(mappings: Map<String, Pair<String, String>>, patternTemplate: String, start: String): Int {
     var current = start
-    patternTemplate.cyclicIteratorIndexed().forEach { (patternIndex, direction) ->
-        steps++
+    var steps = 0
+    patternTemplate.cyclicIterator().forEach { direction ->
         val (left, right) = mappings[current]!!
         current = if (direction == 'L') left else right
-
-        val seen = alreadyVisited[current to patternIndex]
-        if (seen != null) return Cycle(seen, steps - seen)
-        alreadyVisited[current to patternIndex] = steps
+        steps++
+        if (current.endsWith('Z')) return steps
     }
     throw Exception("Can never reach this point")
 }
+
+//private fun findCycle(mappings: Map<String, Pair<String, String>>, patternTemplate: String, start: String): Cycle {
+//    val alreadyVisited = mutableMapOf((start to 0) to 0)
+//    var steps = 0
+//    var current = start
+//    patternTemplate.cyclicIteratorIndexed().forEach { (patternIndex, direction) ->
+//        steps++
+//        val (left, right) = mappings[current]!!
+//        current = if (direction == 'L') left else right
+//
+//        val seen = alreadyVisited[current to patternIndex]
+//        if (seen != null) return Cycle(seen, steps - seen)
+//        alreadyVisited[current to patternIndex] = steps
+//    }
+//    throw Exception("Can never reach this point")
+//}
