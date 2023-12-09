@@ -127,7 +127,7 @@ fun String.linesAsCharArrays(skipEmptyLines: Boolean = false): List<CharArray> {
     if (this.isEmpty()) return emptyList()
     val list = ArrayList<CharArray>()
     val s = this.toCharArray()
-    var start = 0;
+    var start = 0
     var i = -1
     while (++i < s.lastIndex)
         if (s[i] == '\n') {
@@ -146,7 +146,7 @@ fun factorial(num: Int): Long =
     (2..num).fold(1L) { acc, i -> acc * i }
 
 fun String.cyclicIterator() = object : Iterator<Char> {
-    private var index = 0;
+    private var index = 0
     override fun hasNext() = true
     override fun next(): Char {
         if (index > this@cyclicIterator.lastIndex) index = 0
@@ -155,7 +155,7 @@ fun String.cyclicIterator() = object : Iterator<Char> {
 }
 
 fun String.cyclicIteratorIndexed() = object : Iterator<Pair<Int, Char>> {
-    private var index = 0;
+    private var index = 0
     override fun hasNext() = true
     override fun next(): Pair<Int, Char> {
         if (index > this@cyclicIteratorIndexed.lastIndex) index = 0
@@ -169,9 +169,9 @@ fun max(vararg x: Int): Int = x.max()
 
 infix fun Int.divideRoundingUp(divisor: Int): Int = (this + divisor - 1) / divisor
 
+@Suppress("UseWithIndex")
 inline fun <T> Array<out T?>.forEachNotNullIndexed(action: (index: Int, T) -> Unit) {
     var index = 0
-    @Suppress("UseWithIndex")
     for (item in this) {
         if (item != null) action(index, item)
         index++
@@ -180,7 +180,7 @@ inline fun <T> Array<out T?>.forEachNotNullIndexed(action: (index: Int, T) -> Un
 
 
 inline fun <R> CharSequence.firstNotNullOfIndexed(transform: (Int, Char) -> R?): R {
-    var index = 0;
+    var index = 0
     for (element in this) {
         val result = transform(index++, element)
         if (result != null) return result

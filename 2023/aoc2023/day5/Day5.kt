@@ -1,11 +1,6 @@
 package aoc2023.day5
 
-import common.benchmark
-import common.fromClasspathFile
-import common.intersecting
-import common.keepingAbove
-import common.keepingBelow
-import common.shiftedUpBy
+import common.*
 import kotlin.test.assertEquals
 
 
@@ -42,15 +37,14 @@ private fun part2(input: String): Long {
 }
 
 private fun parseSeeds(input: String): List<Long> =
-    input.lineSequence().first().substringAfter(": ").split(' ').map { it.toLong() }
+    input.lineSequence().first().substringAfter(": ").splitToLongs(" ")
 
 private fun parseMappings(input: String): List<List<Mapping>> =
 // • no ranges overlap within a mapping group;
 // • some ranges in a group have gaps between them which have been padded with an identity transformation
     input.split("\n\n").drop(1).map { mappingGroup ->
         mappingGroup.lines().drop(1).map { line ->
-            line.split(' ')
-                .map { it.toLong() }
+            line.splitToLongs(" ")
                 .let { (target, source, count) -> Mapping(source = source..<(source + count), transform = target - source) }
         }.let { mappings ->
             mappings.plus(mappings.sortedBy { it.source.first }
