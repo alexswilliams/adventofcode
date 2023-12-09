@@ -1,7 +1,6 @@
 package aoc2023.day8
 
 import common.*
-import kotlin.system.exitProcess
 import kotlin.test.assertEquals
 
 
@@ -23,24 +22,15 @@ fun main() {
 private fun part1(input: List<String>): Int {
     val patternTemplate = input.first()
     val mappings = input.drop(2).associate { it.substring(0, 3) to (it.substring(7, 10) to it.substring(12, 15)) }
-    var current = "AAA"
-    var steps = 0
-    patternTemplate.cyclicIterator().forEach { direction ->
-        val (left, right) = mappings[current]!!
-        current = if (direction == 'L') left else right
-        steps++
-        if (current == "ZZZ") return steps
-    }
-    throw Exception("Can never reach this point")
+    return stepsToTerminalState(mappings, patternTemplate, "AAA")
 }
 
 private fun part2(input: List<String>): Long {
     val patternTemplate = input.first()
     val mappings = input.drop(2).associate { it.substring(0, 3) to (it.substring(7, 10) to it.substring(12, 15)) }
     val starts = mappings.keys.filter { it.endsWith('A') }
-//    val cycles = starts.map { findCycle(mappings, patternTemplate, it) }
-    val cycles = starts.map { stepsToTerminalState(mappings, patternTemplate, it) }
 
+    // val cycles = starts.map { findCycle(mappings, patternTemplate, it) }
     // Observation: the end state always happens at the end of the cycle.
     // Cycle(startStep=3, length=20777, endState=20777), A
     // Cycle(startStep=5, length=19199, endState=19199), B
@@ -50,11 +40,10 @@ private fun part2(input: List<String>): Long {
     // Cycle(startStep=2, length=15517, endState=15517)  F
 
     // So it should just be LCM
-    val lcm = lcm(cycles.map { it.toLong() })
+    val lcm = lcm(starts.map { stepsToTerminalState(mappings, patternTemplate, it).toLong() })
     return lcm
 }
 
-private data class Cycle(val startStep: Int, val length: Int)
 
 private fun stepsToTerminalState(mappings: Map<String, Pair<String, String>>, patternTemplate: String, start: String): Int {
     var current = start
@@ -68,6 +57,7 @@ private fun stepsToTerminalState(mappings: Map<String, Pair<String, String>>, pa
     throw Exception("Can never reach this point")
 }
 
+//private data class Cycle(val startStep: Int, val length: Int)
 //private fun findCycle(mappings: Map<String, Pair<String, String>>, patternTemplate: String, start: String): Cycle {
 //    val alreadyVisited = mutableMapOf((start to 0) to 0)
 //    var steps = 0
