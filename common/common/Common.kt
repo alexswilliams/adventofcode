@@ -115,7 +115,7 @@ fun extendedGcd(a: Int, b: Int): Triple<Int, Int, Int> {
     tailrec fun extendedGcd(a0: Int, a1: Int, s0: Int, s1: Int, t0: Int, t1: Int): Triple<Int, Int, Int> =
         if (a1 == 0) Triple(a0, s0, t0) else {
             val quotient = a0 / a1
-            extendedGcd(a1, a0 - quotient * a1, s1, s0  - quotient * s1, t1, t0  - quotient * t1)
+            extendedGcd(a1, a0 - quotient * a1, s1, s0 - quotient * s1, t1, t0 - quotient * t1)
         }
     return extendedGcd(a, b, 1, 0, 0, 1)
 }
@@ -197,7 +197,12 @@ inline fun <R> CharSequence.lastNotNullOfIndexed(transform: (Int, Char) -> R?): 
     throw Exception("No non-null result found")
 }
 
-fun <R> String.splitMappingRanges(delimiter: String, startAt: Int, lastIndex: Int = this.lastIndex, transform: (String, Int, Int) -> R): List<R> {
+fun <R> String.splitMappingRanges(
+    delimiter: String,
+    startAt: Int = 0,
+    lastIndex: Int = this.lastIndex,
+    transform: (String, start: Int, end: Int) -> R,
+): List<R> {
     val delimiterLength = delimiter.length
     var currentOffset = startAt
     var nextIndex = indexOf(delimiter, currentOffset)
@@ -211,20 +216,25 @@ fun <R> String.splitMappingRanges(delimiter: String, startAt: Int, lastIndex: In
     return result
 }
 
-fun String.toIntFromIndex(startAt: Int): Int {
+fun String.toIntFromIndex(startAt: Int) = this.toLongFromIndex(startAt).toInt()
+fun String.toLongFromIndex(startAt: Int): Long {
     var currentOffset = startAt
     val endAt = this.lastIndex
-    var value = 0
+    var value = 0L
     var char = this[startAt]
     val isNegative = char == '-'
     if (isNegative) char = this[++currentOffset]
     if (char < '0' || char > '9') throw Exception("Invalid digit")
     do {
         value = value * 10 + (char - '0')
-        if (currentOffset < endAt) char = this[++currentOffset]
-    } while (currentOffset < endAt && char >= '0' && char <= '9')
+        char = if (currentOffset < endAt) this[++currentOffset] else Char.MIN_VALUE
+    } while (char in '0'..'9')
     return if (isNegative) -value else value
 }
+
+fun String.splitToInts(delimiter: String) = splitMappingRanges(delimiter) { s, start, _ -> s.toIntFromIndex(start) }
+fun String.splitToLongs(delimiter: String) = splitMappingRanges(delimiter) { s, start, _ -> s.toLongFromIndex(start) }
+
 
 fun CharSequence.frequency(): List<Pair<Char, Int>> {
     val result = arrayListOf<Pair<Char, Int>>()
