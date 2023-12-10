@@ -47,9 +47,9 @@ private fun part1(input: List<CharArray>): Int {
 private fun part2(input: List<CharArray>): Int {
     val startLocation = findStart(input)
     val shapeOfS = determineShapeOfS(input, startLocation)
-    val gridOnLoop = pathLocations(startLocation, input, shapeOfS)
+    val loopBitmap = pathLocations(startLocation, input, shapeOfS)
     return input.sumOfIndexed { rowIndex, row ->
-        val isOnLoop = gridOnLoop[rowIndex]
+        val isOnLoop = loopBitmap[rowIndex]
         var totalInsideForRow = 0
         var insidePath = false
         var col = 0
