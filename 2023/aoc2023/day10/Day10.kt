@@ -8,6 +8,7 @@ import java.io.File
 import kotlin.test.assertEquals
 
 
+// You know it'll be an awful day when they give you FIVE different example inputs...
 private val exampleInput1 = "aoc2023/day10/example1.txt".fromClasspathFile().linesAsCharArrays()
 private val exampleInput2 = "aoc2023/day10/example2.txt".fromClasspathFile().linesAsCharArrays()
 private val exampleInput3 = "aoc2023/day10/example3.txt".fromClasspathFile().linesAsCharArrays()
@@ -90,7 +91,8 @@ private fun pathLocations(startLocation: Location, grid: List<CharArray>, shapeO
             walkPath(grid.findValidMoveFrom(location, shapeOfS, exclude), location)
     }
     return walkPath(
-        grid.findValidMoveFrom(startLocation, shapeOfS, -1 by -1))
+        grid.findValidMoveFrom(startLocation, shapeOfS, -1 by -1)
+    )
 }
 
 private fun determineShapeOfS(grid: List<CharArray>, start: Location): Char {
@@ -142,56 +144,48 @@ private fun renderMap(input: List<CharArray>, filename: String) {
     val steps = pathLocations(startRow by startCol, input, shapeOfS)
         .flatMapIndexed { rowNum, row -> row.mapIndexed { colNum, col -> if (col) rowNum by colNum else null }.filterNotNull() }
     File(filename).writeText(
-        rerender(input).toMutableList()
-            .also { grid ->
-                steps.forEach { location ->
-                    grid[location.row()][location.col()] = emboldenPath(grid[location.row()][location.col()])
-                }
-                grid.forEachIndexed { rowIndex, row ->
-                    var insidePath = false
-                    var col = 0
-                    while (col <= row.lastIndex) {
-                        val c = if (row[col] == 'S') emboldenPath(shapeOfS) else row[col]
-                        if (c == '║') insidePath = !insidePath
-                        else if (c == '╔' || c == '╚') {
-                            var endChar: Char
-                            do {
-                                col++
-                                endChar = if (row[col] == 'S') emboldenPath(shapeOfS) else row[col]
-                            } while (endChar == '═')
-                            if ((c == '╔' && endChar == '╝') || (c == '╚' && endChar == '╗')) insidePath = !insidePath
-                        } else if (insidePath) {
-                            grid[rowIndex][col] = '█'
-                        }
-                        col++
-                    }
+        input.mapTo(arrayListOf()) { line ->
+            line.mapTo(arrayListOf()) {
+                when (it) {
+                    '|' -> '│'
+                    '-' -> '─'
+                    'F' -> '┌'
+                    '7' -> '┐'
+                    'J' -> '┘'
+                    'L' -> '└'
+                    '.' -> '░'
+                    else -> it
                 }
             }
-            .joinToString("\n") { it.joinToString("") }
+        }.also { grid ->
+            fun emboldenPath(c: Char) = when (c) {
+                '|', '│' -> '║'
+                '-', '─' -> '═'
+                'F', '┌' -> '╔'
+                '7', '┐' -> '╗'
+                'J', '┘' -> '╝'
+                'L', '└' -> '╚'
+                else -> c
+            }
+            steps.forEach { location ->
+                grid[location.row()][location.col()] = emboldenPath(grid[location.row()][location.col()])
+            }
+            grid.forEachIndexed { rowIndex, row ->
+                var insidePath = false
+                var col = 0
+                while (col <= row.lastIndex) {
+                    val c = if (row[col] == 'S') emboldenPath(shapeOfS) else row[col]
+                    if (c == '║') insidePath = !insidePath
+                    else if (c == '╔' || c == '╚') {
+                        var endChar: Char
+                        do endChar = if (row[++col] == 'S') emboldenPath(shapeOfS) else row[col] while (endChar == '═')
+                        if ((c == '╔' && endChar == '╝') || (c == '╚' && endChar == '╗')) insidePath = !insidePath
+                    } else if (insidePath) grid[rowIndex][col] = '█'
+                    col++
+                }
+            }
+        }.joinToString("\n") { it.joinToString("") }
     )
 }
 
-private fun rerender(s: List<CharArray>) = s.map { line ->
-    line.mapTo(arrayListOf()) {
-        when (it) {
-            '|' -> '│'
-            '-' -> '─'
-            'F' -> '┌'
-            '7' -> '┐'
-            'J' -> '┘'
-            'L' -> '└'
-            '.' -> '░'
-            else -> it
-        }
-    }
-}
 
-private fun emboldenPath(c: Char) = when (c) {
-    '|', '│' -> '║'
-    '-', '─' -> '═'
-    'F', '┌' -> '╔'
-    '7', '┐' -> '╗'
-    'J', '┘' -> '╝'
-    'L', '└' -> '╚'
-    else -> c
-}
