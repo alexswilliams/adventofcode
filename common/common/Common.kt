@@ -246,4 +246,13 @@ fun CharSequence.frequency(): List<Pair<Char, Int>> {
     return result
 }
 
+inline fun <T> Iterable<T>.sumOfIndexed(selector: (index: Int, T) -> Int): Int {
+    var sum = 0
+    var index = 0
+    for (element in this) {
+        sum += selector(index++, element)
+    }
+    return sum
+}
+
 object Common

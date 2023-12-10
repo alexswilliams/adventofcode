@@ -3,6 +3,7 @@ package aoc2023.day10
 import common.benchmark
 import common.fromClasspathFile
 import common.linesAsCharArrays
+import common.sumOfIndexed
 import java.io.File
 import kotlin.test.assertEquals
 
@@ -29,28 +30,34 @@ fun main() {
     part2(exampleInput4).also { println("[Example 4] Part 2: $it") }.also { assertEquals(8, it) }
     part2(exampleInput5).also { println("[Example 5] Part 2: $it") }.also { assertEquals(10, it) }
     part2(puzzleInput).also { println("[Puzzle] Part 2: $it") }.also { assertEquals(281, it) }
-    benchmark { part1(puzzleInput) } // 135µs
-    benchmark { part2(puzzleInput) } // 2.44ms
+    benchmark { part1(puzzleInput) } // 93µs
+    benchmark { part2(puzzleInput) } // 265µs
 }
 
 private fun part1(input: List<CharArray>): Int {
-    val (startLocation, shapeOfS) = findStart(input)
-    return pathLength(startLocation, input, shapeOfS) / 2
+    val startLocation = findStart(input)
+    val shapeOfS = determineShapeOfS(input, startLocation)
+    tailrec fun walkPath(location: Location, exclude: Location = startLocation, length: Int = 1): Int =
+        if (location == startLocation) length
+        else walkPath(input.findValidMoveFrom(location, shapeOfS, exclude), location, length + 1)
+    return walkPath(input.findValidMoveFrom(startLocation, shapeOfS, -1 by -1)) / 2
 }
 
 private fun part2(input: List<CharArray>): Int {
-    val (startLocation, shapeOfS) = findStart(input)
-    val loop = pathLocations(startLocation, input, shapeOfS)
-    return input.mapIndexed { rowIndex, row ->
+    val startLocation = findStart(input)
+    val shapeOfS = determineShapeOfS(input, startLocation)
+    val gridOnLoop = pathLocations(startLocation, input, shapeOfS)
+    return input.sumOfIndexed { rowIndex, row ->
+        val isOnLoop = gridOnLoop[rowIndex]
         var totalInsideForRow = 0
         var insidePath = false
         var col = 0
-        while (col <= row.lastIndex) {
+        do {
             val char = row[col]
             val shape = if (char == 'S') shapeOfS else char
             when {
-                (shape == '|') && (rowIndex by col) in loop -> insidePath = !insidePath
-                (shape == 'F' || shape == 'L') && (rowIndex by col) in loop -> {
+                (shape == '|') && isOnLoop[col] -> insidePath = !insidePath
+                (shape == 'F' || shape == 'L') && isOnLoop[col] -> {
                     // a run of edge pieces will follow - ╔═╝ and ╚═╗ will flip 'insidePath' but ╔═╗ and ╚═╝ won't
                     var runEndShape: Char
                     do {
@@ -59,45 +66,41 @@ private fun part2(input: List<CharArray>): Int {
                     } while (runEndShape == '-')
                     if ((shape == 'F' && runEndShape == 'J') || (shape == 'L' && runEndShape == '7')) insidePath = !insidePath
                 }
-                // The puzzle guarantees that any 'J','7','-' here will not be on the main loop, so can be considered junk
+                // The puzzle guarantees that any ╝,╗,═ will never start a run, so cannot be on the main loop
                 insidePath -> totalInsideForRow++
             }
             col++
-        }
+        } while (col < row.lastIndex)
         totalInsideForRow
-    }.sum()
+    }
 }
 
-private fun findStart(input: List<CharArray>): Pair<Location, Char> {
+private fun findStart(input: List<CharArray>): Location {
     val startRow = input.indexOfFirst { 'S' in it }
     val startCol = input[startRow].indexOf('S')
     val startLocation = startRow by startCol
-    val shapeOfS = determineShapeOfS(input, startLocation)
-    return startLocation to shapeOfS
+    return startLocation
 }
 
-private fun pathLocations(startLocation: Location, grid: List<CharArray>, shapeOfS: Char): Set<Location> {
-    val path = sortedSetOf(startLocation)
-    tailrec fun walkPath(location: Location, exclude: Location = startLocation): Set<Location> {
-        path.add(location)
-        return if (location == startLocation) path else walkPath(grid.findValidMoveFrom(location, shapeOfS, exclude), location)
+private fun pathLocations(startLocation: Location, grid: List<CharArray>, shapeOfS: Char): Array<BooleanArray> {
+    val path = Array(grid.size) { BooleanArray(grid[0].size) }
+    tailrec fun walkPath(location: Location, exclude: Location = startLocation): Array<BooleanArray> {
+        path[location.row()][location.col()] = true
+        return if (location == startLocation) path else
+            walkPath(grid.findValidMoveFrom(location, shapeOfS, exclude), location)
     }
-    return walkPath(grid.findValidMoveFrom(startLocation, shapeOfS, -1 by -1))
+    return walkPath(
+        grid.findValidMoveFrom(startLocation, shapeOfS, -1 by -1))
 }
 
-private fun pathLength(startLocation: Location, grid: List<CharArray>, shapeOfS: Char): Int {
-    tailrec fun walkPath(location: Location, exclude: Location = startLocation, length: Int = 1): Int =
-        if (location == startLocation) length else walkPath(grid.findValidMoveFrom(location, shapeOfS, exclude), location, length + 1)
-    return walkPath(grid.findValidMoveFrom(startLocation, shapeOfS, -1 by -1))
-}
-
-private fun determineShapeOfS(grid: List<CharArray>, locationOfS: Location): Char {
-    val row = locationOfS.row()
-    val col = locationOfS.col()
+private fun determineShapeOfS(grid: List<CharArray>, start: Location): Char {
+    val row = start.row()
+    val col = start.col()
     val up = if (row == 0) null else grid[row - 1][col]
     val down = if (row == grid.lastIndex) null else grid[row + 1][col]
     val left = if (col == 0) null else grid[row][col - 1]
     val right = if (col == grid[row].lastIndex) null else grid[row][col + 1]
+
     val possibleShapes = mutableListOf('|', '-', 'J', 'L', 'F', '7')
     if (up != '|' && up != 'F' && up != '7') possibleShapes.removeAll(listOf('|', 'J', 'L'))
     if (down != '|' && down != 'L' && down != 'J') possibleShapes.removeAll(listOf('|', 'F', '7'))
@@ -106,20 +109,16 @@ private fun determineShapeOfS(grid: List<CharArray>, locationOfS: Location): Cha
     return possibleShapes.single()
 }
 
-private fun List<CharArray>.findValidMoveFrom(location: Location, shapeOfS: Char, excluding: Location): Location {
-    val row = location.row()
-    val col = location.col()
-    val exclRow = excluding.row()
-    val exclCol = excluding.col()
-    val pipeAtLocation = this[row][col]
-    val pipeShape = if (pipeAtLocation == 'S') shapeOfS else pipeAtLocation
-    return when (pipeShape) {
-        '|' -> if (exclRow == row + 1 && exclCol == col) (row - 1) by col else (row + 1) by col
-        '-' -> if (exclRow == row && exclCol == col + 1) row by (col - 1) else row by (col + 1)
-        'J' -> if (exclRow == row - 1 && exclCol == col) row by (col - 1) else (row - 1) by col
-        'L' -> if (exclRow == row - 1 && exclCol == col) row by (col + 1) else (row - 1) by col
-        'F' -> if (exclRow == row + 1 && exclCol == col) row by (col + 1) else (row + 1) by col
-        '7' -> if (exclRow == row + 1 && exclCol == col) row by (col - 1) else (row + 1) by col
+private fun List<CharArray>.findValidMoveFrom(location: Location, shapeOfS: Char, exclude: Location): Location {
+    val char = this[location.row()][location.col()]
+    val shape = if (char == 'S') shapeOfS else char
+    return when (shape) {
+        '|' -> if (exclude == location.plusRow()) location.minusRow() else location.plusRow()
+        '-' -> if (exclude == location.plusCol()) location.minusCol() else location.plusCol()
+        'J' -> if (exclude == location.minusRow()) location.minusCol() else location.minusRow()
+        'L' -> if (exclude == location.minusRow()) location.plusCol() else location.minusRow()
+        'F' -> if (exclude == location.plusRow()) location.plusCol() else location.plusRow()
+        '7' -> if (exclude == location.plusRow()) location.minusCol() else location.plusRow()
         else -> throw Exception("Strayed off pipe network considering $location")
     }
 }
@@ -129,6 +128,10 @@ private typealias Location = Int
 private infix fun Int.by(col: Int): Location = (this shl 16) or col
 private fun Location.row() = this shr 16
 private fun Location.col() = this and 0xffff
+private fun Location.plusRow() = this + 0x10000
+private fun Location.minusRow() = this - 0x10000
+private fun Location.plusCol() = this + 1
+private fun Location.minusCol() = this - 1
 
 
 // Just for fun, but a search in a text editor for █ was the fastest way to get the puzzle answer!
@@ -137,6 +140,7 @@ private fun renderMap(input: List<CharArray>, filename: String) {
     val startCol = input[startRow].indexOf('S')
     val shapeOfS = determineShapeOfS(input, startRow by startCol)
     val steps = pathLocations(startRow by startCol, input, shapeOfS)
+        .flatMapIndexed { rowNum, row -> row.mapIndexed { colNum, col -> if (col) rowNum by colNum else null }.filterNotNull() }
     File(filename).writeText(
         rerender(input).toMutableList()
             .also { grid ->
