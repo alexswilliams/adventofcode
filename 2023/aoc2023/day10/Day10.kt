@@ -31,8 +31,8 @@ fun main() {
     part2(exampleInput4).also { println("[Example 4] Part 2: $it") }.also { assertEquals(8, it) }
     part2(exampleInput5).also { println("[Example 5] Part 2: $it") }.also { assertEquals(10, it) }
     part2(puzzleInput).also { println("[Puzzle] Part 2: $it") }.also { assertEquals(281, it) }
-    benchmark { part1(puzzleInput) } // 93µs
-    benchmark { part2(puzzleInput) } // 265µs
+    benchmark { part1(puzzleInput) } // 56µs
+    benchmark { part2(puzzleInput) } // 179µs
 }
 
 private fun part1(input: List<CharArray>): Int {
