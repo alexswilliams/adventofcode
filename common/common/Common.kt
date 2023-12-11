@@ -1,6 +1,6 @@
 package common
 
-import java.io.*
+import java.io.File
 import kotlin.math.*
 
 fun String.fromClasspathFileToLines(): List<String> {
@@ -253,6 +253,28 @@ inline fun <T> Iterable<T>.sumOfIndexed(selector: (index: Int, T) -> Int): Int {
         sum += selector(index++, element)
     }
     return sum
+}
+
+inline fun <T> Iterable<T>.sumOfIndexed(initial: Long, selector: (index: Int, T) -> Long): Long {
+    var sum = initial
+    var index = 0
+    for (element in this) {
+        sum += selector(index++, element)
+    }
+    return sum
+}
+
+inline fun <R> Collection<CharArray>.mapCartesianNotNull(transform: (row: Int, col: Int, char: Char) -> R?): List<R> {
+    val result = ArrayList<R>(this.size * 10)
+    this.forEachIndexed { rowNum, row ->
+        row.forEachIndexed { colNum, c ->
+            val transformed = transform(rowNum, colNum, c)
+            if (transformed != null) {
+                result.add(transformed)
+            }
+        }
+    }
+    return result;
 }
 
 object Common
