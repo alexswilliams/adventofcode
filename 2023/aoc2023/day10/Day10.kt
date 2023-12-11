@@ -1,8 +1,16 @@
 package aoc2023.day10
 
+import common.Location
 import common.benchmark
+import common.by
+import common.colInt
 import common.fromClasspathFile
 import common.linesAsCharArrays
+import common.minusCol
+import common.minusRow
+import common.plusCol
+import common.plusRow
+import common.rowInt
 import common.sumOfIndexed
 import java.io.File
 import kotlin.test.assertEquals
@@ -31,7 +39,7 @@ fun main() {
     part2(exampleInput4).also { println("[Example 4] Part 2: $it") }.also { assertEquals(8, it) }
     part2(exampleInput5).also { println("[Example 5] Part 2: $it") }.also { assertEquals(10, it) }
     part2(puzzleInput).also { println("[Puzzle] Part 2: $it") }.also { assertEquals(281, it) }
-    benchmark { part1(puzzleInput) } // 56µs
+    benchmark { part1(puzzleInput) } // 49µs
     benchmark { part2(puzzleInput) } // 179µs
 }
 
@@ -86,7 +94,7 @@ private fun findStart(input: List<CharArray>): Location {
 private fun pathLocations(startLocation: Location, grid: List<CharArray>, shapeOfS: Char): Array<BooleanArray> {
     val path = Array(grid.size) { BooleanArray(grid[0].size) }
     tailrec fun walkPath(location: Location, exclude: Location = startLocation): Array<BooleanArray> {
-        path[location.row()][location.col()] = true
+        path[location.rowInt()][location.colInt()] = true
         return if (location == startLocation) path else
             walkPath(grid.findValidMoveFrom(location, shapeOfS, exclude), location)
     }
@@ -96,8 +104,8 @@ private fun pathLocations(startLocation: Location, grid: List<CharArray>, shapeO
 }
 
 private fun determineShapeOfS(grid: List<CharArray>, start: Location): Char {
-    val row = start.row()
-    val col = start.col()
+    val row = start.rowInt()
+    val col = start.colInt()
     val up = if (row == 0) null else grid[row - 1][col]
     val down = if (row == grid.lastIndex) null else grid[row + 1][col]
     val left = if (col == 0) null else grid[row][col - 1]
@@ -112,7 +120,7 @@ private fun determineShapeOfS(grid: List<CharArray>, start: Location): Char {
 }
 
 private fun List<CharArray>.findValidMoveFrom(location: Location, shapeOfS: Char, exclude: Location): Location {
-    val char = this[location.row()][location.col()]
+    val char = this[location.rowInt()][location.colInt()]
     val shape = if (char == 'S') shapeOfS else char
     return when (shape) {
         '|' -> if (exclude == location.plusRow()) location.minusRow() else location.plusRow()
@@ -124,17 +132,6 @@ private fun List<CharArray>.findValidMoveFrom(location: Location, shapeOfS: Char
         else -> throw Exception("Strayed off pipe network considering $location")
     }
 }
-
-private typealias Location = Int
-
-private infix fun Int.by(col: Int): Location = (this shl 16) or col
-private fun Location.row() = this shr 16
-private fun Location.col() = this and 0xffff
-private fun Location.plusRow() = this + 0x10000
-private fun Location.minusRow() = this - 0x10000
-private fun Location.plusCol() = this + 1
-private fun Location.minusCol() = this - 1
-
 
 // Just for fun, but a search in a text editor for █ was the fastest way to get the puzzle answer!
 private fun renderMap(input: List<CharArray>, filename: String) {
@@ -168,7 +165,7 @@ private fun renderMap(input: List<CharArray>, filename: String) {
                 else -> c
             }
             steps.forEach { location ->
-                grid[location.row()][location.col()] = emboldenPath(grid[location.row()][location.col()])
+                grid[location.rowInt()][location.colInt()] = emboldenPath(grid[location.rowInt()][location.colInt()])
             }
             grid.forEachIndexed { rowIndex, row ->
                 var insidePath = false

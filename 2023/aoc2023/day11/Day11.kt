@@ -1,9 +1,11 @@
 package aoc2023.day11
 
 import common.benchmark
+import common.col
 import common.fromClasspathFile
 import common.linesAsCharArrays
 import common.mapCartesianNotNull
+import common.row
 import common.sumOfIndexed
 import kotlin.math.abs
 import kotlin.test.assertEquals
@@ -40,7 +42,5 @@ private typealias Location = Long
 
 private infix fun Int.by(col: Int): Location = (this.toLong() shl 32) or col.toLong()
 private infix fun Long.by(col: Long): Location = (this shl 32) or col
-private fun Location.row() = this shr 32
-private fun Location.col() = this and 0xffffffff
 private fun Location.rowInt() = (this shr 32).toInt()
 private fun Location.colInt() = (this and 0xffffffff).toInt()
