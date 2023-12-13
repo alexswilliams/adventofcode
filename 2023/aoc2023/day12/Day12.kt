@@ -6,8 +6,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
+import java.time.Instant
 import kotlin.test.assertEquals
-import kotlin.time.measureTimedValue
 
 
 private val exampleInput = "aoc2023/day12/example.txt".fromClasspathFileToLines()
@@ -17,11 +17,11 @@ fun main() {
     part1(exampleInput).also { println("[Example] Part 1: $it") }.also { assertEquals(21, it) }
     part1(puzzleInput).also { println("[Puzzle] Part 1: $it") }.also { assertEquals(7032, it) }
     part2(exampleInput).also { println("[Example] Part 2: $it") }.also { assertEquals(525152, it) }
-    val x = measureTimedValue { part2(puzzleInput).also { println("[Puzzle] Part 2: $it") } } // TODO: dynamic programming
-    println(x.duration)
+//    val x = measureTimedValue { part2(puzzleInput).also { println("[Puzzle] Part 2: $it") } } // TODO: dynamic programming
+//    println(x.duration)
 //    part2(puzzleInput).also { println("[Puzzle] Part 2: $it") }.also { assertEquals(0, it) }
-//    benchmark { part1(puzzleInput) } //
-//    benchmark { part2(puzzleInput) } //
+//    benchmark { part1(puzzleInput) } // 2.46ms
+//    benchmark(10) { part2(exampleInput) } // 60ms
 }
 
 private fun part1(input: List<String>): Int {
@@ -30,10 +30,7 @@ private fun part1(input: List<String>): Int {
         val runLengths = runLengthString.splitToInts(",")
         val template = ".$templateInput."
 
-        val size = runLengths.fold(setOf(".")) { prefixes: Set<String>, runLength: Int ->
-            prefixes.flatMapTo(mutableSetOf()) { i(template, runLength, it) }
-        }.filter { template.indexOf('#', it.length) == -1 }.size
-        size
+        numberOfArrangements(runLengths, template)
     }
 }
 
@@ -42,47 +39,37 @@ private fun part2(input: List<String>): Int {
     return runBlocking(Dispatchers.Default) {
         input.mapIndexed { index, line ->
             val (templateInput, runLengthString) = line.split(' ', limit = 2)
-            val runLengthsShort = runLengthString.splitToInts(",")
-            val runLengths = listOf(runLengthsShort, runLengthsShort, runLengthsShort, runLengthsShort, runLengthsShort).flatten()
+            val runLengthsOnce = runLengthString.splitToInts(",")
+            val runLengths = listOf(runLengthsOnce, runLengthsOnce, runLengthsOnce, runLengthsOnce, runLengthsOnce).flatten()
             val template = ".$templateInput?$templateInput?$templateInput?$templateInput?$templateInput."
 
             async {
-                runLengths.fold(setOf(".")) { prefixes: Set<String>, runLength: Int ->
-                    prefixes.flatMapTo(mutableSetOf()) { i(template, runLength, it) }
-                }.filter { template.indexOf('#', it.length) == -1 }.size.also { println("Row $index -> size $it") }
+                println("[${Instant.now()}]  Starting Row $index")
+                numberOfArrangements(runLengths, template)
+                    .also { println("[${Instant.now()}]  Finished Row $index -> size $it") }
             }
         }.awaitAll().sum()
     }
 }
 
-private fun i(template: String, runLength: Int, prefix: String): List<String> {
-    var startIndex = prefix.length
-    var knownPrefix = prefix
+private fun numberOfArrangements(runLengths: List<Int>, template: String) =
+    runLengths.fold(listOf(".")) { prefixes, runLength ->
+        prefixes.flatMap { placementsForRun(template, runLength, it, it.length) }
+    }.filter { template.indexOf('#', it.length) == -1 }.size
+
+private fun placementsForRun(template: String, runLength: Int, prefix: String, prefixLength: Int): List<String> {
+    var startIndex = prefixLength
     val prefixesToKeep = arrayListOf<String>()
     while (true) {
-        // Advance so that startIndex points to the first char to be replaced with a #
         while (true) {
-            val before = template[startIndex - 1]
-            if (before == '#') return prefixesToKeep // advancing beyond an existing # will always make the run too long, so stop here
             if (startIndex + runLength > template.lastIndex) return prefixesToKeep
-            val substring = template.substring(startIndex, startIndex + runLength)
-            val after = template[startIndex + runLength]
-            if (substring.contains('.') || after == '#') {
-                knownPrefix += if (template[startIndex] == '?') '.' else template[startIndex]
-                startIndex++
-            } else break
+            if (template[startIndex - 1] == '#') return prefixesToKeep
+            if (template.indexOf('.', startIndex) < (startIndex + runLength) || template[startIndex + runLength] == '#') startIndex++
+            else break
         }
-        val string = template.substring(startIndex).replaceRange(0, runLength, "#".repeat(runLength))
-        if (runLength == firstRunLength(string)) {
-            prefixesToKeep.add(knownPrefix + "#".repeat(runLength) + ".")
-        } else
-            return prefixesToKeep
-
-        knownPrefix += "."
+        prefixesToKeep.add(prefix + template.substring(prefixLength, startIndex) + runs[runLength] + ".")
         startIndex++
     }
 }
 
-private fun firstRunLength(string: String): Int = string.dropWhile { it != '#' }.takeWhile { it == '#' }.length
-
-
+private val runs = (0..20).map { "#".repeat(it) }.toTypedArray()
