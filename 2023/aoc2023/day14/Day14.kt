@@ -20,7 +20,7 @@ fun main() {
     part2(exampleInput).also { println("[Example] Part 2: $it") }.also { assertEquals(64, it) }
     part2(puzzleInput).also { println("[Puzzle] Part 2: $it") }.also { assertEquals(100876, it) }
     benchmark { part1(puzzleInput) } // 275µs
-    benchmark(10) { part2(puzzleInput) } // 195ms
+    benchmark(10) { part2(puzzleInput) } // 183ms
 }
 
 private fun part1(lines: List<String>): Int {
@@ -30,16 +30,15 @@ private fun part1(lines: List<String>): Int {
 }
 
 private fun part2(lines: List<String>): Int {
-    val size = lines.size // Assertion: it's a square
     val (movable, fixed) = lines.locationsOfEach('O', '#')
-    val fixedByCol = fixedRotations(fixed, size)
+    val fixedByCol = fixedRotations(fixed, lines.size)
 
-    val (loopStarts, loopStartsAgain) = findLoop(movable, size, fixedByCol)
-    val spinsConsumedByLooping = (1_000_000_000 - loopStarts) / (loopStartsAgain - loopStarts) * (loopStartsAgain - loopStarts)
+    val (loopStarts, loopStartsAgain) = findLoop(movable, lines.size, fixedByCol)
+    val spinsConsumedByLooping = ((1_000_000_000 - loopStarts) / (loopStartsAgain - loopStarts)) * (loopStartsAgain - loopStarts)
     val remainingSpins = 1_000_000_000 - loopStarts - spinsConsumedByLooping
 
-    val rocksBeforeStartOfLoop = (1..loopStarts).fold(movable) { acc, _ -> spinCycle(size, acc, fixedByCol) }
-    val rocksAfterEndOfLoop = (1..remainingSpins).fold(rocksBeforeStartOfLoop) { acc, _ -> spinCycle(size, acc, fixedByCol) }
+    val rocksBeforeStartOfLoop = (1..loopStarts).fold(movable) { acc, _ -> spinCycle(lines.size, acc, fixedByCol) }
+    val rocksAfterEndOfLoop = (1..remainingSpins).fold(rocksBeforeStartOfLoop) { acc, _ -> spinCycle(lines.size, acc, fixedByCol) }
     return rocksAfterEndOfLoop.sumOf { rock -> lines.size - rock.row() }.toInt()
 }
 
@@ -69,7 +68,8 @@ private fun fixedRotations(fixed: List<Location>, size: Int): List<Map<Long, Lis
 private fun spinCycle(size: Int, movable: List<Location>, fixedByCol: List<Map<Long, List<Location>>>): List<Location> =
     rotate(tilt(rotate(tilt(rotate(tilt(rotate(tilt(movable, fixedByCol[0]), size), fixedByCol[1]), size), fixedByCol[2]), size), fixedByCol[3]), size)
 
-private fun rotate(afterTiltNorth: List<Location>, size: Int) = afterTiltNorth.map { it.col() by (size - 1 - it.row()) }
+private fun rotate(afterTiltNorth: List<Location>, size: Int) =
+    afterTiltNorth.map { it.col() by (size - 1 - it.row()) }
 
 private fun tilt(movable: List<Location>, fixedByCol: Map<Long, List<Location>>): List<Location> {
     val movableByCol = movable.groupBy { it.col() }.mapValues { (_, b) -> b.toLongArray().also { it.sort() } }
@@ -81,16 +81,4 @@ private fun tilt(movable: List<Location>, fixedByCol: Map<Long, List<Location>>)
         }
     }
     return movableByCol.entries.flatMap { it.value.asIterable() }
-}
-
-private fun debug(size: Int, fixed: List<Location>, movable: List<Location>) {
-    for (row in 0..<size) {
-        print("| ")
-        for (col in 0..<size) {
-            if (fixed.contains(row by col)) print('#')
-            else if (movable.contains(row by col)) print('O')
-            else print('.')
-        }
-        println(" |")
-    }
 }
