@@ -277,4 +277,38 @@ inline fun <R> Collection<CharArray>.mapCartesianNotNull(transform: (row: Int, c
     return result;
 }
 
+fun String.locationOfEach(c: Char): List<Int> {
+    val result = ArrayList<Int>(this.length)
+    this.forEachIndexed { index, elem ->
+        if (elem == c) result.add(index)
+    }
+    return result
+}
+
+fun Collection<String>.locationOfEach(c: Char): List<Location> {
+    val result = ArrayList<Location>(this.size * 20)
+    this.forEachIndexed { rowNum, row ->
+        row.forEachIndexed { colNum, cell ->
+            if (cell == c)
+                result.add(rowNum by colNum)
+        }
+    }
+    return result
+}
+
+fun Collection<String>.locationsOfEach(a: Char, b: Char): Pair<List<Location>, List<Location>> {
+    val resultA = ArrayList<Location>(this.size * 20)
+    val resultB = ArrayList<Location>(this.size * 20)
+    this.forEachIndexed { rowNum, row ->
+        row.forEachIndexed { colNum, cell ->
+            if (cell == a)
+                resultA.add(rowNum by colNum)
+            else if (cell == b)
+                resultB.add(rowNum by colNum)
+        }
+    }
+    return resultA to resultB
+}
+
+
 object Common
