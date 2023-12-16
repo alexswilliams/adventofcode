@@ -82,6 +82,13 @@ fun List<String>.transposeToChars(): List<List<Char>> =
         }
     }
 
+fun List<String>.transposeToStrings(): List<String> =
+    List(first().length) { col ->
+        List(size) { row ->
+            this[row][col]
+        }
+    }.map { it.joinToString("") }
+
 fun <T : CharSequence> List<T>.filterNotBlank() = this.filter { it.isNotBlank() }
 fun <T : CharSequence> List<T>.mapMatching(regex: Regex) = this.mapNotNull { regex.matchEntire(it)?.destructured }
 
