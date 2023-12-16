@@ -310,5 +310,16 @@ fun Collection<String>.locationsOfEach(a: Char, b: Char): Pair<List<Location>, L
     return resultA to resultB
 }
 
+inline fun <T, R : Comparable<R>> Iterable<T>.maxOfBefore(maxIndex: Int, selector: (T) -> R): R {
+    val iterator = iterator()
+    if (!iterator.hasNext()) throw NoSuchElementException()
+    var i = 0
+    var maxValue = selector(iterator.next())
+    while (iterator.hasNext() && i++ < maxIndex) {
+        val v = selector(iterator.next())
+        if (maxValue < v) maxValue = v
+    }
+    return maxValue
+}
 
 object Common

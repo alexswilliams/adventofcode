@@ -1,12 +1,6 @@
 package aoc2023.day14
 
-import common.Location
-import common.benchmark
-import common.by
-import common.col
-import common.fromClasspathFileToLines
-import common.locationsOfEach
-import common.row
+import common.*
 import kotlin.math.max
 import kotlin.test.assertEquals
 
@@ -20,7 +14,7 @@ fun main() {
     part2(exampleInput).also { println("[Example] Part 2: $it") }.also { assertEquals(64, it) }
     part2(puzzleInput).also { println("[Puzzle] Part 2: $it") }.also { assertEquals(100876, it) }
     benchmark { part1(puzzleInput) } // 275µs
-    benchmark(10) { part2(puzzleInput) } // 163ms
+    benchmark(10) { part2(puzzleInput) } // 160ms
 }
 
 private typealias Rocks = List<Location>
@@ -72,14 +66,16 @@ private fun spinCycle(size: Int, movable: Rocks, fixed: List<LocationsByColumn>)
 private fun rotate(afterTiltNorth: Rocks, size: Int) =
     afterTiltNorth.map { it.col() by (size - 1 - it.row()) }
 
-private fun tilt(movable: Rocks, fixedByCol: LocationsByColumn): Rocks {
-    val movableByCol = movable.groupBy { it.col() }.mapValues { (_, b) -> b.toLongArray().also { it.sort() } }
+@Suppress("UNCHECKED_CAST")
+private fun tilt(movable: Rocks, fixedRocksByColumn: LocationsByColumn): Rocks {
+    val movableByCol = movable.groupBy { it.col() } as Map<Long, MutableList<Long>>
     movableByCol.forEach { (col, movableRocksInColumn) ->
-        movableRocksInColumn.forEachIndexed { index: Int, rock: Location ->
-            val nearestMovableRockToNorth = movableRocksInColumn.maxOf { if (it.row() < rock.row()) it.row() else -1 }
-            val nearestFixedRockToNorth = fixedByCol[col]?.maxOf { if (it.row() < rock.row()) it.row() else -1 } ?: -1
+        movableRocksInColumn.apply { sort() }.forEachIndexed { index: Int, rock: Location ->
+            val nearestMovableRockToNorth = movableRocksInColumn.maxOfBefore(index) { if (it.row() < rock.row()) it.row() else -1 }
+            val nearestFixedRockToNorth = fixedRocksByColumn[col]?.maxOf { if (it.row() < rock.row()) it.row() else -1 } ?: -1
             movableRocksInColumn[index] = (max(nearestFixedRockToNorth, nearestMovableRockToNorth) + 1) by rock.col()
         }
     }
     return movableByCol.entries.flatMap { it.value.asIterable() }
 }
+
