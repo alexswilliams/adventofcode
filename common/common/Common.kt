@@ -1,6 +1,9 @@
 package common
 
 import java.io.File
+import java.util.LinkedHashSet
+import java.util.LinkedList
+import java.util.TreeSet
 import kotlin.math.*
 
 fun String.fromClasspathFileToLines(): List<String> {
@@ -84,10 +87,12 @@ fun List<String>.transposeToChars(): List<List<Char>> =
 
 fun List<String>.transposeToStrings(): List<String> =
     List(first().length) { col ->
-        List(size) { row ->
-            this[row][col]
-        }
-    }.map { it.joinToString("") }
+        StringBuilder(size).also { sb ->
+            indices.forEach { row ->
+                sb.append(this[row][col])
+            }
+        }.toString()
+    }
 
 fun <T : CharSequence> List<T>.filterNotBlank() = this.filter { it.isNotBlank() }
 fun <T : CharSequence> List<T>.mapMatching(regex: Regex) = this.mapNotNull { regex.matchEntire(it)?.destructured }
@@ -328,5 +333,16 @@ inline fun <T, R : Comparable<R>> Iterable<T>.maxOfBefore(maxIndex: Int, selecto
     }
     return maxValue
 }
+
+fun Sequence<Collection<Int>>.intersect(): List<Int> {
+    val iterator = this.iterator()
+    val result = LinkedList(iterator.next())
+    while (result.isNotEmpty() && iterator.hasNext()) {
+        @Suppress("ConvertArgumentToSet")
+        result.retainAll(iterator.next())
+    }
+    return result.toList()
+}
+
 
 object Common
