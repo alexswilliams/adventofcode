@@ -341,7 +341,7 @@ fun Sequence<Collection<Int>>.intersect(): List<Int> {
         @Suppress("ConvertArgumentToSet")
         result.retainAll(iterator.next())
     }
-    return result.toList()
+    return result
 }
 
 

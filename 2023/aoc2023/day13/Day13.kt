@@ -4,22 +4,32 @@ import common.*
 import kotlin.test.assertEquals
 
 
-private val exampleInput = "aoc2023/day13/example.txt".fromClasspathFile()
-private val puzzleInput = "aoc2023/day13/input.txt".fromClasspathFile()
+private val exampleInput = "aoc2023/day13/example.txt".fromClasspathFile().split("\n\n").map { it.lines() }
+private val puzzleInput = "aoc2023/day13/input.txt".fromClasspathFile().split("\n\n").map { it.lines() }
 
 fun main() {
     part1(exampleInput).also { println("[Example] Part 1: $it") }.also { assertEquals(405, it) }
     part1(puzzleInput).also { println("[Puzzle] Part 1: $it") }.also { assertEquals(33122, it) }
     part2(exampleInput).also { println("[Example] Part 2: $it") }.also { assertEquals(400, it) }
     part2(puzzleInput).also { println("[Puzzle] Part 2: $it") }.also { assertEquals(32312, it) }
-    benchmark { part1(puzzleInput) } // 1.14ms
-    benchmark(100) { part2(puzzleInput) } // 25ms
+    benchmark { part1(puzzleInput) } // 666µs
+    benchmark(100) { part2(puzzleInput) } // 24.0ms
 }
 
-private fun part1(input: String): Int {
-    val grids = input.split("\n\n").map { it.lines() }
+private fun part1(grids: List<List<String>>): Int {
     val allColumnMirrors = grids.mapNotNull { grid -> findMirrorColumns(grid).singleOrNull() }
     val allRowMirrors = grids.mapNotNull { grid -> findMirrorColumns(grid.transposeToStrings()).singleOrNull() }
+    return allRowMirrors.sum() * 100 + allColumnMirrors.sum()
+}
+
+private fun part2(inputs: List<List<String>>): Int {
+    val grids = inputs.map { grid ->
+        val existingVertical = findMirrorColumns(grid).singleOrNull()
+        val existingHorizontal = findMirrorColumns(grid.transposeToStrings()).singleOrNull()
+        Triple(correctSmudge(grid, existingVertical, existingHorizontal), existingVertical, existingHorizontal)
+    }
+    val allColumnMirrors = grids.mapNotNull { (grid, v, _) -> findMirrorColumns(grid, v).singleOrNull() }
+    val allRowMirrors = grids.mapNotNull { (grid, _, h) -> findMirrorColumns(grid.transposeToStrings(), h).singleOrNull() }
     return allRowMirrors.sum() * 100 + allColumnMirrors.sum()
 }
 
@@ -41,18 +51,7 @@ private fun findMirrorColumns(grid: List<String>, ignore: Int? = null) =
             }
         }
 
-private fun part2(input: String): Int {
-    val grids = input.split("\n\n").map { it.lines() }.map { grid ->
-        val existingVertical = findMirrorColumns(grid).singleOrNull()
-        val existingHorizontal = findMirrorColumns(grid.transposeToStrings()).singleOrNull()
-        Triple(correctSmudge(grid, existingVertical, existingHorizontal), existingVertical, existingHorizontal)
-    }
-    val allColumnMirrors = grids.mapNotNull { (grid, v, _) -> findMirrorColumns(grid, v).singleOrNull() }
-    val allRowMirrors = grids.mapNotNull { (grid, _, h) -> findMirrorColumns(grid.transposeToStrings(), h).singleOrNull() }
-    return allRowMirrors.sum() * 100 + allColumnMirrors.sum()
-}
-
-fun correctSmudge(grid: List<String>, ignoreVertical: Int?, ignoreHorizontal: Int?): List<String> {
+private fun correctSmudge(grid: List<String>, ignoreVertical: Int?, ignoreHorizontal: Int?): List<String> {
     val rows = grid.size
     val cols = grid.first().length
     return allCoordinates(rows, cols)
@@ -66,7 +65,7 @@ fun correctSmudge(grid: List<String>, ignoreVertical: Int?, ignoreHorizontal: In
         }
 }
 
-fun allCoordinates(rows: Int, cols: Int): Sequence<Location> {
+private fun allCoordinates(rows: Int, cols: Int): Sequence<Location> {
     return sequence {
         for (row in 0..<rows) {
             for (col in 0..<cols) {
