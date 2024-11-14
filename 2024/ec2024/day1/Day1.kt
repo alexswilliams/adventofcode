@@ -6,12 +6,13 @@ import common.frequency
 import common.fromClasspathFile
 import kotlin.test.assertEquals
 
-private val exampleInput = "ec2024/day1/example.txt".fromClasspathFile()
-private val example2Input = "ec2024/day1/example2.txt".fromClasspathFile()
-private val example3Input = "ec2024/day1/example3.txt".fromClasspathFile()
-private val puzzleInput = "ec2024/day1/input.txt".fromClasspathFile()
-private val puzzle2Input = "ec2024/day1/input2.txt".fromClasspathFile()
-private val puzzle3Input = "ec2024/day1/input3.txt".fromClasspathFile()
+private const val rootFolder = "ec2024/day1"
+private val exampleInput = "$rootFolder/example.txt".fromClasspathFile()
+private val example2Input = "$rootFolder/example2.txt".fromClasspathFile()
+private val example3Input = "$rootFolder/example3.txt".fromClasspathFile()
+private val puzzleInput = "$rootFolder/input.txt".fromClasspathFile()
+private val puzzle2Input = "$rootFolder/input2.txt".fromClasspathFile()
+private val puzzle3Input = "$rootFolder/input3.txt".fromClasspathFile()
 
 internal fun main() {
     Day1.assertPart1Correct()

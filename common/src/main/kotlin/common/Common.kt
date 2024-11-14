@@ -1,10 +1,9 @@
 package common
 
 import java.io.File
-import java.util.LinkedHashSet
-import java.util.LinkedList
-import java.util.TreeSet
-import kotlin.math.*
+import java.util.*
+import kotlin.math.max
+import kotlin.math.min
 
 fun String.fromClasspathFileToLines(): List<String> {
     val url = Common::class.java.classLoader.getResource(this)
@@ -287,6 +286,22 @@ inline fun <R> Collection<CharArray>.mapCartesianNotNull(transform: (row: Int, c
         }
     }
     return result;
+}
+
+fun String.countOccurrences(s: String): Int {
+    var count = 0
+    this.indices.forEach { index ->
+        if (this.startsWith(s, index)) count++
+    }
+    return count
+}
+
+fun String.locationOfEach(s: String): List<Int> {
+    val result = ArrayList<Int>(this.length)
+    this.indices.forEach { index ->
+        if (this.startsWith(s, index)) result.add(index)
+    }
+    return result
 }
 
 fun String.locationOfEach(c: Char): List<Int> {
