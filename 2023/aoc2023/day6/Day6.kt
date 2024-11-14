@@ -1,11 +1,6 @@
 package aoc2023.day6
 
-import common.TwoPartChallenge
-import common.benchmark
-import common.fromClasspathFileToLines
-import common.product
-import common.tail
-import common.transpose
+import common.*
 import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.sqrt
@@ -15,14 +10,14 @@ import kotlin.test.assertEquals
 private val exampleInput = "aoc2023/day6/example.txt".fromClasspathFileToLines()
 private val puzzleInput = "aoc2023/day6/input.txt".fromClasspathFileToLines()
 
-fun main() {
+internal fun main() {
     Day6.assertPart1Correct()
     Day6.assertPart2Correct()
     benchmark { part1(puzzleInput) } // 16µs
     benchmark { part2(puzzleInput) } // 4µs
 }
 
-object Day6 : TwoPartChallenge {
+internal object Day6 : TwoPartChallenge {
     override fun assertPart1Correct() {
         part1(exampleInput).also { println("[Example] Part 1: $it") }.also { assertEquals(288, it) }
         part1(puzzleInput).also { println("[Puzzle] Part 1: $it") }.also { assertEquals(800280, it) }

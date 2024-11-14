@@ -1,13 +1,6 @@
 package aoc2023.day11
 
-import common.TwoPartChallenge
-import common.benchmark
-import common.col
-import common.fromClasspathFile
-import common.linesAsCharArrays
-import common.mapCartesianNotNull
-import common.row
-import common.sumOfIndexed
+import common.*
 import kotlin.math.abs
 import kotlin.test.assertEquals
 
@@ -15,14 +8,14 @@ import kotlin.test.assertEquals
 private val exampleInput = "aoc2023/day11/example.txt".fromClasspathFile().linesAsCharArrays()
 private val puzzleInput = "aoc2023/day11/input.txt".fromClasspathFile().linesAsCharArrays()
 
-fun main() {
+internal fun main() {
     Day11.assertPart1Correct()
     Day11.assertPart2Correct()
     benchmark { part1(puzzleInput) } // 256µs
     benchmark { part2(puzzleInput, 1_000_000) } // 214µs
 }
 
-object Day11 : TwoPartChallenge {
+internal object Day11 : TwoPartChallenge {
     override fun assertPart1Correct() {
         part1(exampleInput).also { println("[Example] Part 1: $it") }.also { assertEquals(374, it) }
         part1(puzzleInput).also { println("[Puzzle] Part 1: $it") }.also { assertEquals(9609130, it) }

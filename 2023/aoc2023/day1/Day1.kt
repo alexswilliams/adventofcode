@@ -1,24 +1,20 @@
 package aoc2023.day1
 
-import common.TwoPartChallenge
-import common.benchmark
-import common.firstNotNullOfIndexed
-import common.fromClasspathFileToLines
-import common.lastNotNullOfIndexed
+import common.*
 import kotlin.test.assertEquals
 
 private val exampleInput1 = "aoc2023/day1/example1.txt".fromClasspathFileToLines()
 private val exampleInput2 = "aoc2023/day1/example2.txt".fromClasspathFileToLines()
 private val puzzleInput = "aoc2023/day1/input.txt".fromClasspathFileToLines()
 
-fun main() {
+internal fun main() {
     Day1.assertPart1Correct()
     Day1.assertPart2Correct()
     benchmark { part1(puzzleInput) } // ~23µs
     benchmark { part2(puzzleInput) } // ~82µs
 }
 
-object Day1 : TwoPartChallenge {
+internal object Day1 : TwoPartChallenge {
     override fun assertPart1Correct() {
         part1(exampleInput1).also { println("[Example] Part 1: $it") }.also { assertEquals(142, it) }
         part1(puzzleInput).also { println("[Puzzle] Part 1: $it") }.also { assertEquals(55477, it) }

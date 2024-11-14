@@ -1,24 +1,20 @@
 package aoc2023.day15
 
-import common.TwoPartChallenge
-import common.benchmark
-import common.fromClasspathFile
-import common.sumOfIndexed
-import common.toIntFromIndex
+import common.*
 import kotlin.test.assertEquals
 
 
 private val exampleInput = "aoc2023/day15/example.txt".fromClasspathFile()
 private val puzzleInput = "aoc2023/day15/input.txt".fromClasspathFile()
 
-fun main() {
+internal fun main() {
     Day15.assertPart1Correct()
     Day15.assertPart2Correct()
     benchmark { part1(puzzleInput) } // 99µs
     benchmark { part2(puzzleInput) } // 268µs
 }
 
-object Day15 : TwoPartChallenge {
+internal object Day15 : TwoPartChallenge {
     override fun assertPart1Correct() {
         part1(exampleInput).also { println("[Example] Part 1: $it") }.also { assertEquals(1320, it) }
         part1(puzzleInput).also { println("[Puzzle] Part 1: $it") }.also { assertEquals(517965, it) }
@@ -45,7 +41,7 @@ private fun part2(input: String): Int {
             if (idxInBox >= 0)
                 box.removeAt(idxInBox)
         } else {
-            val lens = Lens(label, s.toIntFromIndex(idxEquals+1))
+            val lens = Lens(label, s.toIntFromIndex(idxEquals + 1))
             if (idxInBox >= 0)
                 box[idxInBox] = lens
             else

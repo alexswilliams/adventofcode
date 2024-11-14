@@ -10,20 +10,19 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
 import java.time.Instant
 import kotlin.test.assertEquals
-import kotlin.time.measureTimedValue
 
 
 private val exampleInput = "aoc2023/day12/example.txt".fromClasspathFileToLines()
 private val puzzleInput = "aoc2023/day12/input.txt".fromClasspathFileToLines()
 
-fun main() {
+internal fun main() {
     Day12.assertPart1Correct()
     Day12.assertPart2Correct()
     benchmark { part1(puzzleInput) } // 715µs
     benchmark(10) { part2(exampleInput) } // 9ms
 }
 
-object Day12 : TwoPartChallenge {
+internal object Day12 : TwoPartChallenge {
     override fun assertPart1Correct() {
         part1(exampleInput).also { println("[Example] Part 1: $it") }.also { assertEquals(21, it) }
         part1(puzzleInput).also { println("[Puzzle] Part 1: $it") }.also { assertEquals(7032, it) }

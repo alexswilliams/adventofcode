@@ -13,7 +13,7 @@ private val puzzleInput = "ec2024/day1/input.txt".fromClasspathFile()
 private val puzzle2Input = "ec2024/day1/input2.txt".fromClasspathFile()
 private val puzzle3Input = "ec2024/day1/input3.txt".fromClasspathFile()
 
-fun main() {
+internal fun main() {
     Day1.assertPart1Correct()
     Day1.assertPart2Correct()
     Day1.assertPart3Correct()
@@ -22,7 +22,7 @@ fun main() {
     benchmark { part2(puzzle3Input) } // 254µs
 }
 
-object Day1 : ThreePartChallenge {
+internal object Day1 : ThreePartChallenge {
     override fun assertPart1Correct() {
         part1(exampleInput).also { println("[Example] Part 1: $it") }.also { assertEquals(5, it) }
         part1(puzzleInput).also { println("[Puzzle] Part 1: $it") }.also { assertEquals(1321, it) }
@@ -39,12 +39,6 @@ object Day1 : ThreePartChallenge {
     }
 }
 
-private fun baseValue(c: Char) = when (c) {
-    'B' -> 1
-    'C' -> 3
-    'D' -> 5
-    else -> 0
-}
 
 private fun part1(input: String): Int =
     input.frequency().sumOf { it.second * baseValue(it.first) }
@@ -60,3 +54,10 @@ private fun part3(input: String): Int =
             else -> 0
         }
     }
+
+private fun baseValue(c: Char) = when (c) {
+    'B' -> 1
+    'C' -> 3
+    'D' -> 5
+    else -> 0
+}

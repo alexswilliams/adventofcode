@@ -7,14 +7,14 @@ import kotlin.test.assertEquals
 private val exampleInput = "aoc2023/day13/example.txt".fromClasspathFile().split("\n\n").map { it.lines() }
 private val puzzleInput = "aoc2023/day13/input.txt".fromClasspathFile().split("\n\n").map { it.lines() }
 
-fun main() {
+internal fun main() {
     Day13.assertPart1Correct()
     Day13.assertPart2Correct()
     benchmark { part1(puzzleInput) } // 666µs
     benchmark(100) { part2(puzzleInput) } // 24.0ms
 }
 
-object Day13 : TwoPartChallenge {
+internal object Day13 : TwoPartChallenge {
     override fun assertPart1Correct() {
         part1(exampleInput).also { println("[Example] Part 1: $it") }.also { assertEquals(405, it) }
         part1(puzzleInput).also { println("[Puzzle] Part 1: $it") }.also { assertEquals(33122, it) }

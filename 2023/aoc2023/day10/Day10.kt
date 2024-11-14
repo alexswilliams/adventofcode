@@ -1,18 +1,6 @@
 package aoc2023.day10
 
-import common.Location
-import common.TwoPartChallenge
-import common.benchmark
-import common.by
-import common.colInt
-import common.fromClasspathFile
-import common.linesAsCharArrays
-import common.minusCol
-import common.minusRow
-import common.plusCol
-import common.plusRow
-import common.rowInt
-import common.sumOfIndexed
+import common.*
 import java.io.File
 import kotlin.test.assertEquals
 
@@ -25,7 +13,7 @@ private val exampleInput4 = "aoc2023/day10/example4.txt".fromClasspathFile().lin
 private val exampleInput5 = "aoc2023/day10/example5.txt".fromClasspathFile().linesAsCharArrays()
 private val puzzleInput = "aoc2023/day10/input.txt".fromClasspathFile().linesAsCharArrays()
 
-fun main() {
+internal fun main() {
     renderMap(exampleInput1, "2023/aoc2023/day10/renderedMap1.txt")
     renderMap(exampleInput2, "2023/aoc2023/day10/renderedMap2.txt")
     renderMap(exampleInput3, "2023/aoc2023/day10/renderedMap3.txt")
@@ -40,7 +28,7 @@ fun main() {
     benchmark { part2(puzzleInput) } // 179µs
 }
 
-object Day10 : TwoPartChallenge {
+internal object Day10 : TwoPartChallenge {
     override fun assertPart1Correct() {
         part1(exampleInput1).also { println("[Example 1] Part 1: $it") }.also { assertEquals(4, it) }
         part1(exampleInput2).also { println("[Example 2] Part 1: $it") }.also { assertEquals(8, it) }
