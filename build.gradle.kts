@@ -15,7 +15,7 @@ repositories {
 
 dependencies {
     implementation(kotlin("test"))
-    implementation(kotlin("reflect"))
+    testImplementation(kotlin("reflect"))
 
     // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-collections-immutable
     implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.8")
