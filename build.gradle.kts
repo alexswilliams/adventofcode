@@ -15,6 +15,7 @@ repositories {
 
 dependencies {
     implementation(kotlin("test"))
+    implementation(kotlin("reflect"))
 
     // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-collections-immutable
     implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.8")
@@ -28,7 +29,7 @@ tasks.getByName<Test>("test") {
 }
 
 sourceSets.main {
-    kotlin.srcDirs("2022", "2023", "common/src/main/kotlin")
+    kotlin.srcDirs("2022", "2023", "2024", "common/src/main/kotlin")
     resources.srcDirs("2022", "2023")
     kotlin.exclude("2019", "2020")
 }
