@@ -1,5 +1,6 @@
 package aoc2023.day1
 
+import common.TwoPartChallenge
 import common.benchmark
 import common.firstNotNullOfIndexed
 import common.fromClasspathFileToLines
@@ -11,12 +12,22 @@ private val exampleInput2 = "aoc2023/day1/example2.txt".fromClasspathFileToLines
 private val puzzleInput = "aoc2023/day1/input.txt".fromClasspathFileToLines()
 
 fun main() {
-    part1(exampleInput1).also { println("[Example] Part 1: $it") }.also { assertEquals(142, it) }
-    part1(puzzleInput).also { println("[Puzzle] Part 1: $it") }.also { assertEquals(55477, it) }
-    part2(exampleInput2).also { println("[Example] Part 2: $it") }.also { assertEquals(281, it) }
-    part2(puzzleInput).also { println("[Puzzle] Part 2: $it") }.also { assertEquals(54431, it) }
+    Day1.assertPart1Correct()
+    Day1.assertPart2Correct()
     benchmark { part1(puzzleInput) } // ~23µs
     benchmark { part2(puzzleInput) } // ~82µs
+}
+
+object Day1 : TwoPartChallenge {
+    override fun assertPart1Correct() {
+        part1(exampleInput1).also { println("[Example] Part 1: $it") }.also { assertEquals(142, it) }
+        part1(puzzleInput).also { println("[Puzzle] Part 1: $it") }.also { assertEquals(55477, it) }
+    }
+
+    override fun assertPart2Correct() {
+        part2(exampleInput2).also { println("[Example] Part 2: $it") }.also { assertEquals(281, it) }
+        part2(puzzleInput).also { println("[Puzzle] Part 2: $it") }.also { assertEquals(54431, it) }
+    }
 }
 
 private fun part1(input: List<String>) = input.sumOf { line ->

@@ -1,5 +1,6 @@
 package aoc2023.day2
 
+import common.TwoPartChallenge
 import common.benchmark
 import common.fromClasspathFileToLines
 import common.toIntFromIndex
@@ -10,12 +11,22 @@ private val exampleInput = "aoc2023/day2/example.txt".fromClasspathFileToLines()
 private val puzzleInput = "aoc2023/day2/input.txt".fromClasspathFileToLines()
 
 fun main() {
-    part1(exampleInput).also { println("[Example] Part 1: $it") }.also { assertEquals(8, it) }
-    part1(puzzleInput).also { println("[Puzzle] Part 1: $it") }.also { assertEquals(2204, it) }
-    part2(exampleInput).also { println("[Example] Part 2: $it") }.also { assertEquals(2286, it) }
-    part2(puzzleInput).also { println("[Puzzle] Part 2: $it") }.also { assertEquals(71036, it) }
+    Day2.assertPart1Correct()
+    Day2.assertPart2Correct()
     benchmark { part1(puzzleInput) } // 49µs
     benchmark { part2(puzzleInput) } // 37µs
+}
+
+object Day2 : TwoPartChallenge {
+    override fun assertPart1Correct() {
+        part1(exampleInput).also { println("[Example] Part 1: $it") }.also { assertEquals(8, it) }
+        part1(puzzleInput).also { println("[Puzzle] Part 1: $it") }.also { assertEquals(2204, it) }
+    }
+
+    override fun assertPart2Correct() {
+        part2(exampleInput).also { println("[Example] Part 2: $it") }.also { assertEquals(2286, it) }
+        part2(puzzleInput).also { println("[Puzzle] Part 2: $it") }.also { assertEquals(71036, it) }
+    }
 }
 
 private data class Round(val red: Int, val green: Int, val blue: Int)

@@ -8,12 +8,22 @@ private val exampleInput = "aoc2023/day9/example.txt".fromClasspathFileToLines()
 private val puzzleInput = "aoc2023/day9/input.txt".fromClasspathFileToLines()
 
 fun main() {
-    part1(exampleInput).also { println("[Example] Part 1: $it") }.also { assertEquals(114, it) }
-    part1(puzzleInput).also { println("[Puzzle] Part 1: $it") }.also { assertEquals(1666172641, it) }
-    part2(exampleInput).also { println("[Example] Part 2: $it") }.also { assertEquals(2, it) }
-    part2(puzzleInput).also { println("[Puzzle] Part 2: $it") }.also { assertEquals(933, it) }
+    Day9.assertPart1Correct()
+    Day9.assertPart2Correct()
     benchmark { part1(puzzleInput) } // 285µs
     benchmark { part2(puzzleInput) } // 248µs
+}
+
+object Day9 : TwoPartChallenge {
+    override fun assertPart1Correct() {
+        part1(exampleInput).also { println("[Example] Part 1: $it") }.also { assertEquals(114, it) }
+        part1(puzzleInput).also { println("[Puzzle] Part 1: $it") }.also { assertEquals(1666172641, it) }
+    }
+
+    override fun assertPart2Correct() {
+        part2(exampleInput).also { println("[Example] Part 2: $it") }.also { assertEquals(2, it) }
+        part2(puzzleInput).also { println("[Puzzle] Part 2: $it") }.also { assertEquals(933, it) }
+    }
 }
 
 private fun part1(input: List<String>) = sumOfNextValues(input) { numbers, step -> numbers.last() + step }

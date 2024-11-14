@@ -9,12 +9,22 @@ private val exampleInput = "aoc2023/day14/example.txt".fromClasspathFileToLines(
 private val puzzleInput = "aoc2023/day14/input.txt".fromClasspathFileToLines()
 
 fun main() {
-    part1(exampleInput).also { println("[Example] Part 1: $it") }.also { assertEquals(136, it) }
-    part1(puzzleInput).also { println("[Puzzle] Part 1: $it") }.also { assertEquals(108935, it) }
-    part2(exampleInput).also { println("[Example] Part 2: $it") }.also { assertEquals(64, it) }
-    part2(puzzleInput).also { println("[Puzzle] Part 2: $it") }.also { assertEquals(100876, it) }
+    Day14.assertPart1Correct()
+    Day14.assertPart2Correct()
     benchmark { part1(puzzleInput) } // 275µs
     benchmark(10) { part2(puzzleInput) } // 126ms
+}
+
+object Day14 : TwoPartChallenge {
+    override fun assertPart1Correct() {
+        part1(exampleInput).also { println("[Example] Part 1: $it") }.also { assertEquals(136, it) }
+        part1(puzzleInput).also { println("[Puzzle] Part 1: $it") }.also { assertEquals(108935, it) }
+    }
+
+    override fun assertPart2Correct() {
+        part2(exampleInput).also { println("[Example] Part 2: $it") }.also { assertEquals(64, it) }
+        part2(puzzleInput).also { println("[Puzzle] Part 2: $it") }.also { assertEquals(100876, it) }
+    }
 }
 
 private typealias Rocks = List<Location>

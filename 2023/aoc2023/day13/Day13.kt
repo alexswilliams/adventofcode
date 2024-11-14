@@ -8,12 +8,22 @@ private val exampleInput = "aoc2023/day13/example.txt".fromClasspathFile().split
 private val puzzleInput = "aoc2023/day13/input.txt".fromClasspathFile().split("\n\n").map { it.lines() }
 
 fun main() {
-    part1(exampleInput).also { println("[Example] Part 1: $it") }.also { assertEquals(405, it) }
-    part1(puzzleInput).also { println("[Puzzle] Part 1: $it") }.also { assertEquals(33122, it) }
-    part2(exampleInput).also { println("[Example] Part 2: $it") }.also { assertEquals(400, it) }
-    part2(puzzleInput).also { println("[Puzzle] Part 2: $it") }.also { assertEquals(32312, it) }
+    Day13.assertPart1Correct()
+    Day13.assertPart2Correct()
     benchmark { part1(puzzleInput) } // 666µs
     benchmark(100) { part2(puzzleInput) } // 24.0ms
+}
+
+object Day13 : TwoPartChallenge {
+    override fun assertPart1Correct() {
+        part1(exampleInput).also { println("[Example] Part 1: $it") }.also { assertEquals(405, it) }
+        part1(puzzleInput).also { println("[Puzzle] Part 1: $it") }.also { assertEquals(33122, it) }
+    }
+
+    override fun assertPart2Correct() {
+        part2(exampleInput).also { println("[Example] Part 2: $it") }.also { assertEquals(400, it) }
+        part2(puzzleInput).also { println("[Puzzle] Part 2: $it") }.also { assertEquals(32312, it) }
+    }
 }
 
 private fun part1(grids: List<List<String>>): Int {

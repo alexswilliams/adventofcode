@@ -1,5 +1,6 @@
 package aoc2023.day3
 
+import common.TwoPartChallenge
 import common.benchmark
 import common.fromClasspathFile
 import common.linesAsCharArrays
@@ -9,12 +10,22 @@ private val exampleInput = "aoc2023/day3/example.txt".fromClasspathFile().linesA
 private val puzzleInput = "aoc2023/day3/input.txt".fromClasspathFile().linesAsCharArrays()
 
 fun main() {
-    part1(exampleInput).also { println("[Example] Part 1: $it") }.also { assertEquals(4361, it) }
-    part1(puzzleInput).also { println("[Puzzle] Part 1: $it") }.also { assertEquals(532445, it) }
-    part2(exampleInput).also { println("[Example] Part 2: $it") }.also { assertEquals(467835, it) }
-    part2(puzzleInput).also { println("[Puzzle] Part 2: $it") }.also { assertEquals(79842967, it) }
+    Day3.assertPart1Correct()
+    Day3.assertPart2Correct()
     benchmark { part1(puzzleInput) } // 140µs
     benchmark { part2(puzzleInput) } // 122µs
+}
+
+object Day3 : TwoPartChallenge {
+    override fun assertPart1Correct() {
+        part1(exampleInput).also { println("[Example] Part 1: $it") }.also { assertEquals(4361, it) }
+        part1(puzzleInput).also { println("[Puzzle] Part 1: $it") }.also { assertEquals(532445, it) }
+    }
+
+    override fun assertPart2Correct() {
+        part2(exampleInput).also { println("[Example] Part 2: $it") }.also { assertEquals(467835, it) }
+        part2(puzzleInput).also { println("[Puzzle] Part 2: $it") }.also { assertEquals(79842967, it) }
+    }
 }
 
 private sealed interface ItemAtCoordinate

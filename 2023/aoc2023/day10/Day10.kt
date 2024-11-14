@@ -1,6 +1,7 @@
 package aoc2023.day10
 
 import common.Location
+import common.TwoPartChallenge
 import common.benchmark
 import common.by
 import common.colInt
@@ -32,15 +33,26 @@ fun main() {
     renderMap(exampleInput5, "2023/aoc2023/day10/renderedMap5.txt")
     renderMap(puzzleInput, "2023/aoc2023/day10/renderedMapInput.txt")
 
-    part1(exampleInput1).also { println("[Example 1] Part 1: $it") }.also { assertEquals(4, it) }
-    part1(exampleInput2).also { println("[Example 2] Part 1: $it") }.also { assertEquals(8, it) }
-    part1(puzzleInput).also { println("[Puzzle] Part 1: $it") }.also { assertEquals(7107, it) }
-    part2(exampleInput3).also { println("[Example 3] Part 2: $it") }.also { assertEquals(4, it) }
-    part2(exampleInput4).also { println("[Example 4] Part 2: $it") }.also { assertEquals(8, it) }
-    part2(exampleInput5).also { println("[Example 5] Part 2: $it") }.also { assertEquals(10, it) }
-    part2(puzzleInput).also { println("[Puzzle] Part 2: $it") }.also { assertEquals(281, it) }
+    Day10.assertPart1Correct()
+    Day10.assertPart2Correct()
+
     benchmark { part1(puzzleInput) } // 49µs
     benchmark { part2(puzzleInput) } // 179µs
+}
+
+object Day10 : TwoPartChallenge {
+    override fun assertPart1Correct() {
+        part1(exampleInput1).also { println("[Example 1] Part 1: $it") }.also { assertEquals(4, it) }
+        part1(exampleInput2).also { println("[Example 2] Part 1: $it") }.also { assertEquals(8, it) }
+        part1(puzzleInput).also { println("[Puzzle] Part 1: $it") }.also { assertEquals(7107, it) }
+    }
+
+    override fun assertPart2Correct() {
+        part2(exampleInput3).also { println("[Example 3] Part 2: $it") }.also { assertEquals(4, it) }
+        part2(exampleInput4).also { println("[Example 4] Part 2: $it") }.also { assertEquals(8, it) }
+        part2(exampleInput5).also { println("[Example 5] Part 2: $it") }.also { assertEquals(10, it) }
+        part2(puzzleInput).also { println("[Puzzle] Part 2: $it") }.also { assertEquals(281, it) }
+    }
 }
 
 private fun part1(input: List<CharArray>): Int {

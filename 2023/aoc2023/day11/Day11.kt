@@ -1,5 +1,6 @@
 package aoc2023.day11
 
+import common.TwoPartChallenge
 import common.benchmark
 import common.col
 import common.fromClasspathFile
@@ -15,13 +16,23 @@ private val exampleInput = "aoc2023/day11/example.txt".fromClasspathFile().lines
 private val puzzleInput = "aoc2023/day11/input.txt".fromClasspathFile().linesAsCharArrays()
 
 fun main() {
-    part1(exampleInput).also { println("[Example] Part 1: $it") }.also { assertEquals(374, it) }
-    part1(puzzleInput).also { println("[Puzzle] Part 1: $it") }.also { assertEquals(9609130, it) }
-    part2(exampleInput, 10).also { println("[Example x 10] Part 2: $it") }.also { assertEquals(1030, it) }
-    part2(exampleInput, 100).also { println("[Example x 100] Part 2: $it") }.also { assertEquals(8410, it) }
-    part2(puzzleInput, 1_000_000).also { println("[Puzzle x 1m] Part 2: $it") }.also { assertEquals(702152204842L, it) }
+    Day11.assertPart1Correct()
+    Day11.assertPart2Correct()
     benchmark { part1(puzzleInput) } // 256µs
     benchmark { part2(puzzleInput, 1_000_000) } // 214µs
+}
+
+object Day11 : TwoPartChallenge {
+    override fun assertPart1Correct() {
+        part1(exampleInput).also { println("[Example] Part 1: $it") }.also { assertEquals(374, it) }
+        part1(puzzleInput).also { println("[Puzzle] Part 1: $it") }.also { assertEquals(9609130, it) }
+    }
+
+    override fun assertPart2Correct() {
+        part2(exampleInput, 10).also { println("[Example x 10] Part 2: $it") }.also { assertEquals(1030, it) }
+        part2(exampleInput, 100).also { println("[Example x 100] Part 2: $it") }.also { assertEquals(8410, it) }
+        part2(puzzleInput, 1_000_000).also { println("[Puzzle x 1m] Part 2: $it") }.also { assertEquals(702152204842L, it) }
+    }
 }
 
 private fun part1(input: List<CharArray>): Long = sumDistances(expandGalaxy(input, 2))
