@@ -1,6 +1,10 @@
 package ec2024.day7
 
 import common.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.runBlocking
 import kotlin.test.assertEquals
 
 private const val rootFolder = "ec2024/day7"
@@ -15,8 +19,8 @@ internal fun main() {
     Day7.assertPart2Correct()
     Day7.assertPart3Correct()
     benchmark { part1(puzzleInput) } // 27µs
-    benchmark { part2(puzzle2Input) } // 170µs
-    benchmark(1) { part3(puzzle3Input) } // 13s
+    benchmark { part2(puzzle2Input) } // 119µs
+    benchmark(5) { part3(puzzle3Input) } // 1.88s
 }
 
 internal object Day7 : ThreePartChallenge {
@@ -71,7 +75,7 @@ private fun part3(input: List<String>): Int {
             "-=======++--+++=-++=-+=+==-=++=--+=-====++--+=-==++======+=++=-+==+=-==++=-=-=--" +
             "-++=-=++==++===--==+===++===---+++==++=+=-=====+==++===--==-==+++==+++=++=+===--" +
             "==++--===+=====-=++====-+=-+--=+++=-+-===++====+++--=++====+=-=+===+=====-+++=+=" +
-            "=++++==----=+=+=-S").repeat(2024)
+            "=++++==----=+=+=-S").repeat(2024) // total length is a multiple of 11 :eyes:
 
     fun combinations(prefix: String = "", plus: Int = 5, minus: Int = 3, equals: Int = 3, acc: MutableList<String> = arrayListOf()): List<String> {
         if (plus == 0 && minus == 0 && equals == 0) acc.add(prefix)
@@ -82,7 +86,7 @@ private fun part3(input: List<String>): Int {
     }
 
     val ruleset = combinations().plusElement(input.first().drop(2).replace(",", "")).map { it.cyclicIterator() }
-    val cumulativePowers = runRace(ruleset, track)
+    val cumulativePowers = runRaceParallel(ruleset, track)
     val competitorScore = cumulativePowers.last()
     return cumulativePowers.count { it > competitorScore }
 }
@@ -101,13 +105,25 @@ private fun runRace(ruleset: List<Iterator<Char>>, track: String): IntArray {
     return cumulativePowers
 }
 
+private fun runRaceParallel(ruleset: List<Iterator<Char>>, track: String): IntArray {
+    return ruleset.chunked((ruleset.size / Runtime.getRuntime().availableProcessors()).coerceAtLeast(1)).let { sets ->
+        runBlocking(Dispatchers.Default) {
+            sets.map { ruleSubSet ->
+                async {
+                    runRace(ruleSubSet, track)
+                }
+            }.awaitAll()
+        }
+    }.reduce { acc, it -> acc + it }
+}
+
 private fun deriveNextPower(override: Char, currentPower: Int, nextMove: Char): Int =
     when (override) {
         '+' -> currentPower + 1
-        '-' -> currentPower - 1
+        '-' -> (currentPower - 1).coerceAtLeast(0)
         else -> when (nextMove) {
             '+' -> currentPower + 1
-            '-' -> currentPower - 1
+            '-' -> (currentPower - 1).coerceAtLeast(0)
             else -> currentPower
         }
-    }.coerceAtLeast(0)
+    }
