@@ -156,20 +156,24 @@ fun String.linesAsCharArrays(skipEmptyLines: Boolean = false): List<CharArray> {
 fun factorial(num: Int): Long =
     (2..num).fold(1L) { acc, i -> acc * i }
 
-fun String.cyclicIterator() = object : Iterator<Char> {
+fun String.cyclicIterator() = this.toCharArray().cyclicIterator()
+
+fun CharArray.cyclicIterator() = object : Iterator<Char> {
     private var index = 0
+    private val lastIndexConst = this@cyclicIterator.lastIndex
     override fun hasNext() = true
     override fun next(): Char {
-        if (index > this@cyclicIterator.lastIndex) index = 0
+        if (index > lastIndexConst) index = 0
         return this@cyclicIterator[index++]
     }
 }
 
 fun String.cyclicIteratorIndexed() = object : Iterator<Pair<Int, Char>> {
     private var index = 0
+    private val lastIndexConst = this@cyclicIteratorIndexed.lastIndex
     override fun hasNext() = true
     override fun next(): Pair<Int, Char> {
-        if (index > this@cyclicIteratorIndexed.lastIndex) index = 0
+        if (index > lastIndexConst) index = 0
         return index to this@cyclicIteratorIndexed[index++]
     }
 }

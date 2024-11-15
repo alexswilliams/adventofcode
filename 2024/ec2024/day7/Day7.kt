@@ -1,9 +1,6 @@
 package ec2024.day7
 
-import common.ThreePartChallenge
-import common.benchmark
-import common.cyclicIterator
-import common.fromClasspathFileToLines
+import common.*
 import kotlin.test.assertEquals
 
 private const val rootFolder = "ec2024/day7"
@@ -16,10 +13,10 @@ private val puzzle3Input = "$rootFolder/input3.txt".fromClasspathFileToLines()
 internal fun main() {
     Day7.assertPart1Correct()
     Day7.assertPart2Correct()
-//    Day7.assertPart3Correct()
+    Day7.assertPart3Correct()
     benchmark { part1(puzzleInput) } // 27µs
-    benchmark { part2(puzzle2Input) } // 499µs
-//    benchmark { part3(puzzle3Input) } //
+    benchmark { part2(puzzle2Input) } // 170µs
+    benchmark(1) { part3(puzzle3Input) } // 13s
 }
 
 internal object Day7 : ThreePartChallenge {
@@ -39,72 +36,42 @@ internal object Day7 : ThreePartChallenge {
 }
 
 
-data class State(val player: Char, val currentPower: Int, val cumulativePower: Int)
-
 private fun part1(input: List<String>): String {
+    data class State(val player: Char, val currentPower: Int, val cumulativePower: Int)
+
     val ruleset: Map<Char, Iterator<Char>> = input.associate { Pair(it[0], it.drop(2).replace(",", "").cyclicIterator()) }
-
-    fun iterate(state: List<State>): List<State> {
-        return state.map { (squire, currentPower, cumulativePower) ->
-            val nextMove = ruleset[squire]!!.next()
-            val newPower = when (nextMove) {
-                '+' -> currentPower + 1
-                '-' -> currentPower - 1
-                else -> currentPower
-            }.coerceAtLeast(0)
-            State(squire, newPower, cumulativePower + newPower)
-        }
-    }
-
     var state = ruleset.keys.map { knight -> State(knight, 10, 0) }
     (1..10).forEach { i ->
-        state = iterate(state)
+        state = state.map { (squire, currentPower, cumulativePower) ->
+            val nextMove = ruleset[squire]!!.next()
+            val newPower = deriveNextPower('=', currentPower, nextMove)
+            State(squire, newPower, cumulativePower + newPower)
+        }
     }
     return state.sortedByDescending { it.cumulativePower }.map { it.player }.joinToString("")
 }
 
 private fun part2(input: List<String>): String {
-    val ruleset = input.takeWhile { it.isNotBlank() }.associate { it[0] to it.drop(2).replace(",", "").cyclicIterator() }
-    val track = "-=++=-==++=++=-=+=-=+=+=--=-=++=-==++=-+=-=+=-=+=+=++=-+==++=++=-=-=--" +
-            "-=++==--" +
-            "--==++++==+=+++-=+=-=+=-+-=+-=+-=+=-=+=--=+++=++=+++==++==--=+=++==+++".reversed() +
-            "-=+=+=-S"
-    val loopLength = track.length
-    val trackRuleset = track.cyclicIterator()
+    val track = input.takeLastWhile { it.isNotBlank() }.let { original ->
+        val transposed = original.transposeToStrings()
+        original.first().drop(1) +
+                transposed.last().drop(1) +
+                original.last().reversed().drop(1) +
+                transposed.first().reversed().drop(1)
+    }.repeat(10)
 
-    fun iterate(state: List<State>): List<State> {
-        val override = trackRuleset.next()
-        return state.map { (knight, currentPower, cumulativePower) ->
-            val nextMove = ruleset[knight]!!.next()
-            val newPower = when (override) {
-                '+' -> currentPower + 1
-                '-' -> currentPower - 1
-                else -> when (nextMove) {
-                    '+' -> currentPower + 1
-                    '-' -> currentPower - 1
-                    else -> currentPower
-                }
-            }.coerceAtLeast(0)
-            State(knight, newPower, cumulativePower + newPower)
-        }
-    }
-
-    var state = ruleset.keys.map { knight -> State(knight, 10, 0) }
-    (1..10 * loopLength).forEach { i ->
-        state = iterate(state)
-    }
-
-    return state.sortedByDescending { it.cumulativePower }.map { it.player }.joinToString("")
+    val knightsToRules = input.takeWhile { it.isNotBlank() }.map { it[0] to it.drop(2).replace(",", "") }
+    val ruleset = knightsToRules.map { it.second.cyclicIterator() }
+    val cumulativePowers = runRace(ruleset, track)
+    return cumulativePowers.withIndex().sortedByDescending { it.value }.map { knightsToRules[it.index].first }.joinToString("")
 }
 
 private fun part3(input: List<String>): Int {
-    val track = "+=+++===-+++++=-==+--+=+===-++=====+--===++=-==+=++====-==-===+=+=--==++=+========" +
+    val track = ("+=+++===-+++++=-==+--+=+===-++=====+--===++=-==+=++====-==-===+=+=--==++=+========" +
             "-=======++--+++=-++=-+=+==-=++=--+=-====++--+=-==++======+=++=-+==+=-==++=-=-=--" +
             "-++=-=++==++===--==+===++===---+++==++=+=-=====+==++===--==-==+++==+++=++=+===--" +
             "==++--===+=====-=++====-+=-+--=+++=-+-===++====+++--=++====+=-=+===+=====-+++=+=" +
-            "=++++==----=+=+=-S"
-    val loopLength = track.length
-    val trackRuleset = track.cyclicIterator()
+            "=++++==----=+=+=-S").repeat(2024)
 
     fun combinations(prefix: String = "", plus: Int = 5, minus: Int = 3, equals: Int = 3, acc: MutableList<String> = arrayListOf()): List<String> {
         if (plus == 0 && minus == 0 && equals == 0) acc.add(prefix)
@@ -114,34 +81,33 @@ private fun part3(input: List<String>): Int {
         return acc
     }
 
-    val allCombinations = combinations()
-    val competitorPlan = input.first().drop(2).replace(",", "")
-    val ruleset = allCombinations.mapIndexed { index, string -> index to string.cyclicIterator() }.plus(-1 to competitorPlan.cyclicIterator()).toMap()
+    val ruleset = combinations().plusElement(input.first().drop(2).replace(",", "")).map { it.cyclicIterator() }
+    val cumulativePowers = runRace(ruleset, track)
+    val competitorScore = cumulativePowers.last()
+    return cumulativePowers.count { it > competitorScore }
+}
 
-    data class State(val player: Int, val currentPower: Int, val cumulativePower: Int)
 
-    fun iterate(state: List<State>): List<State> {
-        val override = trackRuleset.next()
-        return state.map { (knight, currentPower, cumulativePower) ->
-            val nextMove = ruleset[knight]!!.next()
-            val newPower = when (override) {
-                '+' -> currentPower + 1
-                '-' -> currentPower - 1
-                else -> when (nextMove) {
-                    '+' -> currentPower + 1
-                    '-' -> currentPower - 1
-                    else -> currentPower
-                }
-            }.coerceAtLeast(0)
-            State(knight, newPower, cumulativePower + newPower)
+private fun runRace(ruleset: List<Iterator<Char>>, track: String): IntArray {
+    val currentPowers = IntArray(ruleset.size) { 10 }
+    val cumulativePowers = IntArray(ruleset.size) { 0 }
+    track.forEach { override ->
+        currentPowers.forEachIndexed { i, currentPower ->
+            val newPower = deriveNextPower(override, currentPower, ruleset[i].next())
+            currentPowers[i] = newPower
+            cumulativePowers[i] += newPower
         }
     }
-
-    var state = ruleset.keys.map { player -> State(player, 10, 0) }
-    (1..2024 * loopLength).forEach { i ->
-        state = iterate(state)
-    }
-
-    val competitorScore = state.first { it.player == -1 }.cumulativePower
-    return state.count { it.cumulativePower > competitorScore }
+    return cumulativePowers
 }
+
+private fun deriveNextPower(override: Char, currentPower: Int, nextMove: Char): Int =
+    when (override) {
+        '+' -> currentPower + 1
+        '-' -> currentPower - 1
+        else -> when (nextMove) {
+            '+' -> currentPower + 1
+            '-' -> currentPower - 1
+            else -> currentPower
+        }
+    }.coerceAtLeast(0)
