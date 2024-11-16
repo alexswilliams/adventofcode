@@ -20,7 +20,7 @@ internal fun main() {
     Day7.assertPart3Correct()
     benchmark { part1(puzzleInput) } // 27µs
     benchmark { part2(puzzle2Input) } // 119µs
-    benchmark(5) { part3(puzzle3Input) } // 1.88s
+    benchmark(10) { part3(puzzle3Input) } // 19.3ms
 }
 
 internal object Day7 : ThreePartChallenge {
@@ -75,7 +75,9 @@ private fun part3(input: List<String>): Int {
             "-=======++--+++=-++=-+=+==-=++=--+=-====++--+=-==++======+=++=-+==+=-==++=-=-=--" +
             "-++=-=++==++===--==+===++===---+++==++=+=-=====+==++===--==-==+++==+++=++=+===--" +
             "==++--===+=====-=++====-+=-+--=+++=-+-===++====+++--=++====+=-=+===+=====-+++=+=" +
-            "=++++==----=+=+=-S").repeat(2024) // total length is a multiple of 11 :eyes:
+            "=++++==----=+=+=-S")
+//        .repeat(2024) // total length is a multiple of 11 :eyes:
+        .repeat(11)
 
     fun combinations(prefix: String = "", plus: Int = 5, minus: Int = 3, equals: Int = 3, acc: MutableList<String> = arrayListOf()): List<String> {
         if (plus == 0 && minus == 0 && equals == 0) acc.add(prefix)
