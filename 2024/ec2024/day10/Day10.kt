@@ -57,28 +57,86 @@ private fun part2(input: List<String>): Int {
 }
 
 private fun part3(input: List<String>): Int {
-    val rows = input.windowed(8, 6)
-    val squares = rows.flatMap { strings -> strings.map { it.windowed(8, 6) }.transpose() }
-    val partWords = squares.map { strings -> squareToRuneWordAndSolveMissingBits(strings) }
-    return partWords.filterNot { '.' in it }.sumOf { it.basePower() }
+    val grid = input.map { it -> it.toCharArray() }.toTypedArray()
+    val squareTopLefts = cartesianProductOf(
+        IntProgression.fromClosedRange(0, grid.lastIndex - 2, 6),
+        IntProgression.fromClosedRange(0, grid[0].lastIndex - 2, 6)
+    )
+    val innerCoords = cartesianProductOf(listOf(2, 3, 4, 5), listOf(2, 3, 4, 5))
+    val rowCoords = cartesianProductOf(listOf(2, 3, 4, 5), listOf(0, 1, 6, 7))
+    val colCoords = cartesianProductOf(listOf(0, 1, 6, 7), listOf(2, 3, 4, 5))
+
+    println("Unsolved Grid")
+    printGrid(grid)
+
+    // Fill in what's easily derivable, leave '.' behind if there wasn't a unique letter for that position
+    squareTopLefts.forEach { (row, col) ->
+        val word = squareToRuneWord(input.subList(row, row + 8).map { line -> line.substring(col, col + 8) }).toCharArray()
+        word.copyInto(grid[row + 2], col + 2, 0, 4)
+        word.copyInto(grid[row + 3], col + 2, 4, 8)
+        word.copyInto(grid[row + 4], col + 2, 8, 12)
+        word.copyInto(grid[row + 5], col + 2, 12, 16)
+    }
+
+    println("After naive round")
+    printGrid(grid)
+
+    val unsolvedCells = grid.indices.flatMap { row -> grid[0].indices.filter { col -> grid[row][col] == '.' }.map { col -> row to col } }.toMutableList()
+    var cellsRemaining: Int
+    do {
+        println("Unsolved cell locations: ${unsolvedCells.size}")
+        unsolvedCells.forEach { (row, col) ->
+            val localRow = row % 6
+            val localCol = col % 6
+            val innerRows = innerCoords.groupBy({ (r, _) -> r }) { (r, c) -> grid[row - localRow + r][col - localCol + c] }
+            val innerCols = innerCoords.groupBy({ (_, c) -> c }) { (r, c) -> grid[row - localRow + r][col - localCol + c] }
+            val rows = rowCoords.groupBy({ (r, _) -> r }) { (r, c) -> grid[row - localRow + r][col - localCol + c] }
+            val cols = colCoords.groupBy({ (_, c) -> c }) { (r, c) -> grid[row - localRow + r][col - localCol + c] }
+
+            println(innerRows)
+            println(innerCols)
+            println("$row,$col -> $localRow,$localCol")
+            println("rows[localRow] ${rows[localRow]}")
+            println("innerRows[localRow] ${innerRows[localRow]}")
+            println("cols[localCol] ${cols[localCol]}")
+            println("innerCols[localCol] ${innerCols[localCol]}")
+            println("cols[localCol] - innerCols[localCol] ${cols[localCol]!!.subtract(innerCols[localCol]!!)}")
+            println("rows[localRow] - innerRows[localRow] ${rows[localRow]!!.subtract(innerRows[localRow]!!)}")
+
+            val singleCol = cols[localCol]!!.subtract(innerCols[localCol]!!.plus('?')).singleOrNull()
+            if (singleCol != null) {
+                val markInRow = rows[localRow]!!.indexOf('?')
+                println("Found COL $singleCol for $row, $col and ? ${markInRow + if (markInRow <= 1) 0 else 4}")
+                grid[row][col] = singleCol
+                if (markInRow >= 0)
+                    grid[row][col - localCol + markInRow + if (markInRow <= 1) 0 else 4] = singleCol
+            }
+            val singleRow = rows[localRow]!!.subtract(innerRows[localRow]!!.plus('?')).singleOrNull()
+            if (singleRow != null) {
+                val markInCol = cols[localCol]!!.indexOf('?')
+                println("Found ROW $singleRow for $row, $col and ? ${markInCol + if (markInCol <= 1) 0 else 4}")
+                grid[row][col] = singleRow
+                if (markInCol >= 0)
+                    grid[row - localRow + markInCol + if (markInCol <= 1) 0 else 4][col] = singleRow
+            }
+        }
+        cellsRemaining = unsolvedCells.size
+        unsolvedCells.removeAll { (row, col) -> grid[row][col] != '.' }
+    } while (cellsRemaining != unsolvedCells.size)
+
+    println("After Iterating Solutions")
+    printGrid(grid)
+
+    return squareTopLefts.map { (row, col) ->
+        innerCoords.groupBy({ (r, _) -> r }) { (r, c) -> grid[row + r][col + c] }.map { (_, line) -> line.joinToString("") }.joinToString("")
+    }.also { println(it) }
+        .filterNot { '.' in it }.sumOf { it.basePower() }
 }
 
-private fun squareToRuneWordAndSolveMissingBits(input: List<String>): String {
-    val h = input.subList(2, 6).map { it.filterNot { ch -> ch == '.' }.toSet() }
-    val v = input.transposeToStrings().subList(2, 6).map { it.filterNot { ch -> ch == '.' }.toSet() }
-    val innerWithGaps = (0..3).flatMap { row -> (0..3).map { col -> (row to col) to ((h[row] intersect v[col]).singleOrNull() ?: '.') } }.toMap()
-    val inner = (0..3).map { row ->
-        (0..3).map { col ->
-            val existing = innerWithGaps[row to col]
-            if (existing != '.') existing else {
-                if ('?' in h[row]) v[col].subtract(innerWithGaps.filter { (pos, _) -> pos.second == col }.values).singleOrNull() ?: '.'
-                else if ('?' in v[col]) h[row].subtract(innerWithGaps.filter { (pos, _) -> pos.first == row }.values).singleOrNull() ?: '.'
-                else '.'
-            }
-        }.joinToString("")
+private fun printGrid(arrays: Array<CharArray>) {
+    arrays.forEach { line ->
+        println(line.concatToString())
     }
-    println(innerWithGaps)
-    println(squareToRuneWord(input))
-    println(inner.joinToString(""))
-    return inner.joinToString("")
+    println()
 }
+
