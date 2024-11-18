@@ -2,16 +2,16 @@ package ec2024.dayX
 
 import common.ThreePartChallenge
 import common.benchmark
-import common.fromClasspathFile
+import common.fromClasspathFileToLines
 import kotlin.test.assertEquals
 
 private const val rootFolder = "ec2024/dayX"
-private val exampleInput = "$rootFolder/example.txt".fromClasspathFile()
-private val example2Input = "$rootFolder/example2.txt".fromClasspathFile()
-private val example3Input = "$rootFolder/example3.txt".fromClasspathFile()
-private val puzzleInput = "$rootFolder/input.txt".fromClasspathFile()
-private val puzzle2Input = "$rootFolder/input2.txt".fromClasspathFile()
-private val puzzle3Input = "$rootFolder/input3.txt".fromClasspathFile()
+private val exampleInput = "$rootFolder/example.txt".fromClasspathFileToLines()
+private val example2Input = "$rootFolder/example2.txt".fromClasspathFileToLines()
+private val example3Input = "$rootFolder/example3.txt".fromClasspathFileToLines()
+private val puzzleInput = "$rootFolder/input.txt".fromClasspathFileToLines()
+private val puzzle2Input = "$rootFolder/input2.txt".fromClasspathFileToLines()
+private val puzzle3Input = "$rootFolder/input3.txt".fromClasspathFileToLines()
 
 internal fun main() {
     DayX.assertPart1Correct()
@@ -40,8 +40,8 @@ internal object DayX : ThreePartChallenge {
 }
 
 
-private fun part1(input: String): Int = 0
+private fun part1(input: List<String>): Int = 0
 
-private fun part2(input: String): Int = 0
+private fun part2(input: List<String>): Int = 0
 
-private fun part3(input: String): Int = 0
+private fun part3(input: List<String>): Int = 0

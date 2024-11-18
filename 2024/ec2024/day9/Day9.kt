@@ -64,14 +64,14 @@ private fun part3(input: List<String>): Int {
         }
 }
 
-private fun shortestWayToMake(target: Int, map: MutableMap<Int, Int>, stamps: IntArray): Int {
-    val fromCache = map[target]
+private fun shortestWayToMake(target: Int, cache: MutableMap<Int, Int>, stamps: IntArray): Int {
+    val fromCache = cache[target]
     if (fromCache != null) return fromCache
 
     var minSoFar = Integer.MAX_VALUE
     for (i in stamps) {
         if (i < target)
-            minSoFar = min(minSoFar, shortestWayToMake(target - i, map, stamps))
+            minSoFar = min(minSoFar, shortestWayToMake(target - i, cache, stamps))
     }
-    return (minSoFar + 1).also { map[target] = it }
+    return (minSoFar + 1).also { cache[target] = it }
 }
