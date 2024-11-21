@@ -21,7 +21,7 @@ internal fun main() {
     Day13.assertPart2Correct()
     Day13.assertPart3Correct()
     benchmark { part1(puzzleInput) } // 49µs
-    benchmark { part2(puzzle2Input) } // 558µs
+    benchmark { part2(puzzle2Input) } // 520µs
     benchmark(100) { part3(puzzle3Input) } // 5.8ms
 }
 
@@ -59,8 +59,7 @@ private fun shortestPathLength(input: List<String>): Int =
                     else -> null
                 }
             }
-        }
-    )
+        })
 
 
 private fun aStarSearch(starts: Collection<Tile>, end: Tile, grid: List<List<Tile?>>, heuristic: (Tile) -> Int = { manhattan(it, end) }): Int {
@@ -89,7 +88,7 @@ private fun aStarSearch(starts: Collection<Tile>, end: Tile, grid: List<List<Til
 
 private fun manhattan(t1: Tile, t2: Tile) = (t1.r - t2.r).absoluteValue + (t1.c - t2.c).absoluteValue + (t1.height - t2.height).absoluteValue
 
-private fun neighboursOf(tile: Tile, grid: List<List<Tile?>>): Collection<Tile> = buildList {
+private fun neighboursOf(tile: Tile, grid: List<List<Tile?>>): Collection<Tile> = buildList(4) {
     if (tile.c > 0) grid[tile.r][tile.c - 1]?.also { add(it) }
     if (tile.c < grid[0].lastIndex) grid[tile.r][tile.c + 1]?.also { add(it) }
     if (tile.r > 0) grid[tile.r - 1][tile.c]?.also { add(it) }

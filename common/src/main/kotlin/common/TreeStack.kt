@@ -21,6 +21,6 @@ class TreeStack<Element>(private val weightOffset: (Element) -> Int = { 0 }) {
     fun offerOrReposition(e: Element, oldWeight: Int, newWeight: Int) {
         val weight = oldWeight + weightOffset(e)
         tree[weight]?.apply { if (remove(e) && isEmpty()) tree.remove(weight) }
-        return offer(e, newWeight)
+        offer(e, newWeight)
     }
 }
