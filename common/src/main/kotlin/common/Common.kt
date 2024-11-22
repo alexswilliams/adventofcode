@@ -231,6 +231,7 @@ fun <R> String.splitMappingRanges(
     return result
 }
 
+fun String.toShortFromIndex(startAt: Int) = this.toLongFromIndex(startAt).toShort()
 fun String.toIntFromIndex(startAt: Int) = this.toLongFromIndex(startAt).toInt()
 fun String.toLongFromIndex(startAt: Int): Long {
     var currentOffset = startAt
