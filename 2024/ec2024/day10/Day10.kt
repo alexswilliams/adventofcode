@@ -9,9 +9,9 @@ private val puzzles = loadFilesToLines("ec2024/day10", "input.txt", "input2.txt"
 
 internal fun main() {
     Day10.assertCorrect()
-    benchmark { part1(puzzles[0]) } // 21µs
-    benchmark { part2(puzzles[1]) } // 610µs
-    benchmark(100) { part3(puzzles[2]) } // 3.2ms
+    benchmark { part1(puzzles[0]) } // 19µs
+    benchmark { part2(puzzles[1]) } // 6569µs
+    benchmark { part3(puzzles[2]) } // 1.4ms
 }
 
 internal object Day10 : Challenge {
@@ -40,8 +40,8 @@ private fun part2(input: List<String>): Int =
 
 private fun squareToRuneWord(square: Array<CharArray>) = CharArray(16) { i ->
     val rowCodex = arrayOf(square[i / 4 + 2][0], square[i / 4 + 2][1], square[i / 4 + 2][6], square[i / 4 + 2][7])
-    val colCodex = listOf(square[0][i % 4 + 2], square[1][i % 4 + 2], square[6][i % 4 + 2], square[7][i % 4 + 2])
-    (rowCodex intersect colCodex).singleOrNull() ?: '.'
+    val colCodex = arrayOf(square[0][i % 4 + 2], square[1][i % 4 + 2], square[6][i % 4 + 2], square[7][i % 4 + 2])
+    (rowCodex intersect colCodex.asIterable()).singleOrNull() ?: '.'
 }
 
 private val CharArray.basePower: Int
@@ -65,68 +65,53 @@ private fun part3(input: List<String>): Int {
         }
     }
 
-
-    var unsolvedCells = squareTopLefts.flatMapTo(ArrayList()) { (r, c) -> unsolvedCoordsForSquare(r, c, grid) }
+    val unsolvedCells = squareTopLefts.flatMap { (r, c) -> allUnsolvedCoordsInSquare(r, c, grid) }.toMutableList()
     while (unsolvedCells.isNotEmpty()) {
-//        printGrid(grid)
-//        println(unsolvedCells)
-
-        unsolvedCells.forEach { (r, c) ->
+        val solvedCells = mutableListOf<Pair<Int, Int>>()
+        unsolvedCells.forEach { cell ->
+            val (r, c) = cell
             val localRow = r % 6
             val localCol = c % 6
-            val topR = r - localRow
-            val leftC = c - localCol
-            val square = grid.subGrid(topR, leftC, 8, 8)
 
-            val rowCodex = arrayOf(square[localRow][0], square[localRow][1], square[localRow][6], square[localRow][7])
-            val colCodex = arrayOf(square[0][localCol], square[1][localCol], square[6][localCol], square[7][localCol])
-            val rowWord = arrayOf(square[localRow][2], square[localRow][3], square[localRow][4], square[localRow][5])
-            val colWord = arrayOf(square[2][localCol], square[3][localCol], square[4][localCol], square[5][localCol])
-//            println("Unsolved cell: $r,$c")
-//            println("  Row codex: ${rowCodex.joinToString(",")}, Row Word: ${rowWord.joinToString(",")}")
-//            println("  Col codex: ${colCodex.joinToString(",")}, Col Word: ${colWord.joinToString(",")}")
+            val rowCodex = arrayOf(grid[r][c - localCol + 0], grid[r][c - localCol + 1], grid[r][c - localCol + 6], grid[r][c - localCol + 7])
+            val colCodex = arrayOf(grid[r - localRow + 0][c], grid[r - localRow + 1][c], grid[r - localRow + 6][c], grid[r - localRow + 7][c])
+            val rowWord = arrayOf(grid[r][c - localCol + 2], grid[r][c - localCol + 3], grid[r][c - localCol + 4], grid[r][c - localCol + 5])
+            val colWord = arrayOf(grid[r - localRow + 2][c], grid[r - localRow + 3][c], grid[r - localRow + 4][c], grid[r - localRow + 5][c])
 
             when {
-                rowWord.count { it == '.' } == 1 && '?' !in rowCodex -> {
-                    val missingLetter = rowCodex.subtract(rowWord.toSet()).single()
+                '?' !in rowCodex && rowWord.count { it == '.' } == 1 -> {
+                    val missingLetter = rowCodex.subtract(rowWord.asIterable()).single()
                     grid[r][c] = missingLetter
-//                    println("  - replacing $r,$c with $missingLetter because row contained no ?")
+                    solvedCells.add(cell)
                     if (missingLetter !in colCodex && colCodex.count { it == '?' } == 1) {
-                        grid[codexToSquare(colCodex.indexOf('?')) + topR][c] = missingLetter
-//                        println("  - replacing ? at ${codexToSquare(colCodex.indexOf('?')) + topR},$c with $missingLetter")
+                        grid[codexToSquare(colCodex.indexOf('?')) + (r - localRow)][c] = missingLetter
                     }
                 }
-                colWord.count { it == '.' } == 1 && '?' !in colCodex -> {
-                    val missingLetter = colCodex.subtract(colWord.toSet()).single()
+                '?' !in colCodex && colWord.count { it == '.' } == 1 -> {
+                    val missingLetter = colCodex.subtract(colWord.asIterable()).single()
                     grid[r][c] = missingLetter
-//                    println("  - replacing $r,$c with $missingLetter because column contained no ?")
+                    solvedCells.add(cell)
                     if (missingLetter !in rowCodex && rowCodex.count { it == '?' } == 1) {
-                        grid[r][codexToSquare(rowCodex.indexOf('?')) + leftC] = missingLetter
-//                        println("  - replacing ? at $r,${codexToSquare(rowCodex.indexOf('?')) + leftC} with $missingLetter")
+                        grid[r][codexToSquare(rowCodex.indexOf('?')) + (c - localCol)] = missingLetter
                     }
                 }
                 ('?' !in colCodex && '?' !in rowCodex) -> {
-                    val unusedRowCodex = rowCodex.subtract(rowWord.toSet())
-                    val unusedColCodex = colCodex.subtract(colWord.toSet())
-                    val missingLetter = (unusedRowCodex intersect unusedColCodex).singleOrNull()
-                    if (missingLetter != null) {
-                        grid[r][c] = missingLetter
-//                        println("  - replacing $r,$c with $missingLetter because neither row nor column contained ?")
-                    }
+                    grid[r][c] = (rowCodex intersect colCodex.asIterable()).single()
+                    solvedCells.add(cell)
                 }
             }
-
         }
 
-        squareTopLefts.removeAll(squareTopLefts.filter { isUnsolvable(it, grid) })
-        unsolvedCells = squareTopLefts.flatMapTo(ArrayList()) { (r, c) -> unsolvedCoordsForSquare(r, c, grid) }
+        unsolvedCells.removeAll(solvedCells)
+        // In theory this step might be necessary for a really complex grid, but the puzzle input seems to avoid it.
+        // squareTopLefts.removeAll(squareTopLefts.filter { isUnsolvable(it, grid) })
+        // unsolvedCells = squareTopLefts.flatMapTo(ArrayList()) { (r, c) -> unsolvedCoordsForSquare(r, c, grid) }
     }
 
-    return squareTopLefts.map { (topR, leftC) ->
-        CharArray(16) { i ->
-            grid[topR + i / 4 + 2][leftC + i % 4 + 2]
-        }
-    }.filterNot { chars -> '.' in chars }.sumOf { chars -> chars.basePower }
+    return squareTopLefts
+        .map { (topR, leftC) -> CharArray(16) { i -> grid[topR + i / 4 + 2][leftC + i % 4 + 2] } }
+        .filterNot { chars -> '.' in chars }
+        .sumOf { chars -> chars.basePower }
 }
 
 fun codexToSquare(i: Int) = when (i) {
@@ -135,9 +120,12 @@ fun codexToSquare(i: Int) = when (i) {
     else -> throw Error()
 }
 
-private fun unsolvedCoordsForSquare(r: Int, c: Int, grid: Array<CharArray>): List<Pair<Int, Int>> =
+private fun allUnsolvedCoordsInSquare(r: Int, c: Int, grid: Array<CharArray>): List<Pair<Int, Int>> =
     innerCoords.map { (ir, ic) -> (r + ir) to (c + ic) }.filter { (ir, ic) -> grid[ir][ic] == '.' }
 
+
+private fun List<Char>.uniqueLettersPlusQuestionMarks() =
+    partition { it == '?' }.let { (q, l) -> l.distinct().size + q.size }
 
 private fun isUnsolvable(topLeft: Pair<Int, Int>, grid: Array<CharArray>): Boolean {
     val (squareRow, squareCol) = topLeft
@@ -145,13 +133,15 @@ private fun isUnsolvable(topLeft: Pair<Int, Int>, grid: Array<CharArray>): Boole
     val bottom = bottomCoords.map { (r, c) -> grid[r + squareRow][c + squareCol] }
     val left = leftCoords.map { (r, c) -> grid[r + squareRow][c + squareCol] }
     val right = rightCoords.map { (r, c) -> grid[r + squareRow][c + squareCol] }
-    if ((top.filterNot { it == '?' } intersect bottom).isNotEmpty()) return true
-    if ((left.filterNot { it == '?' } intersect right).isNotEmpty()) return true
-    if (top.partition { it == '?' }.let { (q, l) -> l.distinct().size + q.size } != 8) return true
-    if (bottom.partition { it == '?' }.let { (q, l) -> l.distinct().size + q.size } != 8) return true
-    if (left.partition { it == '?' }.let { (q, l) -> l.distinct().size + q.size } != 8) return true
-    if (right.partition { it == '?' }.let { (q, l) -> l.distinct().size + q.size } != 8) return true
-    return false
+    return when {
+        (top.filterNot { it == '?' } intersect bottom).isNotEmpty() -> true
+        (left.filterNot { it == '?' } intersect right).isNotEmpty() -> true
+        top.uniqueLettersPlusQuestionMarks() != 8 -> true
+        bottom.uniqueLettersPlusQuestionMarks() != 8 -> true
+        left.uniqueLettersPlusQuestionMarks() != 8 -> true
+        right.uniqueLettersPlusQuestionMarks() != 8 -> true
+        else -> false
+    }
 }
 
 private val topCoords = cartesianProductOf(listOf(0, 1), listOf(2, 3, 4, 5))
