@@ -3,8 +3,6 @@ package aoc2022.day16
 import common.*
 import common.BitSet
 import java.util.*
-import kotlin.collections.forEach
-import kotlin.collections.max
 import kotlin.test.*
 
 private val exampleInput = "aoc2022/day16/example.txt".fromClasspathFileToLines()

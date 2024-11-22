@@ -1,7 +1,7 @@
 package aoc2023.day13
 
 import common.*
-import kotlin.test.assertEquals
+import kotlin.test.*
 
 
 private val exampleInput = "aoc2023/day13/example.txt".fromClasspathFile().split("\n\n").map { it.lines() }

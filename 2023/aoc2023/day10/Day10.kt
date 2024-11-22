@@ -1,8 +1,8 @@
 package aoc2023.day10
 
 import common.*
-import java.io.File
-import kotlin.test.assertEquals
+import java.io.*
+import kotlin.test.*
 
 
 // You know it'll be an awful day when they give you FIVE different example inputs...

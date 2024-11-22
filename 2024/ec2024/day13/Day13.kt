@@ -1,13 +1,8 @@
 package ec2024.day13
 
-import common.ThreePartChallenge
-import common.TreeStack
-import common.benchmark
-import common.fromClasspathFileToLines
-import kotlin.math.absoluteValue
-import kotlin.math.max
-import kotlin.math.min
-import kotlin.test.assertEquals
+import common.*
+import kotlin.math.*
+import kotlin.test.*
 
 private const val rootFolder = "ec2024/day13"
 private val exampleInput = "$rootFolder/example.txt".fromClasspathFileToLines()

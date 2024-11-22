@@ -1,7 +1,5 @@
 package common
 
-import java.util.NoSuchElementException
-
 const val EMPTY_BITSET = 0L
 typealias BitSet = Long
 

@@ -1,8 +1,8 @@
 package aoc2023.day11
 
 import common.*
-import kotlin.math.abs
-import kotlin.test.assertEquals
+import kotlin.math.*
+import kotlin.test.*
 
 
 private val exampleInput = "aoc2023/day11/example.txt".fromClasspathFile().linesAsCharArrays()

@@ -1,7 +1,7 @@
 package day2
 
-import common.fromClasspathFileToProgram
-import kotlin.test.assertEquals
+import common.*
+import kotlin.test.*
 
 
 fun main() {

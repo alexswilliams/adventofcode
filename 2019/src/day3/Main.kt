@@ -1,8 +1,8 @@
 package day3
 
-import common.fromClasspathFileToLines
-import kotlin.math.abs
-import kotlin.test.assertEquals
+import common.*
+import kotlin.math.*
+import kotlin.test.*
 
 data class XYC(val x: Int, val y: Int, val count: Int)
 
@@ -18,14 +18,14 @@ fun main() {
         .reduce { acc, next -> acc.intersect(next) }
     val withDistancesFromOrigin = intersections.map { (x, y) -> Triple(x, y, manhattanDistance(x, y)) }
     val closestToOrigin = withDistancesFromOrigin.minBy { it.third }
-    println("Part 1: shortest = $closestToOrigin, distance = ${closestToOrigin?.third}")
-    assertEquals(1431, closestToOrigin?.third)
+    println("Part 1: shortest = $closestToOrigin, distance = ${closestToOrigin.third}")
+    assertEquals(1431, closestToOrigin.third)
 
 
     val soonestIntersectionPerPath = points.map { path ->
         path.filter { (it.x to it.y) in intersections }
             .groupBy({ it.x to it.y }) { it.count }
-            .mapValues { it.value.min() ?: Int.MAX_VALUE }
+            .mapValues { it.value.min() }
     }
     val soonestIntersectionTotals = soonestIntersectionPerPath.reduce { acc, next ->
         (acc.asSequence() + next.asSequence())
@@ -34,8 +34,8 @@ fun main() {
     }
 
     val soonest = soonestIntersectionTotals.minBy { it.value }
-    println("Part 2: soonest = $soonest, combined distance = ${soonest?.value}")
-    assertEquals(48012, soonest?.value)
+    println("Part 2: soonest = $soonest, combined distance = ${soonest.value}")
+    assertEquals(48012, soonest.value)
 }
 
 

@@ -1,9 +1,7 @@
 package aoc2023.day7
 
-import common.TwoPartChallenge
-import common.benchmark
-import common.fromClasspathFileToLines
-import kotlin.test.assertEquals
+import common.*
+import kotlin.test.*
 
 
 private val exampleInput = "aoc2023/day7/example.txt".fromClasspathFileToLines()

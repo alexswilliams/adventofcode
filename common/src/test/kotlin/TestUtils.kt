@@ -1,5 +1,4 @@
-import org.junit.platform.commons.util.ClassFilter
-import org.junit.platform.commons.util.ReflectionUtils
+import org.junit.platform.commons.util.*
 
 inline fun <reified T> allChallengesUnder(pkgName: String): List<T> {
     return ReflectionUtils.streamAllClassesInPackage(pkgName, ClassFilter.of { T::class.java.isAssignableFrom(it) }).toList()

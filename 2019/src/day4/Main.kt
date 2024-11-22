@@ -1,9 +1,7 @@
 package day4
 
-import common.fromClasspathFileToLines
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
+import common.*
+import kotlin.test.*
 
 
 fun main() {

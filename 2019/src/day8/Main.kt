@@ -1,7 +1,7 @@
 package day8
 
-import common.fromClasspathFileToLines
-import kotlin.test.assertEquals
+import common.*
+import kotlin.test.*
 
 
 fun main() {
@@ -13,7 +13,7 @@ fun main() {
     val height = 6
     val layers = transmission.chunked(width * height).map { it.toList() }
 
-    val withFewestZeros = layers.minBy { it.count { char -> char == '0' } } ?: error("No row found")
+    val withFewestZeros = layers.minBy { it.count { char -> char == '0' } }
     val product = withFewestZeros.count { it == '1' } * withFewestZeros.count { it == '2' }
     println("Part 1: product = $product")
     assertEquals(1330, product)

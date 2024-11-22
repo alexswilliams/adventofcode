@@ -1,10 +1,7 @@
 package aoc2023.day4
 
-import common.TwoPartChallenge
-import common.benchmark
-import common.filterNotBlank
-import common.fromClasspathFileToLines
-import kotlin.test.assertEquals
+import common.*
+import kotlin.test.*
 
 
 private val exampleInput = "aoc2023/day4/example.txt".fromClasspathFileToLines()

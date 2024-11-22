@@ -1,9 +1,10 @@
 package common
 
-import java.io.File
+import java.io.*
 import java.util.*
-import kotlin.math.max
-import kotlin.math.min
+import kotlin.math.*
+
+object Common
 
 fun String.fromClasspathFileToLines(): List<String> {
     val url = Common::class.java.classLoader.getResource(this)
@@ -364,5 +365,3 @@ fun Sequence<Collection<Int>>.intersect(): List<Int> {
     return result
 }
 
-
-object Common

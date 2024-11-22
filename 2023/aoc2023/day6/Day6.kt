@@ -1,10 +1,8 @@
 package aoc2023.day6
 
 import common.*
-import kotlin.math.ceil
-import kotlin.math.floor
-import kotlin.math.sqrt
-import kotlin.test.assertEquals
+import kotlin.math.*
+import kotlin.test.*
 
 
 private val exampleInput = "aoc2023/day6/example.txt".fromClasspathFileToLines()

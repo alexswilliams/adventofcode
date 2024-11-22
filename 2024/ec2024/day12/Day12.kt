@@ -1,9 +1,7 @@
 package ec2024.day12
 
-import common.ThreePartChallenge
-import common.benchmark
-import common.fromClasspathFileToLines
-import kotlin.test.assertEquals
+import common.*
+import kotlin.test.*
 
 private const val rootFolder = "ec2024/day12"
 private val exampleInput = "$rootFolder/example.txt".fromClasspathFileToLines()

@@ -1,15 +1,9 @@
 package aoc2023.day12
 
-import common.TwoPartChallenge
-import common.benchmark
-import common.fromClasspathFileToLines
-import common.splitToInts
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.runBlocking
-import java.time.Instant
-import kotlin.test.assertEquals
+import common.*
+import kotlinx.coroutines.*
+import java.time.*
+import kotlin.test.*
 
 
 private val exampleInput = "aoc2023/day12/example.txt".fromClasspathFileToLines()

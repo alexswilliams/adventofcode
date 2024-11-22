@@ -1,12 +1,9 @@
 package ec2024.day14
 
 import common.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.runBlocking
-import java.util.HashSet.newHashSet
-import kotlin.test.assertEquals
+import kotlinx.coroutines.*
+import java.util.HashSet.*
+import kotlin.test.*
 
 private const val rootFolder = "ec2024/day14"
 private val exampleInput = "$rootFolder/example.txt".fromClasspathFile()

@@ -1,8 +1,8 @@
 package day14
 
-import common.fromClasspathFileToLines
-import kotlin.math.absoluteValue
-import kotlin.test.assertEquals
+import common.*
+import kotlin.math.*
+import kotlin.test.*
 
 data class Formula(val consumes: Chemicals, val produces: String, val productionQuantity: Long)
 data class RequiredChemicals(val required: Chemicals, val waste: Chemicals)
@@ -110,7 +110,7 @@ private fun String.asFormula(): Formula {
     val consumed = lhs.split(",")
     val produces = rhs.asChemical()
     return Formula(
-        consumes = consumed.map(String::asChemical).toMap(),
+        consumes = consumed.associate(String::asChemical),
         produces = produces.first,
         productionQuantity = produces.second
     )

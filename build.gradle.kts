@@ -22,6 +22,9 @@ dependencies {
 
     // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
+
+    // https://mvnrepository.com/artifact/com.github.ajalt.mordant/mordant
+    implementation("com.github.ajalt.mordant:mordant:3.0.1")
 }
 
 tasks.getByName<Test>("test") {
@@ -29,9 +32,9 @@ tasks.getByName<Test>("test") {
 }
 
 sourceSets.main {
-    kotlin.srcDirs("2022", "2023", "2024", "common/src/main/kotlin")
-    resources.srcDirs("2022", "2023", "2024")
-    kotlin.exclude("2019", "2020")
+    kotlin.srcDirs("2019/src", "2022", "2023", "2024", "common/src/main/kotlin")
+    resources.srcDirs("2019/resources", "2022", "2023", "2024")
+    kotlin.exclude("2020")
 }
 
 sourceSets.test {

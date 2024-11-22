@@ -9,7 +9,7 @@ data class RunState(
     val ip: Int = 0,
     val state: MachineState = MachineState.RUNNING,
     val base: Int = 0,
-    val sparseMem: Map<Int, Long> = emptyMap()
+    val sparseMem: Map<Int, Long> = emptyMap(),
 )
 
 tailrec fun runProgram(state: RunState): RunState {
@@ -132,7 +132,7 @@ private enum class ParameterMode(val encoding: Int) {
     RELATIVE(2)
 }
 
-private val modeMap = ParameterMode.values().associateBy { it.encoding }
+private val modeMap = ParameterMode.entries.associateBy { it.encoding }
 
 private enum class Opcode(val encoding: Int) {
     ADD(1),
@@ -147,7 +147,7 @@ private enum class Opcode(val encoding: Int) {
     HALT(99)
 }
 
-private val opcodeMap = Opcode.values().associateBy { it.encoding }
+private val opcodeMap = Opcode.entries.associateBy { it.encoding }
 
 enum class MachineState {
     RUNNING,

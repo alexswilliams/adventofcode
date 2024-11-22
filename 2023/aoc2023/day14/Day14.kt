@@ -1,8 +1,8 @@
 package aoc2023.day14
 
 import common.*
-import kotlin.math.max
-import kotlin.test.assertEquals
+import kotlin.math.*
+import kotlin.test.*
 
 
 private val exampleInput = "aoc2023/day14/example.txt".fromClasspathFileToLines()

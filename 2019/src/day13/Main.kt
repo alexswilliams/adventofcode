@@ -1,11 +1,8 @@
 package day13
 
-import common.MachineState
-import common.RunState
-import common.fromClasspathFileToLongProgram
-import common.runProgram
-import kotlin.math.absoluteValue
-import kotlin.test.assertEquals
+import common.*
+import kotlin.math.*
+import kotlin.test.*
 
 private val SCORE_XY = XY(-1, 0)
 
@@ -14,7 +11,7 @@ private data class GameState(
     val score: Long = 0,
     val ball: XY = XY(0, 0),
     val paddle: XY = XY(0, 0),
-    val blocks: Int = 0
+    val blocks: Int = 0,
 )
 private typealias Screen = Map<XY, Long>
 
@@ -88,8 +85,8 @@ private tailrec fun runUntilHalted(state: RunState, programRunner: (RunState) ->
 }
 
 private fun Screen.renderToString(): String {
-    val xs = map { it.key.x }.min()!!..map { it.key.x }.max()!!
-    val ys = map { it.key.y }.min()!!..map { it.key.y }.max()!!
+    val xs = map { it.key.x }.min()..map { it.key.x }.max()
+    val ys = map { it.key.y }.min()..map { it.key.y }.max()
     return ys.joinToString("\n") { y ->
         xs.joinToString("") { x ->
             this.getOrDefault(XY(x, y), Contents.EMPTY.value).toCellContents().displayedAs
@@ -103,7 +100,7 @@ private data class XY(val x: Long, val y: Long) {
 
 private enum class Contents(
     val value: Long,
-    val displayedAs: CharSequence
+    val displayedAs: CharSequence,
 ) {
     EMPTY(0, "."),
     WALL(1, "▓"),

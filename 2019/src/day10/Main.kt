@@ -1,10 +1,8 @@
 package day10
 
-import common.fromClasspathFileToLines
-import kotlin.math.absoluteValue
-import kotlin.math.max
-import kotlin.math.min
-import kotlin.test.assertEquals
+import common.*
+import kotlin.math.*
+import kotlin.test.*
 
 private data class XY(val x: Int, val y: Int) {
     fun gradientTo(other: XY) = -(other.x - x).toDouble() / (other.y - y).toDouble()
@@ -31,8 +29,7 @@ fun main() {
 
 private fun bestPosition(asteroids: Set<XY>): Pair<XY, Int> =
     asteroids.associateWith { asteroids.visibleFrom(it).count() }
-        .maxBy { it.value }?.toPair()
-        ?: error("No asteroids provided")
+        .maxBy { it.value }.toPair()
 
 private fun Set<XY>.visibleFrom(station: XY): Set<XY> {
     if (isEmpty()) return emptySet()
@@ -55,8 +52,8 @@ private fun XY.findOcclusionsBy(asteroid: XY, grid: Box): Set<XY> {
 }
 
 private fun Set<XY>.boundingBox(): Box =
-    XY(minBy { it.x }!!.x, minBy { it.y }!!.y) to
-            XY(maxBy { it.x }!!.x, maxBy { it.y }!!.y)
+    XY(minBy { it.x }.x, minBy { it.y }.y) to
+            XY(maxBy { it.x }.x, maxBy { it.y }.y)
 
 private operator fun Box.contains(point: XY) =
     (point.x in min(first.x, second.x)..max(first.x, second.x))

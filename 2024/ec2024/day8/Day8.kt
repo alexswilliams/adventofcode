@@ -1,9 +1,8 @@
 package ec2024.day8
 
-import common.ThreePartChallenge
-import common.benchmark
-import kotlin.math.sqrt
-import kotlin.test.assertEquals
+import common.*
+import kotlin.math.*
+import kotlin.test.*
 
 private const val exampleInput = 13
 private val example2Input = Triple(3, 5, 50L)

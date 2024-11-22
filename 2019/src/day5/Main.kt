@@ -1,7 +1,7 @@
 package day5
 
-import common.fromClasspathFileToProgram
-import kotlin.test.assertEquals
+import common.*
+import kotlin.test.*
 
 
 fun main() {
@@ -24,13 +24,11 @@ fun main() {
 
 private fun IntArray.withValue(address: Int, value: Int) = this.clone().apply { this[address] = value }
 
-@Suppress("TAILREC_WITH_DEFAULTS") // this is a bug in kotlin < 1.4, but this function's default
-// params are initialised with values which may as well be static, so not an issue.
 private tailrec fun runProgram(
     memory: IntArray,
     inputs: List<Int> = emptyList(),
     outputs: List<Int> = emptyList(),
-    ip: Int = 0
+    ip: Int = 0,
 ): Pair<IntArray, List<Int>> {
     val (opcode, modes) = decodeInstruction(memory[ip])
     return when (opcode) {
@@ -126,7 +124,7 @@ private enum class ParameterMode(val encoding: Int) {
     IMMEDIATE(1)
 }
 
-private val modeMap = ParameterMode.values().associateBy { it.encoding }
+private val modeMap = ParameterMode.entries.associateBy { it.encoding }
 
 private enum class Opcode(val encoding: Int) {
     ADD(1),
@@ -140,7 +138,7 @@ private enum class Opcode(val encoding: Int) {
     HALT(99)
 }
 
-private val opcodeMap = Opcode.values().associateBy { it.encoding }
+private val opcodeMap = Opcode.entries.associateBy { it.encoding }
 
 private fun runTests() {
     fun Pair<IntArray, List<Int>>.forTest() = first.toList() to second

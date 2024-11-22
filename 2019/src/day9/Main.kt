@@ -1,10 +1,7 @@
 package day9
 
-import common.RunState
-import common.fromClasspathFileToLongProgram
-import common.runProgram
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
+import common.*
+import kotlin.test.*
 
 
 fun main() {

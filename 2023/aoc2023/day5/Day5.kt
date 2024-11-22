@@ -1,7 +1,7 @@
 package aoc2023.day5
 
 import common.*
-import kotlin.test.assertEquals
+import kotlin.test.*
 
 
 private val exampleInput = "aoc2023/day5/example.txt".fromClasspathFile()

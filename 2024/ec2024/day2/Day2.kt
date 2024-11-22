@@ -1,7 +1,7 @@
 package ec2024.day2
 
 import common.*
-import kotlin.test.assertEquals
+import kotlin.test.*
 
 private const val rootFolder = "ec2024/day2"
 private val exampleInput = "$rootFolder/example.txt".fromClasspathFileToLines()

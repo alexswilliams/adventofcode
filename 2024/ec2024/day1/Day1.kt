@@ -1,10 +1,7 @@
 package ec2024.day1
 
-import common.ThreePartChallenge
-import common.benchmark
-import common.frequency
-import common.fromClasspathFile
-import kotlin.test.assertEquals
+import common.*
+import kotlin.test.*
 
 private const val rootFolder = "ec2024/day1"
 private val exampleInput = "$rootFolder/example.txt".fromClasspathFile()

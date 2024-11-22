@@ -1,7 +1,7 @@
 package day1
 
-import common.fromClasspathFileToLines
-import kotlin.test.assertEquals
+import common.*
+import kotlin.test.*
 
 
 fun main() {
@@ -10,11 +10,11 @@ fun main() {
     val inputLines = "day1/input.txt".fromClasspathFileToLines()
     val moduleMasses = inputLines.map { it.toLong() }
 
-    val fuelForModules = moduleMasses.map { massToFuel(it) }.sum()
+    val fuelForModules = moduleMasses.sumOf { massToFuel(it) }
     println("Part 1: Sum = $fuelForModules")
     assertEquals(3239890, fuelForModules)
 
-    val totalFuel = moduleMasses.map { totalFuelNeeded(it) }.sum()
+    val totalFuel = moduleMasses.sumOf { totalFuelNeeded(it) }
     println("Part 2: Sum = $totalFuel")
     assertEquals(4856963, totalFuel)
 }

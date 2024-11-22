@@ -1,6 +1,5 @@
-import common.ThreePartChallenge
-import org.junit.jupiter.api.DynamicTest
-import org.junit.jupiter.api.TestFactory
+import common.*
+import org.junit.jupiter.api.*
 
 class Tests2024EC {
     @TestFactory

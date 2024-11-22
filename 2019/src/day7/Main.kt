@@ -1,7 +1,7 @@
 package day7
 
-import common.fromClasspathFileToProgram
-import kotlin.test.assertEquals
+import common.*
+import kotlin.test.*
 
 
 fun main() {
@@ -11,13 +11,13 @@ fun main() {
 
     val permutations01234 = setOf(0, 1, 2, 3, 4).permutations().map { it to memory.runAmplifierChain(it) }
     val maxByPhase = permutations01234.maxBy { it.second }
-    println("Part 1: Best phases = ${maxByPhase?.first}; Power = ${maxByPhase?.second}")
-    assertEquals(929800, maxByPhase?.second)
+    println("Part 1: Best phases = ${maxByPhase.first}; Power = ${maxByPhase.second}")
+    assertEquals(929800, maxByPhase.second)
 
     val permutations56789 = setOf(5, 6, 7, 8, 9).permutations().map { it to memory.runAmplifierLoop(it) }
     val maxByPhaseLoop = permutations56789.maxBy { it.second }
-    println("Part 2: Best phases = ${maxByPhaseLoop?.first}; Power = ${maxByPhaseLoop?.second}")
-    assertEquals(15432220, maxByPhaseLoop?.second)
+    println("Part 2: Best phases = ${maxByPhaseLoop.first}; Power = ${maxByPhaseLoop.second}")
+    assertEquals(15432220, maxByPhaseLoop.second)
 }
 
 fun IntArray.runAmplifier(phase: Int, input: Int) = runProgram(RunState(this, listOf(phase, input))).outputs[0]
@@ -59,7 +59,7 @@ private data class RunState(
     val inputs: List<Int> = emptyList(),
     val outputs: List<Int> = emptyList(),
     val ip: Int = 0,
-    val state: MachineState = MachineState.RUNNING
+    val state: MachineState = MachineState.RUNNING,
 )
 
 
@@ -165,7 +165,7 @@ private enum class ParameterMode(val encoding: Int) {
     IMMEDIATE(1)
 }
 
-private val modeMap = ParameterMode.values().associateBy { it.encoding }
+private val modeMap = ParameterMode.entries.associateBy { it.encoding }
 
 private enum class Opcode(val encoding: Int) {
     ADD(1),
@@ -179,7 +179,7 @@ private enum class Opcode(val encoding: Int) {
     HALT(99)
 }
 
-private val opcodeMap = Opcode.values().associateBy { it.encoding }
+private val opcodeMap = Opcode.entries.associateBy { it.encoding }
 
 private enum class MachineState {
     RUNNING,

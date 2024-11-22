@@ -1,10 +1,9 @@
 package day12
 
-import common.fromClasspathFileToLines
-import java.util.regex.Pattern
-import kotlin.math.absoluteValue
-import kotlin.streams.toList
-import kotlin.test.assertEquals
+import common.*
+import java.util.regex.*
+import kotlin.math.*
+import kotlin.test.*
 
 
 private data class XYZ(val x: Int, val y: Int, val z: Int) {

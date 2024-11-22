@@ -1,7 +1,6 @@
-import aoc2023.day12.Day12
-import common.TwoPartChallenge
-import org.junit.jupiter.api.DynamicTest
-import org.junit.jupiter.api.TestFactory
+import aoc2023.day12.*
+import common.*
+import org.junit.jupiter.api.*
 
 class Tests2023 {
     @TestFactory

@@ -1,10 +1,7 @@
 package day11
 
-import common.MachineState
-import common.RunState
-import common.fromClasspathFileToLongProgram
-import common.runProgram
-import kotlin.test.assertEquals
+import common.*
+import kotlin.test.*
 
 
 fun main() {
@@ -66,8 +63,8 @@ private fun advanceRobot(state: RobotState, programRunner: (RunState) -> RunStat
 }
 
 private fun Map<XY, Long>.renderToString(): String {
-    val xs = map { it.key.x }.min()!!..map { it.key.x }.max()!!
-    val ys = map { it.key.y }.max()!! downTo map { it.key.y }.min()!!
+    val xs = map { it.key.x }.min()..map { it.key.x }.max()
+    val ys = map { it.key.y }.max() downTo map { it.key.y }.min()
     return ys.joinToString("\n") { y ->
         xs.joinToString("") { x ->
             if (this.getOrDefault(XY(x, y), 0L) == 1L) "█" else "░"
@@ -113,7 +110,7 @@ private data class RobotState(
     val heading: Heading,
     val position: XY,
     val visitedNodes: Map<XY, Long>,
-    val intComputer: RunState
+    val intComputer: RunState,
 )
 
 

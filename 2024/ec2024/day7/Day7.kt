@@ -1,11 +1,8 @@
 package ec2024.day7
 
 import common.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.runBlocking
-import kotlin.test.assertEquals
+import kotlinx.coroutines.*
+import kotlin.test.*
 
 private const val rootFolder = "ec2024/day7"
 private val exampleInput = "$rootFolder/example.txt".fromClasspathFileToLines()

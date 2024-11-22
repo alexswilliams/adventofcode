@@ -1,7 +1,7 @@
 package aoc2023.day1
 
 import common.*
-import kotlin.test.assertEquals
+import kotlin.test.*
 
 private val exampleInput1 = "aoc2023/day1/example1.txt".fromClasspathFileToLines()
 private val exampleInput2 = "aoc2023/day1/example2.txt".fromClasspathFileToLines()
