@@ -53,7 +53,7 @@ private fun maxGeodesFromRobotRecipe(bestSoFar: IntArray, robotCreationOrder: Li
     if (geodesFromThisRecipe == -1) return 0 // this recipe and all that start with this sequence of robots will always run out of time
     if (geodesFromThisRecipe == -2) return 0 // this sequence prefix could never produce a better result than already found elsewhere
 
-    return common.max(
+    return max(
         geodesFromThisRecipe,
         maxGeodesFromRobotRecipe(bestSoFar, robotCreationOrder.plus(GEODE), blueprint, minutes),
         maxGeodesFromRobotRecipe(bestSoFar, robotCreationOrder.plus(OBSIDIAN), blueprint, minutes),
@@ -77,12 +77,12 @@ private fun simulate(bestSoFar: IntArray, robotCreationOrder: List<RobotType>, d
         val turnsToAcquireResources = when (nextRobot) {
             ORE -> max(0, (bp.oreOreCost - ore) divideRoundingUp oreRobots)
             CLAY -> max(0, (bp.clayOreCost - ore) divideRoundingUp oreRobots)
-            OBSIDIAN -> common.max(
+            OBSIDIAN -> max(
                 0,
                 (bp.obsidianOreCost - ore) divideRoundingUp oreRobots,
                 (bp.obsidianClayCost - clay) divideRoundingUp clayRobots
             )
-            GEODE -> common.max(
+            GEODE -> max(
                 0,
                 (bp.geodeOreCost - ore) divideRoundingUp oreRobots,
                 (bp.geodeObsidianCost - obsidian) divideRoundingUp obsidianRobots

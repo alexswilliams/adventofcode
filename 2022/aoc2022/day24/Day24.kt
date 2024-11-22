@@ -92,5 +92,4 @@ private typealias Point2D = Int
 private val Point2D.row get():Int = this shr 8
 private val Point2D.col get():Int = this.toByte().toInt()
 private fun Point2D.copy(row: Int = this.row, col: Int = this.col): Point2D = Point2D(row, col)
-private fun Point2D.asString() = "↓$row→$col"
 private fun Point2D(row: Int, col: Int): Point2D = (row shl 8) or (col and 0x000000ff)

@@ -73,7 +73,7 @@ private fun part2(input: String): Long {
         searchFrom--
     }
     // `matches` now contains an anchor into each repeated pattern, but might also contain noise (e.g. if another part of the tower coincidentally
-    // contained the 5 rows that were being scanned for,) so increase the size of the pattern until the distance between each match becomes constant.
+    // contained the 5 rows that were being scanned for) so increase the size of the pattern until the distance between each match becomes constant.
     while (matches.zipWithNext().map { it.first - it.second }.distinct().size != 1) {
         runLength++ // +=1 avoids accidentally striding over the actual repeated length, as opposed to e.g. *=2 which might go from many gaps to none.
         matches.removeAll { byteArraysMatch(tower, endOfMatchRange - runLength, it - runLength, runLength) }

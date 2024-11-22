@@ -4,7 +4,7 @@ import common.*
 import kotlin.test.*
 
 private val exampleInput = "aoc2022/day1/example.txt".fromClasspathFileToLines()
-private const val PART_1_EXPECTED_ANSWER = 24000;
+private const val PART_1_EXPECTED_ANSWER = 24000
 private const val PART_2_EXPECTED_ANSWER = 45000
 
 private val puzzleInput = "aoc2022/day1/input.txt".fromClasspathFileToLines()

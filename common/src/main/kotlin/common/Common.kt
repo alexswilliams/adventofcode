@@ -1,3 +1,5 @@
+@file:Suppress("SameReturnValue")
+
 package common
 
 import java.io.*

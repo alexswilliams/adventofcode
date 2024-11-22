@@ -23,7 +23,7 @@ private fun part2(input: List<String>) = solveForBlocksPickedUpAtOnce(input, pic
 private fun solveForBlocksPickedUpAtOnce(input: List<String>, picksUpSingleBlocks: Boolean): String {
     tailrec fun <T> makeMove(state: List<List<T>>, move: Move, blocksToPickUpAtOnce: Int): List<List<T>> =
         if (move.count == 0)
-            state;
+            state
         else
             makeMove(
                 state.mapIndexed { index, column ->

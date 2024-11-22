@@ -32,7 +32,6 @@ fun balancedQuinaryToLong(bq: String): Long {
 }
 
 private fun Long.toBalancedQuinary(): String {
-    if (this == 0L) return "0"
     var output = ""
     var runningQuotient = this
     do {

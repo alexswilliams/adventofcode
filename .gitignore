@@ -10,3 +10,4 @@ out
 .gradle
 build
 .attach_pid*
+*.yaml
