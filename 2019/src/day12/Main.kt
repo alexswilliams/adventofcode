@@ -17,7 +17,7 @@ private data class MoonState(val position: XYZ, val velocity: XYZ = XYZ(0, 0, 0)
     val totalEnergy get() = position.sum() * velocity.sum()
 }
 
-private val List<MoonState>.totalEnergy get() = this.sumBy { it.totalEnergy }
+private val List<MoonState>.totalEnergy get() = this.sumOf { it.totalEnergy }
 
 
 fun main() {

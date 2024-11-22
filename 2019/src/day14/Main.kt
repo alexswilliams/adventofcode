@@ -192,7 +192,6 @@ private fun runTests() {
     }
     testFormulaParsing()
 
-    val parsed1 = input1.asFormula()
     val parsed2 = input2.lines().asFormulae()
     val parsed3 = input3.lines().asFormulae()
     val parsed4 = input4.lines().asFormulae()

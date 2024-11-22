@@ -55,9 +55,5 @@ private fun part2(input: Triple<Int, Int, Long>): Long {
 }
 
 private fun part3(input: Triple<Int, Int, Long>): Long {
-    val (step, modulus, supplied) = input
-
-    val thicknesses = generateSequence(1) { prev -> (prev * step) % modulus + modulus }
-    val emptyCount = { height: Int, width: Int -> (((step * width) % modulus) * height) % modulus }
-    throw Error()
+    throw Error("I don't understand the question")
 }

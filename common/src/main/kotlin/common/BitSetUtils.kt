@@ -17,7 +17,6 @@ inline fun BitSet.forEach(body: (Long) -> Unit) {
 }
 
 inline fun <R : Comparable<R>> BitSet.maxOf(selector: (Long) -> R): R {
-    if (this == 0L) throw NoSuchElementException()
     var x = this
     var maxValue = selector(x.takeHighestOneBit().also { x = x xor it })
     while (x != 0L) {
