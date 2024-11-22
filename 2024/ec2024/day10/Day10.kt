@@ -1,142 +1,180 @@
 package ec2024.day10
 
+import com.github.ajalt.mordant.rendering.TextColors.*
+import com.github.ajalt.mordant.rendering.TextStyles.*
 import common.*
-import kotlin.test.assertEquals
 
-private const val rootFolder = "ec2024/day10"
-private val exampleInput = "$rootFolder/example.txt".fromClasspathFileToLines()
-private val example3Input = "$rootFolder/example3.txt".fromClasspathFileToLines()
-private val puzzleInput = "$rootFolder/input.txt".fromClasspathFileToLines()
-private val puzzle2Input = "$rootFolder/input2.txt".fromClasspathFileToLines()
-private val puzzle3Input = "$rootFolder/input3.txt".fromClasspathFileToLines()
+private val examples = loadFilesToLines("ec2024/day10", "example.txt", "example3.txt")
+private val puzzles = loadFilesToLines("ec2024/day10", "input.txt", "input2.txt", "input3.txt")
 
 internal fun main() {
-    Day10.assertPart1Correct()
-    Day10.assertPart2Correct()
-    Day10.assertPart3Correct()
-    benchmark { part1(puzzleInput) } // 32µs
-    benchmark { part2(puzzle2Input) } // 1.23ms
-    benchmark { part3(puzzle3Input) } //
+    Day10.assertCorrect()
+    benchmark { part1(puzzles[0]) } // 21µs
+    benchmark { part2(puzzles[1]) } // 610µs
+    benchmark(100) { part3(puzzles[2]) } // 3.2ms
 }
 
-internal object Day10 : ThreePartChallenge {
-    override fun assertPart1Correct() {
-        part1(exampleInput).also { println("[Example] Part 1: $it") }.also { assertEquals("PTBVRCZHFLJWGMNS", it) }
-        part1(puzzleInput).also { println("[Puzzle] Part 1: $it") }.also { assertEquals("FHMTJRGZSLKWCXVD", it) }
-    }
+internal object Day10 : Challenge {
+    override fun assertCorrect() {
+        check("PTBVRCZHFLJWGMNS", "P1 Example") { part1(examples[0]) }
+        check("FHMTJRGZSLKWCXVD", "P1 Puzzle") { part1(puzzles[0]) }
 
-    override fun assertPart2Correct() {
-        part2(exampleInput).also { println("[Example] Part 2: $it") }.also { assertEquals(1851, it) }
-        part2(puzzle2Input).also { println("[Puzzle] Part 2: $it") }.also { assertEquals(195008, it) }
-    }
+        check(1851, "P2 Example") { part2(examples[0]) }
+        check(195008, "P2 Puzzle") { part2(puzzles[1]) }
 
-    override fun assertPart3Correct() {
-        part3(example3Input).also { println("[Example] Part 3: $it") }.also { assertEquals(3889, it) }
-        part3(puzzle3Input).also { println("[Puzzle] Part 3: $it") }.also { assertEquals(0, it) }
+        check(3889, "P3 Example") { part3(examples[1]) }
+        check(212096, "P3 Puzzle") { part3(puzzles[2]) }
     }
 }
 
 
-private fun part1(input: List<String>): String {
-    return squareToRuneWord(input)
+private fun part1(input: List<String>): String =
+    squareToRuneWord(input.asArrayOfCharArrays()).joinToString("")
+
+private fun part2(input: List<String>): Int =
+    input.chunked(9) { chunk -> chunk.dropLastWhile { it.isBlank() } }
+        .flatMap { it.splitOnSpaces().transpose() }
+        .map { it.asArrayOfCharArrays() }
+        .sumOf { squareToRuneWord(it).basePower }
+
+
+private fun squareToRuneWord(square: Array<CharArray>) = CharArray(16) { i ->
+    val rowCodex = arrayOf(square[i / 4 + 2][0], square[i / 4 + 2][1], square[i / 4 + 2][6], square[i / 4 + 2][7])
+    val colCodex = listOf(square[0][i % 4 + 2], square[1][i % 4 + 2], square[6][i % 4 + 2], square[7][i % 4 + 2])
+    (rowCodex intersect colCodex).singleOrNull() ?: '.'
 }
 
-private fun squareToRuneWord(input: List<String>): String {
-    val h = input.subList(2, 6).map { it.filterNot { ch -> ch == '.' }.toSet() }
-    val v = input.transposeToStrings().subList(2, 6).map { it.filterNot { ch -> ch == '.' }.toSet() }
-    return (0..3).joinToString("") { row -> (0..3).map { col -> (h[row] intersect v[col]).singleOrNull() ?: '.' }.joinToString("") }
-}
+private val CharArray.basePower: Int
+    get() = this.foldIndexed(0) { index, acc, ch -> acc + (ch - 'A' + 1) * (index + 1) }
 
-private fun String.basePower() = this.foldIndexed(0) { index, acc, ch -> acc + (ch - 'A' + 1) * (index + 1) }
-
-
-private fun part2(input: List<String>): Int {
-    val squares = input.chunked(9) { chunk -> chunk.dropLastWhile { string -> string.isBlank() } }.flatMap { strings -> strings.splitOnSpaces().transpose() }
-    val words = squares.map { grid -> squareToRuneWord(grid).basePower() }
-    return words.sum()
-}
 
 private fun part3(input: List<String>): Int {
-    val grid = input.map { it -> it.toCharArray() }.toTypedArray()
+    val grid = input.asArrayOfCharArrays()
     val squareTopLefts = cartesianProductOf(
         IntProgression.fromClosedRange(0, grid.lastIndex - 2, 6),
         IntProgression.fromClosedRange(0, grid[0].lastIndex - 2, 6)
-    )
-    val innerCoords = cartesianProductOf(listOf(2, 3, 4, 5), listOf(2, 3, 4, 5))
-    val rowCoords = cartesianProductOf(listOf(2, 3, 4, 5), listOf(0, 1, 6, 7))
-    val colCoords = cartesianProductOf(listOf(0, 1, 6, 7), listOf(2, 3, 4, 5))
-
-    println("Unsolved Grid")
-    printGrid(grid)
+    ).filterNot { topLeft -> isUnsolvable(topLeft, grid) }.toMutableList()
 
     // Fill in what's easily derivable, leave '.' behind if there wasn't a unique letter for that position
     squareTopLefts.forEach { (row, col) ->
-        val word = squareToRuneWord(input.subList(row, row + 8).map { line -> line.substring(col, col + 8) }).toCharArray()
-        word.copyInto(grid[row + 2], col + 2, 0, 4)
-        word.copyInto(grid[row + 3], col + 2, 4, 8)
-        word.copyInto(grid[row + 4], col + 2, 8, 12)
-        word.copyInto(grid[row + 5], col + 2, 12, 16)
-    }
-
-    println("After naive round")
-    printGrid(grid)
-
-    val unsolvedCells = grid.indices.flatMap { row -> grid[0].indices.filter { col -> grid[row][col] == '.' }.map { col -> row to col } }.toMutableList()
-    var cellsRemaining: Int
-    do {
-        println("Unsolved cell locations: ${unsolvedCells.size}")
-        unsolvedCells.forEach { (row, col) ->
-            val localRow = row % 6
-            val localCol = col % 6
-            val innerRows = innerCoords.groupBy({ (r, _) -> r }) { (r, c) -> grid[row - localRow + r][col - localCol + c] }
-            val innerCols = innerCoords.groupBy({ (_, c) -> c }) { (r, c) -> grid[row - localRow + r][col - localCol + c] }
-            val rows = rowCoords.groupBy({ (r, _) -> r }) { (r, c) -> grid[row - localRow + r][col - localCol + c] }
-            val cols = colCoords.groupBy({ (_, c) -> c }) { (r, c) -> grid[row - localRow + r][col - localCol + c] }
-
-            println(innerRows)
-            println(innerCols)
-            println("$row,$col -> $localRow,$localCol")
-            println("rows[localRow] ${rows[localRow]}")
-            println("innerRows[localRow] ${innerRows[localRow]}")
-            println("cols[localCol] ${cols[localCol]}")
-            println("innerCols[localCol] ${innerCols[localCol]}")
-            println("cols[localCol] - innerCols[localCol] ${cols[localCol]!!.subtract(innerCols[localCol]!!)}")
-            println("rows[localRow] - innerRows[localRow] ${rows[localRow]!!.subtract(innerRows[localRow]!!)}")
-
-            val singleCol = cols[localCol]!!.subtract(innerCols[localCol]!!.plus('?')).singleOrNull()
-            if (singleCol != null) {
-                val markInRow = rows[localRow]!!.indexOf('?')
-                println("Found COL $singleCol for $row, $col and ? ${markInRow + if (markInRow <= 1) 0 else 4}")
-                grid[row][col] = singleCol
-                if (markInRow >= 0)
-                    grid[row][col - localCol + markInRow + if (markInRow <= 1) 0 else 4] = singleCol
-            }
-            val singleRow = rows[localRow]!!.subtract(innerRows[localRow]!!.plus('?')).singleOrNull()
-            if (singleRow != null) {
-                val markInCol = cols[localCol]!!.indexOf('?')
-                println("Found ROW $singleRow for $row, $col and ? ${markInCol + if (markInCol <= 1) 0 else 4}")
-                grid[row][col] = singleRow
-                if (markInCol >= 0)
-                    grid[row - localRow + markInCol + if (markInCol <= 1) 0 else 4][col] = singleRow
-            }
+        squareToRuneWord(grid.subGrid(row, col, 8, 8)).apply {
+            copyInto(grid[row + 2], col + 2, 0, 4)
+            copyInto(grid[row + 3], col + 2, 4, 8)
+            copyInto(grid[row + 4], col + 2, 8, 12)
+            copyInto(grid[row + 5], col + 2, 12, 16)
         }
-        cellsRemaining = unsolvedCells.size
-        unsolvedCells.removeAll { (row, col) -> grid[row][col] != '.' }
-    } while (cellsRemaining != unsolvedCells.size)
-
-    println("After Iterating Solutions")
-    printGrid(grid)
-
-    return squareTopLefts.map { (row, col) ->
-        innerCoords.groupBy({ (r, _) -> r }) { (r, c) -> grid[row + r][col + c] }.map { (_, line) -> line.joinToString("") }.joinToString("")
-    }.also { println(it) }
-        .filterNot { '.' in it }.sumOf { it.basePower() }
-}
-
-private fun printGrid(arrays: Array<CharArray>) {
-    arrays.forEach { line ->
-        println(line.concatToString())
     }
-    println()
+
+
+    var unsolvedCells = squareTopLefts.flatMapTo(ArrayList()) { (r, c) -> unsolvedCoordsForSquare(r, c, grid) }
+    while (unsolvedCells.isNotEmpty()) {
+//        printGrid(grid)
+//        println(unsolvedCells)
+
+        unsolvedCells.forEach { (r, c) ->
+            val localRow = r % 6
+            val localCol = c % 6
+            val topR = r - localRow
+            val leftC = c - localCol
+            val square = grid.subGrid(topR, leftC, 8, 8)
+
+            val rowCodex = arrayOf(square[localRow][0], square[localRow][1], square[localRow][6], square[localRow][7])
+            val colCodex = arrayOf(square[0][localCol], square[1][localCol], square[6][localCol], square[7][localCol])
+            val rowWord = arrayOf(square[localRow][2], square[localRow][3], square[localRow][4], square[localRow][5])
+            val colWord = arrayOf(square[2][localCol], square[3][localCol], square[4][localCol], square[5][localCol])
+//            println("Unsolved cell: $r,$c")
+//            println("  Row codex: ${rowCodex.joinToString(",")}, Row Word: ${rowWord.joinToString(",")}")
+//            println("  Col codex: ${colCodex.joinToString(",")}, Col Word: ${colWord.joinToString(",")}")
+
+            when {
+                rowWord.count { it == '.' } == 1 && '?' !in rowCodex -> {
+                    val missingLetter = rowCodex.subtract(rowWord.toSet()).single()
+                    grid[r][c] = missingLetter
+//                    println("  - replacing $r,$c with $missingLetter because row contained no ?")
+                    if (missingLetter !in colCodex && colCodex.count { it == '?' } == 1) {
+                        grid[codexToSquare(colCodex.indexOf('?')) + topR][c] = missingLetter
+//                        println("  - replacing ? at ${codexToSquare(colCodex.indexOf('?')) + topR},$c with $missingLetter")
+                    }
+                }
+                colWord.count { it == '.' } == 1 && '?' !in colCodex -> {
+                    val missingLetter = colCodex.subtract(colWord.toSet()).single()
+                    grid[r][c] = missingLetter
+//                    println("  - replacing $r,$c with $missingLetter because column contained no ?")
+                    if (missingLetter !in rowCodex && rowCodex.count { it == '?' } == 1) {
+                        grid[r][codexToSquare(rowCodex.indexOf('?')) + leftC] = missingLetter
+//                        println("  - replacing ? at $r,${codexToSquare(rowCodex.indexOf('?')) + leftC} with $missingLetter")
+                    }
+                }
+                ('?' !in colCodex && '?' !in rowCodex) -> {
+                    val unusedRowCodex = rowCodex.subtract(rowWord.toSet())
+                    val unusedColCodex = colCodex.subtract(colWord.toSet())
+                    val missingLetter = (unusedRowCodex intersect unusedColCodex).singleOrNull()
+                    if (missingLetter != null) {
+                        grid[r][c] = missingLetter
+//                        println("  - replacing $r,$c with $missingLetter because neither row nor column contained ?")
+                    }
+                }
+            }
+
+        }
+
+        squareTopLefts.removeAll(squareTopLefts.filter { isUnsolvable(it, grid) })
+        unsolvedCells = squareTopLefts.flatMapTo(ArrayList()) { (r, c) -> unsolvedCoordsForSquare(r, c, grid) }
+    }
+
+    return squareTopLefts.map { (topR, leftC) ->
+        CharArray(16) { i ->
+            grid[topR + i / 4 + 2][leftC + i % 4 + 2]
+        }
+    }.filterNot { chars -> '.' in chars }.sumOf { chars -> chars.basePower }
 }
 
+fun codexToSquare(i: Int) = when (i) {
+    0, 1 -> i
+    2, 3 -> i + 4
+    else -> throw Error()
+}
+
+private fun unsolvedCoordsForSquare(r: Int, c: Int, grid: Array<CharArray>): List<Pair<Int, Int>> =
+    innerCoords.map { (ir, ic) -> (r + ir) to (c + ic) }.filter { (ir, ic) -> grid[ir][ic] == '.' }
+
+
+private fun isUnsolvable(topLeft: Pair<Int, Int>, grid: Array<CharArray>): Boolean {
+    val (squareRow, squareCol) = topLeft
+    val top = topCoords.map { (r, c) -> grid[r + squareRow][c + squareCol] }
+    val bottom = bottomCoords.map { (r, c) -> grid[r + squareRow][c + squareCol] }
+    val left = leftCoords.map { (r, c) -> grid[r + squareRow][c + squareCol] }
+    val right = rightCoords.map { (r, c) -> grid[r + squareRow][c + squareCol] }
+    if ((top.filterNot { it == '?' } intersect bottom).isNotEmpty()) return true
+    if ((left.filterNot { it == '?' } intersect right).isNotEmpty()) return true
+    if (top.partition { it == '?' }.let { (q, l) -> l.distinct().size + q.size } != 8) return true
+    if (bottom.partition { it == '?' }.let { (q, l) -> l.distinct().size + q.size } != 8) return true
+    if (left.partition { it == '?' }.let { (q, l) -> l.distinct().size + q.size } != 8) return true
+    if (right.partition { it == '?' }.let { (q, l) -> l.distinct().size + q.size } != 8) return true
+    return false
+}
+
+private val topCoords = cartesianProductOf(listOf(0, 1), listOf(2, 3, 4, 5))
+private val bottomCoords = cartesianProductOf(listOf(6, 7), listOf(2, 3, 4, 5))
+private val leftCoords = cartesianProductOf(listOf(2, 3, 4, 5), listOf(0, 1))
+private val rightCoords = cartesianProductOf(listOf(2, 3, 4, 5), listOf(6, 7))
+private val innerCoords = cartesianProductOf(listOf(2, 3, 4, 5), listOf(2, 3, 4, 5))
+
+private fun printGrid(arrays: Array<CharArray>, offset: Int = 0) {
+    arrays.forEachIndexed { lineNo, line ->
+        println(
+            " ".repeat(offset) +
+                    line.concatToString().chunked(2).mapIndexed { index, string ->
+                        if (string == "**") "  "
+                        else if (string == "??") brightRed(string)
+                        else if (string[0] == '?') (brightRed(string[0].toString()) + string[1].toString())
+                        else if (string[1] == '?') (string[0].toString() + brightRed(string[1].toString()))
+                        else if (index % 3 == 0 || lineNo % 6 <= 1) string
+                        else if (string == "..") bold(brightCyan(string))
+                        else if (string[0] == '.') (bold(brightCyan(string[0].toString())) + brightCyan(string[1].toString()))
+                        else if (string[1] == '.') (brightCyan(string[0].toString()) + bold(brightCyan(string[1].toString())))
+                        else brightCyan(string)
+                    }.joinToString("")
+        )
+    }
+}

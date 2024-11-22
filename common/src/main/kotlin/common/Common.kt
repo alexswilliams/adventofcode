@@ -25,6 +25,14 @@ fun loadFilesToLines(root: String, vararg files: String): List<List<String>> = f
 
 fun List<String>.splitOnSpaces() = map { it.split(' ') }
 
+fun List<String>.asArrayOfCharArrays(): Array<CharArray> {
+    return Array(size) { r -> this[r].toCharArray() }
+}
+
+fun Array<CharArray>.subGrid(startRow: Int, startCol: Int, width: Int, height: Int): Array<CharArray> {
+    return Array(height) { r -> this[startRow + r].copyOfRange(startCol, startCol + width) }
+}
+
 fun LongRange.intersecting(other: LongRange) = LongRange(max(first, other.first), min(last, other.last))
 fun LongRange.shiftedUpBy(other: Long) = LongRange(first + other, last + other)
 fun LongRange.keepingAbove(lowerBoundExcl: Long) = first.coerceAtLeast(lowerBoundExcl + 1)..last

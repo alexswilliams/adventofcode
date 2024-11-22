@@ -1,5 +1,6 @@
 package common
 
+import com.github.ajalt.mordant.rendering.*
 import kotlin.test.*
 
 interface Challenge {
@@ -7,7 +8,12 @@ interface Challenge {
 
     fun <R> check(expected: R, description: String, test: () -> R) {
         val result = test()
-        println("$description: $result")
+
+        if (description.contains("Example")) {
+            println(TextColors.gray(" - $description: $result"))
+        } else {
+            println(" - $description: ${TextColors.brightBlue(result.toString())}")
+        }
         assertEquals(expected, result)
     }
 }
