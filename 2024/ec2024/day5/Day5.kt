@@ -1,39 +1,27 @@
 package ec2024.day5
 
 import common.*
-import kotlin.test.*
 
-private const val rootFolder = "ec2024/day5"
-private val exampleInput = "$rootFolder/example.txt".fromClasspathFileToLines()
-private val example2Input = "$rootFolder/example2.txt".fromClasspathFileToLines()
-private val example3Input = "$rootFolder/example3.txt".fromClasspathFileToLines()
-private val puzzleInput = "$rootFolder/input.txt".fromClasspathFileToLines()
-private val puzzle2Input = "$rootFolder/input2.txt".fromClasspathFileToLines()
-private val puzzle3Input = "$rootFolder/input3.txt".fromClasspathFileToLines()
+private val examples = loadFilesToLines("ec2024/day5", "example.txt", "example2.txt", "example3.txt")
+private val puzzles = loadFilesToLines("ec2024/day5", "input.txt", "input2.txt", "input3.txt")
 
 internal fun main() {
-    Day5.assertPart1Correct()
-    Day5.assertPart2Correct()
-    Day5.assertPart3Correct()
-    benchmark { part1(puzzleInput) } // 8.4µs
-    benchmark(5) { part2(puzzle2Input) } // 330ms
-    benchmark { part3(puzzle3Input) } // 47µs
+    Day5.assertCorrect()
+    benchmark { part1(puzzles[0]) } // 8.4µs
+    benchmark(5) { part2(puzzles[1]) } // 330ms
+    benchmark { part3(puzzles[2]) } // 47µs
 }
 
-internal object Day5 : ThreePartChallenge {
-    override fun assertPart1Correct() {
-        part1(exampleInput).also { println("[Example] Part 1: $it") }.also { assertEquals(2323L, it) }
-        part1(puzzleInput).also { println("[Puzzle] Part 1: $it") }.also { assertEquals(2335L, it) }
-    }
+internal object Day5 : Challenge {
+    override fun assertCorrect() {
+        check(2323L, "P1 Example") { part1(examples[0]) }
+        check(2335L, "P1 Puzzle") { part1(puzzles[0]) }
 
-    override fun assertPart2Correct() {
-        part2(example2Input).also { println("[Example] Part 2: $it") }.also { assertEquals(50877075L, it) }
-        part2(puzzle2Input).also { println("[Puzzle] Part 2: $it") }.also { assertEquals(20214341458880L, it) }
-    }
+        check(50877075L, "P2 Example") { part2(examples[1]) }
+        check(20214341458880L, "P2 Puzzle") { part2(puzzles[1]) }
 
-    override fun assertPart3Correct() {
-        part3(example3Input).also { println("[Example] Part 3: $it") }.also { assertEquals(6584L, it) }
-        part3(puzzle3Input).also { println("[Puzzle] Part 3: $it") }.also { assertEquals(3546100410031005L, it) }
+        check(6584L, "P3 Example") { part3(examples[2]) }
+        check(3546100410031005L, "P3 Puzzle") { part3(puzzles[2]) }
     }
 }
 

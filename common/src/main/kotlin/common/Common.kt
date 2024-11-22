@@ -20,6 +20,9 @@ fun String.fromClasspathFile(): String {
     return File(url.toURI()).readText()
 }
 
+fun loadFiles(root: String, vararg files: String): List<String> = files.map { file -> "$root/$file".fromClasspathFile() }
+fun loadFilesToLines(root: String, vararg files: String): List<List<String>> = files.map { file -> "$root/$file".fromClasspathFileToLines() }
+
 fun List<String>.splitOnSpaces() = map { it.split(' ') }
 
 fun LongRange.intersecting(other: LongRange) = LongRange(max(first, other.first), min(last, other.last))

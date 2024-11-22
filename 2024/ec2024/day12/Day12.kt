@@ -1,37 +1,26 @@
 package ec2024.day12
 
 import common.*
-import kotlin.test.*
 
-private const val rootFolder = "ec2024/day12"
-private val exampleInput = "$rootFolder/example.txt".fromClasspathFileToLines()
-private val example3Input = "$rootFolder/example3.txt".fromClasspathFileToLines()
-private val puzzleInput = "$rootFolder/input.txt".fromClasspathFileToLines()
-private val puzzle2Input = "$rootFolder/input2.txt".fromClasspathFileToLines()
-private val puzzle3Input = "$rootFolder/input3.txt".fromClasspathFileToLines()
+private val examples = loadFilesToLines("ec2024/day12", "example.txt", "example3.txt")
+private val puzzles = loadFilesToLines("ec2024/day12", "input.txt", "input2.txt", "input3.txt")
 
 internal fun main() {
-    Day12.assertPart1Correct()
-    Day12.assertPart2Correct()
-    Day12.assertPart3Correct()
-    benchmark { part1(puzzleInput) } // 11.8µs
-    benchmark { part2(puzzle2Input) } // 80.4µs
-    benchmark { part3(puzzle3Input) } // 212µs
+    Day12.assertCorrect()
+    benchmark { part1(puzzles[0]) } // 11.8µs
+    benchmark { part2(puzzles[1]) } // 80.4µs
+    benchmark { part3(puzzles[2]) } // 212µs
 }
 
-internal object Day12 : ThreePartChallenge {
-    override fun assertPart1Correct() {
-        part1(exampleInput).also { println("[Example] Part 1: $it") }.also { assertEquals(13, it) }
-        part1(puzzleInput).also { println("[Puzzle] Part 1: $it") }.also { assertEquals(188, it) }
-    }
+internal object Day12 : Challenge {
+    override fun assertCorrect() {
+        check(13, "P1 Example") { part1(examples[0]) }
+        check(188, "P1 Puzzle") { part1(puzzles[0]) }
 
-    override fun assertPart2Correct() {
-        part2(puzzle2Input).also { println("[Puzzle] Part 2: $it") }.also { assertEquals(20230, it) }
-    }
+        check(20230, "P2 Puzzle") { part2(puzzles[1]) }
 
-    override fun assertPart3Correct() {
-        part3(example3Input).also { println("[Example] Part 3: $it") }.also { assertEquals(8, it) }
-        part3(puzzle3Input).also { println("[Puzzle] Part 3: $it") }.also { assertEquals(734277, it) }
+        check(8, "P3 Example") { part3(examples[1]) }
+        check(734277, "P3 Puzzle") { part3(puzzles[2]) }
     }
 }
 

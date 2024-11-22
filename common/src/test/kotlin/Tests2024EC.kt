@@ -3,29 +3,12 @@ import org.junit.jupiter.api.*
 
 class Tests2024EC {
     @TestFactory
-    fun ec2024_part1(): List<DynamicTest> =
-        allChallengesUnder<ThreePartChallenge>("ec2024")
+    fun ec2024(): List<DynamicTest> =
+        allChallengesUnder<Challenge>("ec2024")
             .map {
                 DynamicTest.dynamicTest(it::class.simpleName) {
-                    it.assertPart1Correct()
+                    it.assertCorrect()
                 }
             }
 
-    @TestFactory
-    fun ec2024_part2(): List<DynamicTest> =
-        allChallengesUnder<ThreePartChallenge>("ec2024")
-            .map {
-                DynamicTest.dynamicTest(it::class.simpleName) {
-                    it.assertPart2Correct()
-                }
-            }
-
-    @TestFactory
-    fun ec2024_part3(): List<DynamicTest> =
-        allChallengesUnder<ThreePartChallenge>("ec2024")
-            .map {
-                DynamicTest.dynamicTest(it::class.simpleName) {
-                    it.assertPart3Correct()
-                }
-            }
 }

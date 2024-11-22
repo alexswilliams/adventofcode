@@ -2,7 +2,6 @@ package ec2024.day8
 
 import common.*
 import kotlin.math.*
-import kotlin.test.*
 
 private const val exampleInput = 13
 private val example2Input = Triple(3, 5, 50L)
@@ -12,28 +11,22 @@ private val puzzle2Input = Triple(375, 1111, 20240000L)
 private val puzzle3Input = Triple(904813, 10, 202400000L)
 
 internal fun main() {
-    Day8.assertPart1Correct()
-    Day8.assertPart2Correct()
-    Day8.assertPart3Correct()
+    Day8.assertCorrect()
     benchmark { part1(puzzleInput) } // 530ns
     benchmark { part2(puzzle2Input) } // 10µs
     benchmark { part3(puzzle3Input) } //
 }
 
-internal object Day8 : ThreePartChallenge {
-    override fun assertPart1Correct() {
-        part1(exampleInput).also { println("[Example] Part 1: $it") }.also { assertEquals(21, it) }
-        part1(puzzleInput).also { println("[Puzzle] Part 1: $it") }.also { assertEquals(6470302, it) }
-    }
+internal object Day8 : Challenge {
+    override fun assertCorrect() {
+        check(21, "P1 Example") { part1(exampleInput) }
+        check(6470302, "P1 Puzzle") { part1(puzzleInput) }
 
-    override fun assertPart2Correct() {
-        part2(example2Input).also { println("[Example] Part 2: $it") }.also { assertEquals(27, it) }
-        part2(puzzle2Input).also { println("[Puzzle] Part 2: $it") }.also { assertEquals(125560657, it) }
-    }
+        check(27, "P2 Example") { part2(example2Input) }
+        check(125560657, "P2 Puzzle") { part2(puzzle2Input) }
 
-    override fun assertPart3Correct() {
-        part3(example3Input).also { println("[Example] Part 3: $it") }.also { assertEquals(2, it) }
-        part3(puzzle3Input).also { println("[Puzzle] Part 3: $it") }.also { assertEquals(0, it) }
+        check(2, "P3 Example") { part3(example3Input) }
+        check(0, "P3 Puzzle") { part3(puzzle3Input) }
     }
 }
 

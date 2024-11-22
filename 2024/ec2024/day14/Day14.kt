@@ -3,40 +3,28 @@ package ec2024.day14
 import common.*
 import kotlinx.coroutines.*
 import java.util.HashSet.*
-import kotlin.test.*
 
-private const val rootFolder = "ec2024/day14"
-private val exampleInput = "$rootFolder/example.txt".fromClasspathFile()
-private val example2Input = "$rootFolder/example2.txt".fromClasspathFileToLines()
-private val example3Input = "$rootFolder/example3.txt".fromClasspathFileToLines()
-private val puzzleInput = "$rootFolder/input.txt".fromClasspathFile()
-private val puzzle2Input = "$rootFolder/input2.txt".fromClasspathFileToLines()
-private val puzzle3Input = "$rootFolder/input3.txt".fromClasspathFileToLines()
+private val examples = loadFilesToLines("ec2024/day14", "example.txt", "example2.txt", "example3.txt")
+private val puzzles = loadFilesToLines("ec2024/day14", "input.txt", "input2.txt", "input3.txt")
 
 internal fun main() {
-    Day14.assertPart1Correct()
-    Day14.assertPart2Correct()
-    Day14.assertPart3Correct()
-    benchmark { part1(puzzleInput) } // 21µs
-    benchmark { part2(puzzle2Input) } // 1.3ms
-    benchmark(100) { part3(puzzle3Input) } // 12.6ms
+    Day14.assertCorrect()
+    benchmark { part1(puzzles[0]) } // 21µs
+    benchmark { part2(puzzles[1]) } // 1.3ms
+    benchmark(100) { part3(puzzles[2]) } // 12.6ms
 }
 
-internal object Day14 : ThreePartChallenge {
-    override fun assertPart1Correct() {
-        part1(exampleInput).also { println("[Example] Part 1: $it") }.also { assertEquals(7, it) }
-        part1(puzzleInput).also { println("[Puzzle] Part 1: $it") }.also { assertEquals(140, it) }
-    }
+internal object Day14 : Challenge {
+    override fun assertCorrect() {
+        check(7, "P1 Example") { part1(examples[0]) }
+        check(140, "P1 Puzzle") { part1(puzzles[0]) }
 
-    override fun assertPart2Correct() {
-        part2(example2Input).also { println("[Example] Part 2: $it") }.also { assertEquals(32, it) }
-        part2(puzzle2Input).also { println("[Puzzle] Part 2: $it") }.also { assertEquals(5172, it) }
-    }
+        check(32, "P2 Example") { part2(examples[1]) }
+        check(5172, "P2 Puzzle") { part2(puzzles[1]) }
 
-    override fun assertPart3Correct() {
-        part3(example2Input).also { println("[Example] Part 3: $it") }.also { assertEquals(5, it) }
-        part3(example3Input).also { println("[Example] Part 3: $it") }.also { assertEquals(46, it) }
-        part3(puzzle3Input).also { println("[Puzzle] Part 3: $it") }.also { assertEquals(1494, it) }
+        check(5, "P3 Example 1") { part3(examples[1]) }
+        check(46, "P3 Example 2") { part3(examples[2]) }
+        check(1494, "P3 Puzzle") { part3(puzzles[2]) }
     }
 }
 
@@ -48,8 +36,8 @@ private data class Point3D(val x: Int, val y: Int, val z: Int) {
 }
 
 
-private fun part1(input: String): Int =
-    input.split(',').runningFold(0) { currentHeight, string ->
+private fun part1(input: List<String>): Int =
+    input.first().split(',').runningFold(0) { currentHeight, string ->
         when (string[0]) {
             'U' -> currentHeight + string.toIntFromIndex(1)
             'D' -> currentHeight - string.toIntFromIndex(1)
