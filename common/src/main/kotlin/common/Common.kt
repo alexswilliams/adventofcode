@@ -290,7 +290,7 @@ inline fun <R> Collection<CharArray>.mapCartesianNotNull(transform: (row: Int, c
             }
         }
     }
-    return result;
+    return result
 }
 
 fun String.countOccurrences(s: String): Int {
