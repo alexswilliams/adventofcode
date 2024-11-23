@@ -1,39 +1,27 @@
 package ec2024.dayX
 
 import common.*
-import kotlin.test.*
 
-private const val rootFolder = "ec2024/dayX"
-private val exampleInput = "$rootFolder/example.txt".fromClasspathFileToLines()
-private val example2Input = "$rootFolder/example2.txt".fromClasspathFileToLines()
-private val example3Input = "$rootFolder/example3.txt".fromClasspathFileToLines()
-private val puzzleInput = "$rootFolder/input.txt".fromClasspathFileToLines()
-private val puzzle2Input = "$rootFolder/input2.txt".fromClasspathFileToLines()
-private val puzzle3Input = "$rootFolder/input3.txt".fromClasspathFileToLines()
+private val examples = loadFilesToLines("ec2024/dayX", "example.txt", "example2.txt", "example3.txt")
+private val puzzles = loadFilesToLines("ec2024/dayX", "input.txt", "input2.txt", "input3.txt")
 
 internal fun main() {
-    DayX.assertPart1Correct()
-    DayX.assertPart2Correct()
-    DayX.assertPart3Correct()
-    benchmark { part1(puzzleInput) } //
-    benchmark { part2(puzzle2Input) } //
-    benchmark { part3(puzzle3Input) } //
+    DayX.assertCorrect()
+    benchmark { part1(puzzles[0]) }
+    benchmark { part2(puzzles[1]) }
+    benchmark(100) { part3(puzzles[2]) }
 }
 
-internal object DayX : ThreePartChallenge {
-    override fun assertPart1Correct() {
-        part1(exampleInput).also { println("[Example] Part 1: $it") }.also { assertEquals(0, it) }
-        part1(puzzleInput).also { println("[Puzzle] Part 1: $it") }.also { assertEquals(0, it) }
-    }
+internal object DayX : Challenge {
+    override fun assertCorrect() {
+        check(0, "P1 Example") { part1(examples[0]) }
+        check(0, "P1 Puzzle") { part1(puzzles[0]) }
 
-    override fun assertPart2Correct() {
-        part2(example2Input).also { println("[Example] Part 2: $it") }.also { assertEquals(0, it) }
-        part2(puzzle2Input).also { println("[Puzzle] Part 2: $it") }.also { assertEquals(0, it) }
-    }
+        check(0, "P2 Example") { part2(examples[1]) }
+        check(0, "P2 Puzzle") { part2(puzzles[1]) }
 
-    override fun assertPart3Correct() {
-        part3(example3Input).also { println("[Example] Part 3: $it") }.also { assertEquals(0, it) }
-        part3(puzzle3Input).also { println("[Puzzle] Part 3: $it") }.also { assertEquals(0, it) }
+        check(0, "P3 Example") { part3(examples[2]) }
+        check(0, "P3 Puzzle") { part3(puzzles[2]) }
     }
 }
 

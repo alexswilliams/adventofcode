@@ -2,7 +2,7 @@ package common
 
 import java.util.*
 
-class TreeStack<Element>(private val weightOffset: (Element) -> Int = { 0 }) {
+class TreeQueue<Element>(private val weightOffset: (Element) -> Int = { 0 }) {
     private val tree = TreeMap<Int, MutableList<Element>>()
 
     fun offer(e: Element, weight: Int) {
