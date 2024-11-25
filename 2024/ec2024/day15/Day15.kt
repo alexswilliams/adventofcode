@@ -1,6 +1,7 @@
 package ec2024.day15
 
 import common.*
+import kotlinx.coroutines.*
 import kotlin.math.*
 
 private val examples = loadFilesToLines("ec2024/day15", "example.txt", "example2.txt")
@@ -23,7 +24,7 @@ internal object Day15 : Challenge {
 
         check(38, "P3 Example from part 2") { part3(examples[1]) }
         check(526, "P3 using Input from part 2") { part3(puzzles[1]) }
-        check(0, "P3 Puzzle") { part3(puzzles[2]) }
+        check(1530, "P3 Puzzle") { part3(puzzles[2]) }
     }
 }
 
@@ -66,6 +67,8 @@ private fun part2(input: List<String>): Int {
     return shortestPathPerOrder.min()
 }
 
+private fun Iterable<Char>.lettersToBitSet() = this.map { 1L shl (it - 'A') }.asBitSet()
+private fun String.lettersToBitSet() = this.asIterable().lettersToBitSet()
 
 private fun part3(input: List<String>): Int {
     val grid = input.asArrayOfCharArrays()
@@ -74,32 +77,33 @@ private fun part3(input: List<String>): Int {
         .groupBy({ it.second }) { it.first }
 
     val startToEachHerb = herbs.flatMap { (_, targets) ->
-        targets.map {
-            it to aStarCollectingHerbs(start, it, grid).let { (dist, seen) -> dist to (seen.map { path -> path.map { 1L shl (it - 'A') }.asBitSet() }) }
-        }
+        targets.map { it to aStarCollectingHerbs(start, it, grid).let { (dist, seen) -> dist to (seen.map { it.lettersToBitSet() }) } }
     }.toMap()
     // manually verified: there are no herbs where the shortest path from the start accidentally also visits all other herbs
     println(startToEachHerb)
     println(herbs.keys)
-    val reachableFromEachHerb = herbs.values.runningFold(Int.MAX_VALUE) { bestSoFar, places ->
-        places.flatMap { herb ->
-            val (distanceFromStartToHerb, herbsSeenBetweenStartAndHerb) = startToEachHerb[herb]!!
-            println("Trying $herb (from Start = $distanceFromStartToHerb, $herbsSeenBetweenStartAndHerb)")
-            herbsSeenBetweenStartAndHerb.map { seenSoFar ->
-                bfsToOtherReachableHerbs(
-                    herb,
-                    distanceFromStartToHerb,
-                    startToEachHerb,
-                    seenSoFar,
-                    herbs.keys.map { 1L shl (it - 'A') }.asBitSet().excluding(seenSoFar),
-                    grid,
-                    bestSoFar
-                )
-            }
+    val reachableFromEachHerb = herbs.values.fold(Int.MAX_VALUE) { bestSoFar, places ->
+        runBlocking(Dispatchers.Default) {
+            places.mapIndexed { index, herb ->
+                async {
+                    val (distanceFromStartToHerb, herbsSeenBetweenStartAndHerb) = startToEachHerb[herb]!!
+                    println("[${index + 1} of ${places.size}] Trying ${grid[herb.row()][herb.col()]} $herb (from Start = $distanceFromStartToHerb, $herbsSeenBetweenStartAndHerb) - best so far is $bestSoFar")
+                    herbsSeenBetweenStartAndHerb.minOf { seenSoFar ->
+                        bfsToOtherReachableHerbs(
+                            start = herb,
+                            distanceFromStart = distanceFromStartToHerb,
+                            pathsBackHomeFromEachHerb = startToEachHerb,
+                            seenBeforeStart = seenSoFar,
+                            herbsStillNeeded = herbs.keys.lettersToBitSet().excluding(seenSoFar),
+                            grid = grid,
+                            bestSoFar = bestSoFar
+                        )
+                    }
+                }
+            }.awaitAll()
         }.min()
     }
-
-    return reachableFromEachHerb.min()
+    return reachableFromEachHerb
 }
 
 
