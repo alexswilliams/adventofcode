@@ -8,9 +8,9 @@ private val puzzles = loadFilesToLines("ec2024/day15", "input.txt", "input2.txt"
 
 internal fun main() {
     Day15.assertCorrect()
-    benchmark { part1(puzzles[0]) } // 77µs
-    benchmark(10) { part2(puzzles[1]) } // 234ms
-    benchmark(1) { part3(puzzles[2]) }
+//    benchmark { part1(puzzles[0]) } // 77µs
+//    benchmark(10) { part2(puzzles[1]) } // 234ms
+//    benchmark(1) { part3(puzzles[2]) }
 }
 
 internal object Day15 : Challenge {
@@ -22,6 +22,8 @@ internal object Day15 : Challenge {
         check(526, "P2 Puzzle") { part2(puzzles[1]) }
 
         check(0, "P3 Puzzle") { part3(puzzles[2]) }
+        check(526, "P3 using Input from part 2") { part3(puzzles[1]) }
+        check(38, "P3 Example from part 2") { part3(examples[1]) }
     }
 }
 
@@ -67,7 +69,124 @@ private fun part2(input: List<String>): Int {
 }
 
 
-private fun part3(input: List<String>): Int = throw Error("Need more coffee")
+private fun part3(input: List<String>): Int {
+    val grid = input.asArrayOfCharArrays()
+    val start = Place(r = 0, c = grid[0].indexOf('.'))
+    val herbs = grid.flatMapIndexed { row, line -> line.mapIndexed { col, ch -> if (ch.isLetter()) Place(row, col) to ch else null }.filterNotNull() }
+        .groupBy({ it.second }) { it.first }
+
+    val startToEachHerb = herbs.flatMap { (_, targets) -> targets.map { it to aStarCollectingHerbs(start, it, grid) } }.toMap()
+    // manually verified: there are no herbs where the shortest path from the start accidentally also visits all other herbs
+    println(startToEachHerb)
+    val reachableFromEachHerb = herbs.values.runningFold(Int.MAX_VALUE) { bestSoFar, places ->
+        places.flatMap { herb ->
+            val (distanceFromStartToHerb, herbsSeenBetweenStartAndHerb) = startToEachHerb[herb]!!
+            println("Trying $herb (from Start = $distanceFromStartToHerb, $herbsSeenBetweenStartAndHerb)")
+            herbsSeenBetweenStartAndHerb.map { seenSoFar ->
+                bfsToOtherReachableHerbs(
+                    herb,
+                    startToEachHerb,
+                    seenSoFar.toCharArray(),
+                    herbs.keys.subtract(seenSoFar.asIterable()),
+                    grid,
+                    bestSoFar - distanceFromStartToHerb
+                ) + distanceFromStartToHerb
+            }
+        }.min()
+    }
+
+    return reachableFromEachHerb.min()
+}
+
+private fun bfsToOtherReachableHerbs(
+    start: Place,
+    pathsBackHomeFromEachHerb: Map<Place, Pair<Int, List<String>>>,
+    seenBeforeStart: CharArray,
+    herbsStillNeeded: Set<Char>,
+    grid: Array<CharArray>,
+    bestSoFar: Int,
+): Int {
+    val work = ArrayDeque(listOf(Triple(start, seenBeforeStart.sortedArray(), 0)))
+    val visited = mutableSetOf<Pair<Place, String>>(start to seenBeforeStart.sortedArray().joinToString(""))
+    var shortestRouteLength: Int = bestSoFar
+
+    while (work.isNotEmpty()) {
+        val (u, seenSoFar, distance) = work.removeFirst()
+        if (distance >= shortestRouteLength) continue
+
+        for (n in neighboursOf(u, grid)) {
+            if (grid[n.r][n.c].isLetter()) {
+                val newSeenSoFar = (seenSoFar + grid[n.r][n.c]).distinct().toCharArray().sortedArray()
+                if (visited.add(n to newSeenSoFar.joinToString(""))) {
+                    work.addLast(Triple(n, newSeenSoFar, distance + 1))
+
+                    val (distanceBackHome, pathsBackHome) = pathsBackHomeFromEachHerb[n]!!
+                    if (pathsBackHome.any { path ->
+                            val discoveredInPath = (path + newSeenSoFar.joinToString("") + seenBeforeStart.joinToString("")).toCharArray().sortedArray()
+                            val difference = herbsStillNeeded.subtract(discoveredInPath.asIterable())
+                            difference.isEmpty()
+                        }) {
+                        if (distance + distanceBackHome < shortestRouteLength) {
+                            shortestRouteLength = distance + distanceBackHome + 1
+                        }
+                        continue
+                    }
+                }
+            } else {
+                if (visited.add(n to seenSoFar.joinToString(""))) {
+                    work.addLast(Triple(n, seenSoFar, distance + 1))
+                }
+            }
+        }
+    }
+    return shortestRouteLength.also { if (it == Int.MAX_VALUE) throw Error("Could not find a complete route - should be impossible") }
+}
+
+private fun aStarCollectingHerbs(
+    start: Place,
+    end: Place,
+    grid: Array<CharArray>,
+    heuristic: (Place) -> Int = { manhattan(it, end) },
+): Pair<Int, List<String>> {
+    val heap = TreeQueue(heuristic)
+    val shortestPaths = Array(grid.size) { Array(grid[0].size) { Int.MAX_VALUE to listOf<String>() } }
+    val offered = mutableSetOf<Place>()
+    shortestPaths[start.r][start.c] = 0 to listOf()
+    heap.offer(start, weight = 0)
+
+    while (true) {
+        val u = heap.poll() ?: throw Error("All routes explored with no solution")
+        val (distanceToU, pathsToU) = shortestPaths[u.r][u.c]
+        if (u == end) return distanceToU to pathsToU
+
+        for (n in neighboursOf(u, grid)) {
+            val (oldDistanceToN, oldPathsToN) = shortestPaths[n.r][n.c]
+            val newDistanceToN = distanceToU + 1
+            val floorType = grid[n.r][n.c]
+            if (newDistanceToN < oldDistanceToN) {
+                heap.offerOrReposition(n, oldDistanceToN, newDistanceToN)
+                offered.add(n)
+                if (floorType.isLetter()) shortestPaths[n.r][n.c] = newDistanceToN to pathsToU
+                    .map { if (floorType !in it) it + floorType else it }
+                    .let { if (it.isEmpty()) listOf(floorType.toString()) else it }
+                    .distinct()
+                else shortestPaths[n.r][n.c] = newDistanceToN to pathsToU
+            }
+            if (newDistanceToN == oldDistanceToN) {
+                if (n !in offered) {
+                    heap.offerOrReposition(n, oldDistanceToN, newDistanceToN)
+                    offered.add(n)
+                }
+                shortestPaths[n.r][n.c] =
+                    if (floorType.isLetter()) newDistanceToN to pathsToU
+                        .map { if (floorType !in it) it + floorType else it }
+                        .let { if (it.isEmpty()) listOf(floorType.toString()) else it }
+                        .plus(oldPathsToN).distinct()
+                    else newDistanceToN to pathsToU.plus(oldPathsToN).distinct()
+            }
+        }
+    }
+}
 
 
 private fun aStarSearch(starts: Collection<Pair<Place, Int>>, end: Place, grid: Array<CharArray>, heuristic: (Place) -> Int = { manhattan(it, end) }): Int {
