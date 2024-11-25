@@ -2,6 +2,7 @@ package ec2024.day15
 
 import common.*
 import kotlinx.coroutines.*
+import java.util.HashMap.*
 import kotlin.math.*
 
 private val examples = loadFilesToLines("ec2024/day15", "example.txt", "example2.txt")
@@ -67,9 +68,6 @@ private fun part2(input: List<String>): Int {
     return shortestPathPerOrder.min()
 }
 
-private fun Iterable<Char>.lettersToBitSet() = this.map { 1L shl (it - 'A') }.asBitSet()
-private fun String.lettersToBitSet() = this.asIterable().lettersToBitSet()
-
 private fun part3(input: List<String>): Int {
     val grid = input.asArrayOfCharArrays()
     val start = 0 by16 grid[0].indexOf('.')
@@ -79,10 +77,8 @@ private fun part3(input: List<String>): Int {
     val startToEachHerb = herbs.flatMap { (_, targets) ->
         targets.map { it to aStarCollectingHerbs(start, it, grid).let { (dist, seen) -> dist to (seen.map { it.lettersToBitSet() }) } }
     }.toMap()
-    // manually verified: there are no herbs where the shortest path from the start accidentally also visits all other herbs
-    println(startToEachHerb)
-    println(herbs.keys)
-    val reachableFromEachHerb = herbs.values.fold(Int.MAX_VALUE) { bestSoFar, places ->
+
+    val reachableFromEachHerb = herbs.values.sortedBy { it.size }.fold(Int.MAX_VALUE) { bestSoFar, places ->
         runBlocking(Dispatchers.Default) {
             places.mapIndexed { index, herb ->
                 async {
@@ -106,6 +102,8 @@ private fun part3(input: List<String>): Int {
     return reachableFromEachHerb
 }
 
+private fun Iterable<Char>.lettersToBitSet() = this.map { 1L shl (it - 'A') }.asBitSet()
+private fun String.lettersToBitSet() = this.asIterable().lettersToBitSet()
 
 private fun bfsToOtherReachableHerbs(
     start: Location1616,
@@ -116,48 +114,55 @@ private fun bfsToOtherReachableHerbs(
     grid: Array<CharArray>,
     bestSoFar: Int,
 ): Int {
+    val visitedGrids = newHashMap<Int, Array<BooleanArray>>(4096)
+        .apply { getOrPut(seenBeforeStart.toInt()) { Array(grid.size) { BooleanArray(grid[0].size) } }[start.row()][start.col()] = true }
     val work = ArrayDeque(listOf(Triple(start, seenBeforeStart, distanceFromStart)))
-    val visitedGrids = mutableMapOf(seenBeforeStart to Array(grid.size) { BooleanArray(grid[0].size) })
-        .apply { get(seenBeforeStart)!![start.row()][start.col()] = true }
     var shortestRouteLength: Int = bestSoFar
     val neighboursArray = IntArray(4)
+
+    fun locatePlane(newSeenSoFar: BitSet): Array<BooleanArray> = visitedGrids.getOrPut(newSeenSoFar.toInt()) { Array(grid.size) { BooleanArray(grid[0].size) } }
 
     while (work.isNotEmpty()) {
         val (u, seenSoFar, distance) = work.removeFirst()
         if (distance >= shortestRouteLength) continue
-        val plane = visitedGrids.getOrPut(seenSoFar) { Array(grid.size) { BooleanArray(grid[0].size) } }
+        val plane = locatePlane(seenSoFar)
 
         for (n in neighboursOf(u, grid, neighboursArray)) {
             if (n == -1) continue
             val floorType = grid[n.row()][n.col()]
-            if (floorType.isLetter()) {
-                val newSeenSoFar = seenSoFar plusItem (1L shl (floorType - 'A'))
-                val newPlane = if (newSeenSoFar != seenSoFar) visitedGrids.getOrPut(newSeenSoFar) { Array(grid.size) { BooleanArray(grid[0].size) } } else plane
-                if (!newPlane[n.row()][n.col()]) {
-                    newPlane[n.row()][n.col()] = true
-                    work.addLast(Triple(n, newSeenSoFar, distance + 1))
 
-                    val (distanceBackHome, pathsBackHome) = pathsBackHomeFromEachHerb[n]!!
-                    if (pathsBackHome.any { pathBackHome ->
-                            val discoveredInPath = pathBackHome plusItem newSeenSoFar plusItem seenBeforeStart
-                            val difference = herbsStillNeeded.excluding(discoveredInPath)
-                            difference == EMPTY_BITSET
-                        }) {
-                        if (distance + distanceBackHome < shortestRouteLength) {
-                            shortestRouteLength = distance + distanceBackHome + 1
-                        }
-                        continue
-                    }
-                }
-            } else {
+            fun maybeAddBlankTile() {
                 if (!plane[n.row()][n.col()]) {
                     plane[n.row()][n.col()] = true
                     work.addLast(Triple(n, seenSoFar, distance + 1))
                 }
             }
+
+            fun maybeAddLetterTile() {
+                val newSeenSoFar = seenSoFar plusItem (1L shl (floorType - 'A'))
+                val newPlane = if (newSeenSoFar != seenSoFar) locatePlane(newSeenSoFar) else plane
+                if (!newPlane[n.row()][n.col()]) {
+                    newPlane[n.row()][n.col()] = true
+                    work.addLast(Triple(n, newSeenSoFar, distance + 1))
+
+                    val (distanceBackHome, pathsBackHome) = pathsBackHomeFromEachHerb[n]!!
+                    if (pathsBackHome.any { pathBackHome -> herbsStillNeeded.excluding(pathBackHome plusItem newSeenSoFar) == EMPTY_BITSET }) {
+                        if (distance + distanceBackHome < shortestRouteLength) {
+                            shortestRouteLength = distance + distanceBackHome + 1
+                        }
+                        return
+                    }
+                }
+            }
+
+            if (floorType.isLetter()) {
+                maybeAddLetterTile()
+            } else {
+                maybeAddBlankTile()
+            }
         }
     }
-    return shortestRouteLength.also { if (it == Int.MAX_VALUE) throw Error("Could not find a complete route - should be impossible") }
+    return shortestRouteLength
 }
 
 private fun aStarCollectingHerbs(
