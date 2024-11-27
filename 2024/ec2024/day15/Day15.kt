@@ -1,7 +1,6 @@
 package ec2024.day15
 
 import common.*
-import kotlinx.coroutines.*
 import java.util.HashMap.*
 import kotlin.math.*
 
@@ -11,8 +10,8 @@ private val puzzles = loadFilesToLines("ec2024/day15", "input.txt", "input2.txt"
 internal fun main() {
     Day15.assertCorrect()
     benchmark { part1(puzzles[0]) } // 77µs
-    benchmark(10) { part2(puzzles[1]) } // 234ms
-    benchmark(1) { part3(puzzles[2]) } // 9m6s :(
+    benchmark(100) { part2(puzzles[1]) } // 25.5ms
+    benchmark(100) { part3(puzzles[2]) } // 86.2ms
 }
 
 internal object Day15 : Challenge {
@@ -23,13 +22,9 @@ internal object Day15 : Challenge {
         check(38, "P2 Example") { part2(examples[1]) }
         check(526, "P2 Puzzle") { part2(puzzles[1]) }
 
-        check(38, "P3 Example from part 2") { part3(examples[1]) }
-        check(526, "P3 using Input from part 2") { part3(puzzles[1]) }
         check(1530, "P3 Puzzle") { part3(puzzles[2]) }
     }
 }
-
-private data class Destination(val end: Location1616, val distance: Int)
 
 private fun part1(input: List<String>): Int {
     val grid = input.asArrayOfCharArrays()
@@ -42,124 +37,141 @@ private fun part1(input: List<String>): Int {
 private fun part2(input: List<String>): Int {
     val grid = input.asArrayOfCharArrays()
     val start = 0 by16 grid[0].indexOf('.')
-    val herbs = grid.flatMapIndexed { row, line -> line.mapIndexed { col, ch -> if (ch.isLetter()) row by16 col to ch else null }.filterNotNull() }
-        .groupBy({ it.second }) { it.first }
-
-    val possibleOrderings = herbs.keys.permutations().let { strings -> strings.filter { it.reversed() !in strings || it <= it.reversed() } }
-
-    val routePrefixCache = mutableMapOf<String, List<Destination>>()
-    fun shortestPathForOrdering(ordering: String): Int {
-        var distancesSoFar = routePrefixCache.getOrPut(ordering.take(1)) {
-            herbs[ordering[0]]!!.map { herb ->
-                Destination(herb, aStarSearch(listOf(start to 0), herb, grid))
-            }
-        }
-        (1..ordering.lastIndex).forEach { i ->
-            distancesSoFar = routePrefixCache.getOrPut(ordering.take(i + 1)) {
-                herbs[ordering[i]]!!.map { herb ->
-                    Destination(herb, aStarSearch(distancesSoFar.map { it.end to it.distance }, herb, grid))
-                }
-            }
-        }
-        return aStarSearch(distancesSoFar.map { it.end to it.distance }, start, grid)
-    }
-
-    val shortestPathPerOrder = possibleOrderings.map { ordering -> shortestPathForOrdering(ordering) }
-    return shortestPathPerOrder.min()
+    fillDeadEnds(grid)
+    return shortestLengthViaAllHerbs(grid, start)
 }
 
 private fun part3(input: List<String>): Int {
     val grid = input.asArrayOfCharArrays()
     val start = 0 by16 grid[0].indexOf('.')
+    fillDeadEnds(grid)
+
+    val barriers = grid[0].indices.filter { col -> grid.count { it[col] == '#' } == grid.size - 1 && grid.any { it[col] == '.' } }
+    if (barriers.isEmpty()) return shortestLengthViaAllHerbs(grid, start)
+
+    if (barriers.size != 2 || start.col() !in barriers[0]..barriers[1]) throw Error("Solution needs to be made more generic")
+    val grids = listOf(
+        Array(grid.size) { row -> grid[row].copyOfRange(0, barriers[0] + 1) },
+        Array(grid.size) { row -> grid[row].copyOfRange(barriers[0], barriers[1] + 1) },
+        Array(grid.size) { row -> grid[row].copyOfRange(barriers[1], grid[0].lastIndex + 1) },
+    )
+    val startLeft = (grids[0].indexOfLast { it.last() == '.' }) by16 grids[0][0].lastIndex
+    val startMiddle = 0 by16 grids[1][0].indexOf('.')
+    val startRight = (grids[2].indexOfLast { it.first() == '.' }) by16 0
+    grids[1][startLeft.row()][0] = 'X'
+    grids[1][startRight.row()][grids[1][0].lastIndex] = 'Y'
+
+    return shortestLengthViaAllHerbs(grids[0], startLeft) +
+            shortestLengthViaAllHerbs(grids[1], startMiddle) +
+            shortestLengthViaAllHerbs(grids[2], startRight)
+}
+
+private fun shortestLengthViaAllHerbs(grid: Array<CharArray>, start: Location1616): Int {
     val herbs = grid.flatMapIndexed { row, line -> line.mapIndexed { col, ch -> if (ch.isLetter()) row by16 col to ch else null }.filterNotNull() }
         .groupBy({ it.second }) { it.first }
 
-    val startToEachHerb = herbs.flatMap { (_, targets) ->
+    val startToEachHerb = herbs.values.flatMap { targets ->
         targets.map { it to aStarCollectingHerbs(start, it, grid).let { (dist, seen) -> dist to (seen.map { it.lettersToBitSet() }) } }
     }.toMap()
 
-    val reachableFromEachHerb = herbs.values.sortedBy { it.size }.fold(Int.MAX_VALUE) { bestSoFar, places ->
-        runBlocking(Dispatchers.Default) {
-            places.mapIndexed { index, herb ->
-                async {
-                    val (distanceFromStartToHerb, herbsSeenBetweenStartAndHerb) = startToEachHerb[herb]!!
-                    println("[${index + 1} of ${places.size}] Trying ${grid[herb.row()][herb.col()]} $herb (from Start = $distanceFromStartToHerb, $herbsSeenBetweenStartAndHerb) - best so far is $bestSoFar")
-                    herbsSeenBetweenStartAndHerb.minOf { seenSoFar ->
-                        bfsToOtherReachableHerbs(
-                            start = herb,
-                            distanceFromStart = distanceFromStartToHerb,
-                            pathsBackHomeFromEachHerb = startToEachHerb,
-                            seenBeforeStart = seenSoFar,
-                            herbsStillNeeded = herbs.keys.lettersToBitSet().excluding(seenSoFar),
-                            grid = grid,
-                            bestSoFar = bestSoFar
-                        )
-                    }
-                }
-            }.awaitAll()
-        }.min()
+    val startConditions = herbs.values.sortedBy { it.size }.flatMap { places ->
+        places.flatMap { herbLocation ->
+            val (distanceFromStartToHerb, herbsSeenBetweenStartAndHerb) = startToEachHerb[herbLocation]!!
+            herbsSeenBetweenStartAndHerb.map { seenSoFar -> Triple(herbLocation, seenSoFar, distanceFromStartToHerb) }
+        }
     }
-    return reachableFromEachHerb
+    return bfsToOtherReachableHerbs(startConditions, startToEachHerb, herbs.keys.lettersToBitSet(), grid)
+}
+
+private fun fillDeadEnds(grid: Array<CharArray>) {
+    var changed: Boolean
+    do {
+        changed = false
+
+        fun maybeFillCell(row: Int, col: Int) {
+            if (grid[row][col] != '.') return
+            val up = grid[row - 1][col]
+            val down = grid[row + 1][col]
+            val left = grid[row][col - 1]
+            val right = grid[row][col + 1]
+            if (up == '#' && down == '#' && (left == '#' || right == '#')) {
+                changed = true
+                grid[row][col] = '#'
+                if (left == '.') maybeFillCell(row, col - 1) else maybeFillCell(row, col + 1)
+            }
+            if (left == '#' && right == '#' && (up == '#' || down == '#')) {
+                changed = true
+                grid[row][col] = '#'
+                if (up == '.') maybeFillCell(row - 1, col) else maybeFillCell(row + 1, col)
+            }
+        }
+
+        for (row in 1..grid.lastIndex - 1) {
+            for (col in 1..grid[0].lastIndex - 1) {
+                maybeFillCell(row, col)
+            }
+        }
+    } while (changed)
 }
 
 private fun Iterable<Char>.lettersToBitSet() = this.map { 1L shl (it - 'A') }.asBitSet()
 private fun String.lettersToBitSet() = this.asIterable().lettersToBitSet()
 
+private fun pack(location: Location1616, seen: BitSet): Long = (location.toLong() shl 32) or seen
+private fun unpackSeen(l: Long): BitSet = l and 0xffff_ffff
+private fun unpackLocation(l: Long): Location1616 = (l shr 32).toInt()
+
 private fun bfsToOtherReachableHerbs(
-    start: Location1616,
-    distanceFromStart: Int,
+    starts: List<Triple<Location1616, BitSet, Int>>,
     pathsBackHomeFromEachHerb: Map<Location1616, Pair<Int, List<BitSet>>>,
-    seenBeforeStart: BitSet,
-    herbsStillNeeded: BitSet,
+    herbsNeeded: BitSet,
     grid: Array<CharArray>,
-    bestSoFar: Int,
 ): Int {
-    val visitedGrids = newHashMap<Int, Array<BooleanArray>>(4096)
-        .apply { getOrPut(seenBeforeStart.toInt()) { Array(grid.size) { BooleanArray(grid[0].size) } }[start.row()][start.col()] = true }
-    val work = ArrayDeque(listOf(Triple(start, seenBeforeStart, distanceFromStart)))
-    var shortestRouteLength: Int = bestSoFar
+    val height = grid.size
+    val width = grid[0].size
+    val newPlane = { Array(height) { BooleanArray(width) } }
+    val visitedGrids = newHashMap<Long, Array<BooleanArray>>(90)
+        .apply { starts.forEach { (start, seen) -> getOrPut(seen, newPlane)[start.row()][start.col()] = true } }
+    val work = TreeQueue<Long>()
+        .apply { starts.forEach { offer(pack(it.first, it.second), weight = it.third) } }
+    var shortestRouteLength: Int = Int.MAX_VALUE
     val neighboursArray = IntArray(4)
 
-    fun locatePlane(newSeenSoFar: BitSet): Array<BooleanArray> = visitedGrids.getOrPut(newSeenSoFar.toInt()) { Array(grid.size) { BooleanArray(grid[0].size) } }
-
-    while (work.isNotEmpty()) {
-        val (u, seenSoFar, distance) = work.removeFirst()
+    while (true) {
+        val distance: Int
+        val node = work.poll { weight -> distance = weight } ?: break
+        val u = unpackLocation(node)
+        val seenSoFar = unpackSeen(node)
         if (distance >= shortestRouteLength) continue
-        val plane = locatePlane(seenSoFar)
+        val visited = visitedGrids.getOrPut(seenSoFar, newPlane)
 
         for (n in neighboursOf(u, grid, neighboursArray)) {
             if (n == -1) continue
             val floorType = grid[n.row()][n.col()]
 
             fun maybeAddBlankTile() {
-                if (!plane[n.row()][n.col()]) {
-                    plane[n.row()][n.col()] = true
-                    work.addLast(Triple(n, seenSoFar, distance + 1))
+                if (!visited[n.row()][n.col()]) {
+                    visited[n.row()][n.col()] = true
+                    work.offer(pack(n, seenSoFar), distance + 1)
                 }
             }
 
             fun maybeAddLetterTile() {
                 val newSeenSoFar = seenSoFar plusItem (1L shl (floorType - 'A'))
-                val newPlane = if (newSeenSoFar != seenSoFar) locatePlane(newSeenSoFar) else plane
-                if (!newPlane[n.row()][n.col()]) {
-                    newPlane[n.row()][n.col()] = true
-                    work.addLast(Triple(n, newSeenSoFar, distance + 1))
+                val newVisited = if (newSeenSoFar != seenSoFar) visitedGrids.getOrPut(newSeenSoFar, newPlane) else visited
+                if (!newVisited[n.row()][n.col()]) {
+                    newVisited[n.row()][n.col()] = true
+                    work.offer(pack(n, newSeenSoFar), distance + 1)
 
                     val (distanceBackHome, pathsBackHome) = pathsBackHomeFromEachHerb[n]!!
-                    if (pathsBackHome.any { pathBackHome -> herbsStillNeeded.excluding(pathBackHome plusItem newSeenSoFar) == EMPTY_BITSET }) {
-                        if (distance + distanceBackHome < shortestRouteLength) {
-                            shortestRouteLength = distance + distanceBackHome + 1
-                        }
+                    if (pathsBackHome.any { pathBackHome -> herbsNeeded.excluding(pathBackHome plusItem newSeenSoFar) == EMPTY_BITSET }) {
+                        if (distance + distanceBackHome < shortestRouteLength) shortestRouteLength = distance + distanceBackHome + 1
                         return
                     }
                 }
             }
 
-            if (floorType.isLetter()) {
-                maybeAddLetterTile()
-            } else {
-                maybeAddBlankTile()
-            }
+            if (floorType.isLetter()) maybeAddLetterTile() else maybeAddBlankTile()
         }
     }
     return shortestRouteLength
@@ -222,6 +234,7 @@ private fun aStarSearch(
 ): Int {
     val heap = TreeQueue<Location1616>(heuristic)
     val shortestPath = Array(grid.size) { row -> IntArray(grid[0].size) { Int.MAX_VALUE } }
+    val neighboursArray = IntArray(4)
     starts.forEach { (start, distanceSoFar) ->
         shortestPath[start.row()][start.col()] = distanceSoFar
         heap.offer(start, weight = distanceSoFar)
@@ -230,7 +243,8 @@ private fun aStarSearch(
         val u = heap.poll() ?: throw Error("All routes explored with no solution")
         val distanceToU = shortestPath[u.row()][u.col()]
         if (u == end) return distanceToU
-        for (n in neighboursOf(u, grid)) {
+        for (n in neighboursOf(u, grid, neighboursArray)) {
+            if (n == -1) continue
             val originalDistance = shortestPath[n.row()][n.col()]
             val newDistance = distanceToU + 1
             if (newDistance < originalDistance) {
@@ -244,27 +258,10 @@ private fun aStarSearch(
 private fun manhattan(t1: Location1616, t2: Location1616) = (t1.row() - t2.row()).absoluteValue + (t1.col() - t2.col()).absoluteValue
 
 private val impassable = charArrayOf('#', '~')
-private fun neighboursOf(center: Location1616, grid: Array<CharArray>) = buildList(4) {
-    if (center.col() > 0 && grid[center.row()][center.col() - 1] !in impassable) add(center.minusCol())
-    if (center.col() < grid[0].lastIndex && grid[center.row()][center.col() + 1] !in impassable) add(center.plusCol())
-    if (center.row() > 0 && grid[center.row() - 1][center.col()] !in impassable) add(center.minusRow())
-    if (center.row() < grid.lastIndex && grid[center.row() + 1][center.col()] !in impassable) add(center.plusRow())
-}
 
 private fun neighboursOf(center: Location1616, grid: Array<CharArray>, array: IntArray) = array.apply {
     this[0] = if (center.col() > 0 && grid[center.row()][center.col() - 1] !in impassable) center.minusCol() else -1
     this[1] = if (center.col() < grid[0].lastIndex && grid[center.row()][center.col() + 1] !in impassable) center.plusCol() else -1
     this[2] = if (center.row() > 0 && grid[center.row() - 1][center.col()] !in impassable) center.minusRow() else -1
     this[3] = if (center.row() < grid.lastIndex && grid[center.row() + 1][center.col()] !in impassable) center.plusRow() else -1
-}
-
-private fun Set<Char>.permutations(prefix: List<Char> = listOf()): List<String> =
-    if (isEmpty()) listOf(prefix.joinToString("")) else flatMap { (this - it).permutations(prefix + it) }
-
-private fun orderingsOf(choices: String): List<String> {
-    if (choices.length <= 1) return listOf(choices)
-    return choices.flatMapIndexed { index, thisLetter ->
-        val allSuffixes = orderingsOf(choices.removeRange(index, index + 1))
-        allSuffixes.map { string -> thisLetter + string }
-    }
 }
