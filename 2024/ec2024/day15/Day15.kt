@@ -29,7 +29,7 @@ internal object Day15 : Challenge {
 private fun part1(input: List<String>): Int {
     val grid = input.asArrayOfCharArrays()
     val start = 0 by16 grid[0].indexOf('.')
-    val herbs = grid.flatMapIndexed { row, line -> line.mapIndexed { col, ch -> if (ch == 'H') row by16 col else null }.filterNotNull() }
+    val herbs = grid.mapCartesianNotNull { row, col, char -> if (char == 'H') row by16 col else null }
     return 2 * aStarSearch(herbs.map { it to 0 }, start, grid)
 }
 
@@ -67,7 +67,7 @@ private fun part3(input: List<String>): Int {
 }
 
 private fun shortestLengthViaAllHerbs(grid: Array<CharArray>, start: Location1616): Int {
-    val herbs = grid.flatMapIndexed { row, line -> line.mapIndexed { col, ch -> if (ch.isLetter()) row by16 col to ch else null }.filterNotNull() }
+    val herbs = grid.mapCartesianNotNull { row, col, char -> if (char.isLetter()) row by16 col to char else null }
         .groupBy({ it.second }) { it.first }
 
     val startToEachHerb = herbs.values.flatMap { targets ->

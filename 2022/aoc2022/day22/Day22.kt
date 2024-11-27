@@ -3,8 +3,8 @@ package aoc2022.day22
 import common.*
 import kotlin.test.*
 
-private val exampleInput = "aoc2022/day22/example.txt".fromClasspathFile()
-private val puzzleInput = "aoc2022/day22/input.txt".fromClasspathFile()
+private val exampleInput = loadFilesToGrids("aoc2022/day22", "example.txt").single()
+private val puzzleInput = loadFilesToGrids("aoc2022/day22", "input.txt").single()
 private const val PART_1_EXPECTED_EXAMPLE_ANSWER = 6032
 private const val PART_2_EXPECTED_EXAMPLE_ANSWER = 5031
 
@@ -49,10 +49,9 @@ private data class Point2DAndDirection(val row: Int, val col: Int, val facing: F
 private data class CubeEdge(val before: Point2DAndDirection, val after: Point2DAndDirection, val indicesReversed: Boolean)
 
 
-private fun part1(input: String): Int {
-    val inputLines = input.linesAsCharArrays()
-    val grid = inputLines.dropLast(2)
-    val instructions = parseInstructions(inputLines.last())
+private fun part1(input: Grid): Int {
+    val grid = input.copyOfRange(0, input.size - 2)
+    val instructions = parseInstructions(input.last())
 
     tailrec fun positionAfterFollowing(row: Int, col: Int, facing: Facing, remainingInstructions: List<String>): Int {
         val nextInstruction = remainingInstructions.firstOrNull() ?: return (row + 1) * 1000 + (col + 1) * 4 + facing.number
@@ -82,10 +81,9 @@ private fun part1(input: String): Int {
     return positionAfterFollowing(0, grid[0].indexOfFirst { it != ' ' }, Facing.RIGHT, instructions)
 }
 
-private fun part2(input: String, faceSize: Int, boundaryTransitions: List<CubeEdge>): Int {
-    val inputLines = input.linesAsCharArrays()
-    val grid = inputLines.dropLast(2)
-    val instructions = parseInstructions(inputLines.last())
+private fun part2(input: Grid, faceSize: Int, boundaryTransitions: List<CubeEdge>): Int {
+    val grid = input.copyOfRange(0, input.size - 2)
+    val instructions = parseInstructions(input.last())
 
 
     val transitionSites: Map<Point2DAndDirection, Point2DAndDirection> = boundaryTransitions.flatMap {
@@ -202,8 +200,6 @@ private fun Grid.findLeftEdge(row: Int, col: Int) = findRowEdge(row, col, -1)
 private fun Grid.findRightEdge(row: Int, col: Int) = findRowEdge(row, col, 1)
 private fun Grid.findTopEdge(row: Int, col: Int) = findColEdge(row, col, -1)
 private fun Grid.findBottomEdge(row: Int, col: Int) = findColEdge(row, col, 1)
-
-typealias Grid = List<CharArray>
 
 private enum class Facing(val number: Int, private val afterLeftTurn: Int, private val afterRightTurn: Int, private val opposite: Int) {
     RIGHT(0, 3, 1, 2),

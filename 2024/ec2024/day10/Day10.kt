@@ -4,8 +4,8 @@ import com.github.ajalt.mordant.rendering.TextColors.*
 import com.github.ajalt.mordant.rendering.TextStyles.*
 import common.*
 
-private val examples = loadFilesToLines("ec2024/day10", "example.txt", "example3.txt")
-private val puzzles = loadFilesToLines("ec2024/day10", "input.txt", "input2.txt", "input3.txt")
+private val examples = loadFilesToGrids("ec2024/day10", "example.txt", "example3.txt")
+private val puzzles = loadFilesToGrids("ec2024/day10", "input.txt", "input2.txt", "input3.txt")
 
 internal fun main() {
     Day10.assertCorrect()
@@ -28,17 +28,17 @@ internal object Day10 : Challenge {
 }
 
 
-private fun part1(input: List<String>): String =
-    squareToRuneWord(input.asArrayOfCharArrays()).joinToString("")
+private fun part1(input: Grid): String =
+    squareToRuneWord(input).joinToString("")
 
-private fun part2(input: List<String>): Int =
-    input.chunked(9) { chunk -> chunk.dropLastWhile { it.isBlank() } }
-        .flatMap { it.splitOnSpaces().transpose() }
+private fun part2(input: Grid): Int =
+    input.asIterable().chunked(9) { chunk -> chunk.dropLastWhile { it.isEmpty() } }
+        .flatMap { it.splitArrayOnSpaces().transpose() }
         .map { it.asArrayOfCharArrays() }
         .sumOf { squareToRuneWord(it).basePower }
 
 
-private fun squareToRuneWord(square: Array<CharArray>) = CharArray(16) { i ->
+private fun squareToRuneWord(square: Grid) = CharArray(16) { i ->
     val rowCodex = arrayOf(square[i / 4 + 2][0], square[i / 4 + 2][1], square[i / 4 + 2][6], square[i / 4 + 2][7])
     val colCodex = arrayOf(square[0][i % 4 + 2], square[1][i % 4 + 2], square[6][i % 4 + 2], square[7][i % 4 + 2])
     (rowCodex intersect colCodex.asIterable()).singleOrNull() ?: '.'
@@ -48,8 +48,7 @@ private val CharArray.basePower: Int
     get() = this.foldIndexed(0) { index, acc, ch -> acc + (ch - 'A' + 1) * (index + 1) }
 
 
-private fun part3(input: List<String>): Int {
-    val grid = input.asArrayOfCharArrays()
+private fun part3(grid: Grid): Int {
     val squareTopLefts = cartesianProductOf(
         IntProgression.fromClosedRange(0, grid.lastIndex - 2, 6),
         IntProgression.fromClosedRange(0, grid[0].lastIndex - 2, 6)
@@ -120,14 +119,14 @@ fun codexToSquare(i: Int) = when (i) {
     else -> throw Error()
 }
 
-private fun allUnsolvedCoordsInSquare(r: Int, c: Int, grid: Array<CharArray>): List<Pair<Int, Int>> =
+private fun allUnsolvedCoordsInSquare(r: Int, c: Int, grid: Grid): List<Pair<Int, Int>> =
     innerCoords.map { (ir, ic) -> (r + ir) to (c + ic) }.filter { (ir, ic) -> grid[ir][ic] == '.' }
 
 
 private fun List<Char>.uniqueLettersPlusQuestionMarks() =
     partition { it == '?' }.let { (q, l) -> l.distinct().size + q.size }
 
-private fun isUnsolvable(topLeft: Pair<Int, Int>, grid: Array<CharArray>): Boolean {
+private fun isUnsolvable(topLeft: Pair<Int, Int>, grid: Grid): Boolean {
     val (squareRow, squareCol) = topLeft
     val top = topCoords.map { (r, c) -> grid[r + squareRow][c + squareCol] }
     val bottom = bottomCoords.map { (r, c) -> grid[r + squareRow][c + squareCol] }
@@ -150,7 +149,7 @@ private val leftCoords = cartesianProductOf(listOf(2, 3, 4, 5), listOf(0, 1))
 private val rightCoords = cartesianProductOf(listOf(2, 3, 4, 5), listOf(6, 7))
 private val innerCoords = cartesianProductOf(listOf(2, 3, 4, 5), listOf(2, 3, 4, 5))
 
-private fun printGrid(arrays: Array<CharArray>, offset: Int = 0) {
+private fun printGrid(arrays: Grid, offset: Int = 0) {
     arrays.forEachIndexed { lineNo, line ->
         println(
             " ".repeat(offset) +

@@ -8,6 +8,8 @@ import kotlin.math.*
 
 object Common
 
+typealias Grid = Array<CharArray>
+
 fun String.fromClasspathFileToLines(): List<String> {
     val url = Common::class.java.classLoader.getResource(this)
         ?: throw Exception("Could not find file '$this'")
@@ -22,14 +24,17 @@ fun String.fromClasspathFile(): String {
 
 fun loadFiles(root: String, vararg files: String): List<String> = files.map { file -> "$root/$file".fromClasspathFile() }
 fun loadFilesToLines(root: String, vararg files: String): List<List<String>> = files.map { file -> "$root/$file".fromClasspathFileToLines() }
+fun loadFilesToGrids(root: String, vararg files: String): List<Grid> = files.map { file -> "$root/$file".fromClasspathFile().linesAsCharArrays() }
+
 
 fun List<String>.splitOnSpaces() = map { it.split(' ') }
+fun List<CharArray>.splitArrayOnSpaces() = map { it.concatToString().split(' ') }
 
-fun List<String>.asArrayOfCharArrays(): Array<CharArray> {
+fun List<String>.asArrayOfCharArrays(): Grid {
     return Array(size) { r -> this[r].toCharArray() }
 }
 
-fun Array<CharArray>.subGrid(startRow: Int, startCol: Int, width: Int, height: Int): Array<CharArray> {
+fun Grid.subGrid(startRow: Int, startCol: Int, width: Int, height: Int): Grid {
     return Array(height) { r -> this[startRow + r].copyOfRange(startCol, startCol + width) }
 }
 
@@ -148,7 +153,11 @@ fun extendedGcd(a: Int, b: Int): Triple<Int, Int, Int> {
 fun lcm(input: List<Int>) = input.fold(1) { acc, i -> acc * (i / gcd(acc, i)) }
 fun lcm(input: List<Long>) = input.fold(1L) { acc, i -> acc * (i / gcd(acc, i)) }
 
-fun String.linesAsCharArrays(skipEmptyLines: Boolean = false): List<CharArray> {
+
+fun String.linesAsCharArrays(skipEmptyLines: Boolean = false): Grid =
+    this.linesAsCharArrayList(skipEmptyLines).toTypedArray()
+
+fun String.linesAsCharArrayList(skipEmptyLines: Boolean = false): List<CharArray> {
     if (this.isEmpty()) return emptyList()
     val list = ArrayList<CharArray>()
     val s = this.toCharArray()
@@ -294,7 +303,20 @@ inline fun <T> Iterable<T>.sumOfIndexed(initial: Long, selector: (index: Int, T)
     return sum
 }
 
-inline fun <R> Collection<CharArray>.mapCartesianNotNull(transform: (row: Int, col: Int, char: Char) -> R?): List<R> {
+inline fun <R> Collection<String>.mapCartesianNotNull(transform: (row: Int, col: Int, char: Char) -> R?): List<R> {
+    val result = ArrayList<R>(this.size * 10)
+    this.forEachIndexed { rowNum, row ->
+        row.forEachIndexed { colNum, c ->
+            val transformed = transform(rowNum, colNum, c)
+            if (transformed != null) {
+                result.add(transformed)
+            }
+        }
+    }
+    return result
+}
+
+inline fun <R> Grid.mapCartesianNotNull(transform: (row: Int, col: Int, char: Char) -> R?): List<R> {
     val result = ArrayList<R>(this.size * 10)
     this.forEachIndexed { rowNum, row ->
         row.forEachIndexed { colNum, c ->

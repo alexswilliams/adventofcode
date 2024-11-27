@@ -1,31 +1,24 @@
 package aoc2023.day8
 
 import common.*
-import kotlin.test.*
 
-
-private val exampleInput1 = "aoc2023/day8/example1.txt".fromClasspathFileToLines()
-private val exampleInput2 = "aoc2023/day8/example2.txt".fromClasspathFileToLines()
-private val exampleInput3 = "aoc2023/day8/example3.txt".fromClasspathFileToLines()
-private val puzzleInput = "aoc2023/day8/input.txt".fromClasspathFileToLines()
+private val examples = loadFilesToLines("aoc2023/day8", "example1.txt", "example2.txt", "example3.txt")
+private val puzzles = loadFilesToLines("aoc2023/day8", "input.txt")
 
 internal fun main() {
-    Day8.assertPart1Correct()
-    Day8.assertPart2Correct()
-    benchmark { part1(puzzleInput) } // 205µs
-    benchmark { part2(puzzleInput) } // 1.2ms
+    Day8.assertCorrect()
+    benchmark { part1(puzzles[0]) } // 205µs
+    benchmark { part2(puzzles[0]) } // 1.2ms
 }
 
-internal object Day8 : TwoPartChallenge {
-    override fun assertPart1Correct() {
-        part1(exampleInput1).also { println("[Example 1] Part 1: $it") }.also { assertEquals(2, it) }
-        part1(exampleInput2).also { println("[Example 2] Part 1: $it") }.also { assertEquals(6, it) }
-        part1(puzzleInput).also { println("[Puzzle] Part 1: $it") }.also { assertEquals(12361, it) }
-    }
+internal object Day8 : Challenge {
+    override fun assertCorrect() {
+        check(2, "P1 Example 1") { part1(examples[0]) }
+        check(6, "P1 Example 2") { part1(examples[1]) }
+        check(12361, "P1 Puzzle") { part1(puzzles[0]) }
 
-    override fun assertPart2Correct() {
-        part2(exampleInput3).also { println("[Example 3] Part 2: $it") }.also { assertEquals(6, it) }
-        part2(puzzleInput).also { println("[Puzzle] Part 2: $it") }.also { assertEquals(18215611419223L, it) }
+        check(6, "P2 Example 3") { part2(examples[2]) }
+        check(18215611419223L, "P2 Puzzle") { part2(puzzles[0]) }
     }
 }
 

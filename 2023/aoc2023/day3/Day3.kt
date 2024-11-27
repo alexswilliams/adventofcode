@@ -1,27 +1,23 @@
 package aoc2023.day3
 
 import common.*
-import kotlin.test.*
 
-private val exampleInput = "aoc2023/day3/example.txt".fromClasspathFile().linesAsCharArrays()
-private val puzzleInput = "aoc2023/day3/input.txt".fromClasspathFile().linesAsCharArrays()
+private val examples = loadFilesToGrids("aoc2023/day3", "example.txt")
+private val puzzles = loadFilesToGrids("aoc2023/day3", "input.txt")
 
 internal fun main() {
-    Day3.assertPart1Correct()
-    Day3.assertPart2Correct()
-    benchmark { part1(puzzleInput) } // 140µs
-    benchmark { part2(puzzleInput) } // 122µs
+    Day3.assertCorrect()
+    benchmark { part1(puzzles[0]) } // 140µs
+    benchmark { part2(puzzles[0]) } // 122µs
 }
 
-internal object Day3 : TwoPartChallenge {
-    override fun assertPart1Correct() {
-        part1(exampleInput).also { println("[Example] Part 1: $it") }.also { assertEquals(4361, it) }
-        part1(puzzleInput).also { println("[Puzzle] Part 1: $it") }.also { assertEquals(532445, it) }
-    }
+internal object Day3 : Challenge {
+    override fun assertCorrect() {
+        check(4361, "P1 Example") { part1(examples[0]) }
+        check(532445, "P1 Puzzle") { part1(puzzles[0]) }
 
-    override fun assertPart2Correct() {
-        part2(exampleInput).also { println("[Example] Part 2: $it") }.also { assertEquals(467835, it) }
-        part2(puzzleInput).also { println("[Puzzle] Part 2: $it") }.also { assertEquals(79842967, it) }
+        check(467835, "P2 Example") { part2(examples[0]) }
+        check(79842967, "P2 Puzzle") { part2(puzzles[0]) }
     }
 }
 
@@ -32,7 +28,7 @@ private data class IntAtCoordinate(val value: Int, val row: Int, val colFirst: I
     fun isColumnAdjacentTo(symbol: SymbolAtCoordinate) = symbol.col in (colFirst - 1..colLast + 1)
 }
 
-private fun part1(input: List<CharArray>): Int {
+private fun part1(input: Grid): Int {
     val (symbols, numbers) = tokeniseInput(input)
     val symbolsBoundingRow = Array(symbols.size) { row ->
         symbols[row] +
@@ -44,7 +40,7 @@ private fun part1(input: List<CharArray>): Int {
         .sumOf { it.value }
 }
 
-private fun part2(input: List<CharArray>): Int {
+private fun part2(input: Grid): Int {
     val (symbols, numbers) = tokeniseInput(input)
     val numbersBoundingRow = Array(numbers.size) { row ->
         numbers[row] +
@@ -60,7 +56,7 @@ private fun part2(input: List<CharArray>): Int {
         }
 }
 
-private fun tokeniseInput(input: List<CharArray>): Pair<List<List<SymbolAtCoordinate>>, List<List<IntAtCoordinate>>> {
+private fun tokeniseInput(input: Grid): Pair<List<List<SymbolAtCoordinate>>, List<List<IntAtCoordinate>>> {
     val symbols = List<MutableList<SymbolAtCoordinate>>(input.size) { ArrayList(15) }
     val numbers = List<MutableList<IntAtCoordinate>>(input.size) { ArrayList(15) }
     input.forEachIndexed { row, line ->

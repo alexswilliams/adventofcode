@@ -3,8 +3,8 @@ package ec2024.day13
 import common.*
 import kotlin.math.*
 
-private val examples = loadFilesToLines("ec2024/day13", "example.txt", "example3.txt")
-private val puzzles = loadFilesToLines("ec2024/day13", "input.txt", "input2.txt", "input3.txt")
+private val examples = loadFilesToGrids("ec2024/day13", "example.txt", "example3.txt")
+private val puzzles = loadFilesToGrids("ec2024/day13", "input.txt", "input2.txt", "input3.txt")
 
 internal fun main() {
     Day13.assertCorrect()
@@ -26,61 +26,62 @@ internal object Day13 : Challenge {
     }
 }
 
-private data class Tile(val r: Int, val c: Int, val height: Int)
+private fun part1(input: Grid): Int = shortestPathLength(input)
+private fun part2(input: Grid): Int = shortestPathLength(input)
+private fun part3(input: Grid): Int = shortestPathLength(input)
 
-private fun part1(input: List<String>): Int = shortestPathLength(input)
-private fun part2(input: List<String>): Int = shortestPathLength(input)
-private fun part3(input: List<String>): Int = shortestPathLength(input)
-
-private fun shortestPathLength(input: List<String>): Int =
+private fun shortestPathLength(input: Grid): Int =
     aStarSearch(
-        starts = input.flatMapIndexed { row, line -> line.mapIndexedNotNull { col, ch -> if (ch == 'S') Tile(row, col, 0) else null } },
-        end = input.flatMapIndexed { row, line -> line.mapIndexedNotNull { col, ch -> if (ch == 'E') Tile(row, col, 0) else null } }.single(),
-        grid = input.mapIndexed { row, line ->
-            line.mapIndexed { col, ch ->
-                when (ch) {
-                    in '0'..'9', 'S', 'E' -> Tile(row, col, ch.digitToIntOrNull() ?: 0)
-                    else -> null
-                }
-            }
-        })
+        starts = input.mapCartesianNotNull { row, col, char -> if (char == 'S') row by16 col else null },
+        end = input.mapCartesianNotNull { row, col, char -> if (char == 'E') row by16 col else null }.single(),
+        grid = input
+    )
 
 
-private fun aStarSearch(starts: Collection<Tile>, end: Tile, grid: List<List<Tile?>>, heuristic: (Tile) -> Int = { manhattan(it, end) }): Int {
-    val heap = TreeQueue<Tile>(heuristic)
+private fun aStarSearch(starts: Collection<Location1616>, end: Location1616, grid: Grid, heuristic: (Location1616) -> Int = { manhattan(it, end, grid) }): Int {
+    val heap = TreeQueue<Location1616>(heuristic)
     val shortestPath = Array(grid.size) { row -> IntArray(grid[0].size) { Int.MAX_VALUE } }
     starts.forEach {
-        shortestPath[it.r][it.c] = 0
+        shortestPath[it.row()][it.col()] = 0
         heap.offer(it, weight = 0)
     }
 
     while (true) {
         val u = heap.poll() ?: throw Error("All routes explored with no solution")
-        val distanceToU = shortestPath[u.r][u.c]
+        val distanceToU = shortestPath[u.row()][u.col()]
         if (u == end) return distanceToU
 
         for (n in neighboursOf(u, grid)) {
-            val originalDistance = shortestPath[n.r][n.c]
-            val newDistance = distanceBetween(u, n) + distanceToU + 1
+            val originalDistance = shortestPath[n.row()][n.col()]
+            val newDistance = distanceBetween(u, n, grid) + distanceToU + 1
             if (newDistance < originalDistance) {
                 heap.offerOrReposition(n, originalDistance, newDistance)
-                shortestPath[n.r][n.c] = newDistance
+                shortestPath[n.row()][n.col()] = newDistance
             }
         }
     }
 }
 
-private fun manhattan(t1: Tile, t2: Tile) = (t1.r - t2.r).absoluteValue + (t1.c - t2.c).absoluteValue + (t1.height - t2.height).absoluteValue
+private fun manhattan(t1: Location1616, t2: Location1616, grid: Grid) =
+    (t1.row() - t2.row()).absoluteValue +
+            (t1.col() - t2.col()).absoluteValue +
+            (grid[t1.row()][t1.col()].heightOr0() - grid[t2.row()][t2.col()].heightOr0()).absoluteValue
 
-private fun neighboursOf(tile: Tile, grid: List<List<Tile?>>): Collection<Tile> = buildList(4) {
-    if (tile.c > 0) grid[tile.r][tile.c - 1]?.also { add(it) }
-    if (tile.c < grid[0].lastIndex) grid[tile.r][tile.c + 1]?.also { add(it) }
-    if (tile.r > 0) grid[tile.r - 1][tile.c]?.also { add(it) }
-    if (tile.r < grid.lastIndex) grid[tile.r + 1][tile.c]?.also { add(it) }
+private fun Char.heightOr0(): Int = this.digitToIntOrNull() ?: 0
+
+private val allowed = "SE0123456789".toCharArray()
+
+private fun neighboursOf(tile: Location1616, grid: Grid): Collection<Location1616> = buildList(4) {
+    if (tile.col() > 0 && grid[tile.row()][tile.col() - 1] in allowed) add(tile.minusCol())
+    if (tile.col() < grid[0].lastIndex && grid[tile.row()][tile.col() + 1] in allowed) add(tile.plusCol())
+    if (tile.row() > 0 && grid[tile.row() - 1][tile.col()] in allowed) add(tile.minusRow())
+    if (tile.row() < grid.lastIndex && grid[tile.row() + 1][tile.col()] in allowed) add(tile.plusRow())
 }
 
-private fun distanceBetween(a: Tile, b: Tile): Int {
-    val bigger = max(a.height, b.height)
-    val smaller = min(a.height, b.height)
+private fun distanceBetween(a: Location1616, b: Location1616, grid: Grid): Int {
+    val heightA = grid[a.row()][a.col()].heightOr0()
+    val heightB = grid[b.row()][b.col()].heightOr0()
+    val bigger = max(heightA, heightB)
+    val smaller = min(heightA, heightB)
     return min(bigger - smaller, smaller + 10 - bigger)
 }

@@ -3,8 +3,8 @@ package aoc2022.day13
 import common.*
 import kotlin.test.*
 
-private val exampleInput = "aoc2022/day13/example.txt".fromClasspathFile()
-private val puzzleInput = "aoc2022/day13/input.txt".fromClasspathFile()
+private val exampleInput = "aoc2022/day13/example.txt".fromClasspathFile().linesAsCharArrayList()
+private val puzzleInput = "aoc2022/day13/input.txt".fromClasspathFile().linesAsCharArrayList()
 private const val PART_1_EXPECTED_EXAMPLE_ANSWER = 13
 private const val PART_2_EXPECTED_EXAMPLE_ANSWER = 140
 
@@ -16,15 +16,15 @@ fun main() {
     part2(puzzleInput).also { println("Part 2: $it") } // 20952
 }
 
-private fun part1(input: String) = input
-    .linesAsCharArrays().chunked(3)
+private fun part1(input: List<CharArray>) = input
+    .chunked(3)
     .mapIndexed { index, it -> if (packetComparator(it[0], it[1]) < 0) index + 1 else 0 }
     .sum()
 
 private val beacon2 = "[[2]]".toCharArray()
 private val beacon6 = "[[6]]".toCharArray()
-private fun part2(input: String) = input
-    .linesAsCharArrays(skipEmptyLines = true)
+private fun part2(input: List<CharArray>) = input
+    .filterNot { it.isEmpty() }
     .plus(listOf(beacon2, beacon6))
     .sortedWith(::packetComparator)
     .let { (it.indexOf(beacon2) + 1) * (it.indexOf(beacon6) + 1) }

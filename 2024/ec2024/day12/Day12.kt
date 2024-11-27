@@ -27,12 +27,12 @@ internal object Day12 : Challenge {
 
 private fun part1(input: List<String>): Int =
     input.reversed().drop(1)
-        .flatMapIndexed { row, line -> line.mapIndexedNotNull { col, c -> if (c == 'T') (row to col - 1) else null } }
+        .mapCartesianNotNull { row, col, char -> if (char == 'T') (row to col - 1) else null }
         .sumOf { (r, c) -> findIntersectionsRankingsFor(r, c).max() }
 
 private fun part2(input: List<String>): Int =
     input.reversed().drop(1)
-        .flatMapIndexed { row, line -> line.mapIndexedNotNull { col, c -> if (c == 'T' || c == 'H') ((row to col - 1) to (if (c == 'T') 1 else 2)) else null } }
+        .mapCartesianNotNull { row, col, char -> if (char == 'T' || char == 'H') ((row to col - 1) to (if (char == 'T') 1 else 2)) else null }
         .sumOf { (point, softness) -> findIntersectionsRankingsFor(point.first, point.second).max() * softness }
 
 private fun part3(input: List<String>): Int =

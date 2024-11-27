@@ -39,9 +39,8 @@ private fun part3(input: List<String>): Int {
 }
 
 
-private fun levelToSparseGrid(input: List<String>): MutableSet<Long> = input.flatMapIndexedTo(mutableSetOf()) { row, line ->
-    line.mapIndexedNotNull { col, it -> if (it == '#') row by col else null }
-}
+private fun levelToSparseGrid(input: List<String>): MutableSet<Long> =
+    input.mapCartesianNotNull { row, col, char -> if (char == '#') row by col else null }.toMutableSet()
 
 private fun removeEdgePieces(currentLevel: Set<Long>, hasAllNeighbours: (Long, Set<Long>) -> Boolean) =
     currentLevel.mapNotNullTo(mutableSetOf()) {

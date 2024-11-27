@@ -2,61 +2,52 @@ package aoc2023.day10
 
 import common.*
 import java.io.*
-import kotlin.test.*
 
 
 // You know it'll be an awful day when they give you FIVE different example inputs...
-private val exampleInput1 = "aoc2023/day10/example1.txt".fromClasspathFile().linesAsCharArrays()
-private val exampleInput2 = "aoc2023/day10/example2.txt".fromClasspathFile().linesAsCharArrays()
-private val exampleInput3 = "aoc2023/day10/example3.txt".fromClasspathFile().linesAsCharArrays()
-private val exampleInput4 = "aoc2023/day10/example4.txt".fromClasspathFile().linesAsCharArrays()
-private val exampleInput5 = "aoc2023/day10/example5.txt".fromClasspathFile().linesAsCharArrays()
-private val puzzleInput = "aoc2023/day10/input.txt".fromClasspathFile().linesAsCharArrays()
+private val examples = loadFilesToGrids("aoc2023/day10", "example1.txt", "example2.txt", "example3.txt", "example4.txt", "example5.txt")
+private val puzzles = loadFilesToGrids("aoc2023/day10", "input.txt")
 
 internal fun main() {
-    renderMap(exampleInput1, "2023/aoc2023/day10/renderedMap1.txt")
-    renderMap(exampleInput2, "2023/aoc2023/day10/renderedMap2.txt")
-    renderMap(exampleInput3, "2023/aoc2023/day10/renderedMap3.txt")
-    renderMap(exampleInput4, "2023/aoc2023/day10/renderedMap4.txt")
-    renderMap(exampleInput5, "2023/aoc2023/day10/renderedMap5.txt")
-    renderMap(puzzleInput, "2023/aoc2023/day10/renderedMapInput.txt")
+    renderMap(examples[0], "2023/aoc2023/day10/renderedMap1.txt")
+    renderMap(examples[1], "2023/aoc2023/day10/renderedMap2.txt")
+    renderMap(examples[2], "2023/aoc2023/day10/renderedMap3.txt")
+    renderMap(examples[3], "2023/aoc2023/day10/renderedMap4.txt")
+    renderMap(examples[4], "2023/aoc2023/day10/renderedMap5.txt")
+    renderMap(puzzles[0], "2023/aoc2023/day10/renderedMapInput.txt")
 
-    Day10.assertPart1Correct()
-    Day10.assertPart2Correct()
-
-    benchmark { part1(puzzleInput) } // 49µs
-    benchmark { part2(puzzleInput) } // 179µs
+    Day10.assertCorrect()
+    benchmark { part1(puzzles[0]) } // 49µs
+    benchmark { part2(puzzles[0]) } // 179µs
 }
 
-internal object Day10 : TwoPartChallenge {
-    override fun assertPart1Correct() {
-        part1(exampleInput1).also { println("[Example 1] Part 1: $it") }.also { assertEquals(4, it) }
-        part1(exampleInput2).also { println("[Example 2] Part 1: $it") }.also { assertEquals(8, it) }
-        part1(puzzleInput).also { println("[Puzzle] Part 1: $it") }.also { assertEquals(7107, it) }
-    }
+internal object Day10 : Challenge {
+    override fun assertCorrect() {
+        check(4, "P1 Example 1") { part1(examples[0]) }
+        check(8, "P1 Example 2") { part1(examples[1]) }
+        check(7107, "P1 Puzzle") { part1(puzzles[0]) }
 
-    override fun assertPart2Correct() {
-        part2(exampleInput3).also { println("[Example 3] Part 2: $it") }.also { assertEquals(4, it) }
-        part2(exampleInput4).also { println("[Example 4] Part 2: $it") }.also { assertEquals(8, it) }
-        part2(exampleInput5).also { println("[Example 5] Part 2: $it") }.also { assertEquals(10, it) }
-        part2(puzzleInput).also { println("[Puzzle] Part 2: $it") }.also { assertEquals(281, it) }
+        check(4, "P2 Example 3") { part2(examples[2]) }
+        check(8, "P2 Example 4") { part2(examples[3]) }
+        check(10, "P2 Example 5") { part2(examples[4]) }
+        check(281, "P2 Puzzle") { part2(puzzles[0]) }
     }
 }
 
-private fun part1(input: List<CharArray>): Int {
-    val startLocation = findStart(input)
-    val shapeOfS = determineShapeOfS(input, startLocation)
+private fun part1(grid: Grid): Int {
+    val startLocation = findStart(grid)
+    val shapeOfS = determineShapeOfS(grid, startLocation)
     tailrec fun walkPath(location: Location, exclude: Location = startLocation, length: Int = 1): Int =
         if (location == startLocation) length
-        else walkPath(input.findValidMoveFrom(location, shapeOfS, exclude), location, length + 1)
-    return walkPath(input.findValidMoveFrom(startLocation, shapeOfS, -1 by -1)) / 2
+        else walkPath(grid.findValidMoveFrom(location, shapeOfS, exclude), location, length + 1)
+    return walkPath(grid.findValidMoveFrom(startLocation, shapeOfS, -1 by -1)) / 2
 }
 
-private fun part2(input: List<CharArray>): Int {
-    val startLocation = findStart(input)
-    val shapeOfS = determineShapeOfS(input, startLocation)
-    val loopBitmap = pathLocations(startLocation, input, shapeOfS)
-    return input.sumOfIndexed { rowIndex, row ->
+private fun part2(grid: Grid): Int {
+    val startLocation = findStart(grid)
+    val shapeOfS = determineShapeOfS(grid, startLocation)
+    val loopBitmap = pathLocations(startLocation, grid, shapeOfS)
+    return grid.asIterable().sumOfIndexed { rowIndex, row ->
         val isOnLoop = loopBitmap[rowIndex]
         var totalInsideForRow = 0
         var insidePath = false
@@ -84,14 +75,14 @@ private fun part2(input: List<CharArray>): Int {
     }
 }
 
-private fun findStart(input: List<CharArray>): Location {
+private fun findStart(input: Grid): Location {
     val startRow = input.indexOfFirst { 'S' in it }
     val startCol = input[startRow].indexOf('S')
     val startLocation = startRow by startCol
     return startLocation
 }
 
-private fun pathLocations(startLocation: Location, grid: List<CharArray>, shapeOfS: Char): Array<BooleanArray> {
+private fun pathLocations(startLocation: Location, grid: Grid, shapeOfS: Char): Array<BooleanArray> {
     val path = Array(grid.size) { BooleanArray(grid[0].size) }
     tailrec fun walkPath(location: Location, exclude: Location = startLocation): Array<BooleanArray> {
         path[location.rowInt()][location.colInt()] = true
@@ -103,7 +94,7 @@ private fun pathLocations(startLocation: Location, grid: List<CharArray>, shapeO
     )
 }
 
-private fun determineShapeOfS(grid: List<CharArray>, start: Location): Char {
+private fun determineShapeOfS(grid: Grid, start: Location): Char {
     val row = start.rowInt()
     val col = start.colInt()
     val up = if (row == 0) null else grid[row - 1][col]
@@ -119,7 +110,7 @@ private fun determineShapeOfS(grid: List<CharArray>, start: Location): Char {
     return possibleShapes.single()
 }
 
-private fun List<CharArray>.findValidMoveFrom(location: Location, shapeOfS: Char, exclude: Location): Location {
+private fun Grid.findValidMoveFrom(location: Location, shapeOfS: Char, exclude: Location): Location {
     val char = this[location.rowInt()][location.colInt()]
     val shape = if (char == 'S') shapeOfS else char
     return when (shape) {
@@ -134,14 +125,14 @@ private fun List<CharArray>.findValidMoveFrom(location: Location, shapeOfS: Char
 }
 
 // Just for fun, but a search in a text editor for █ was the fastest way to get the puzzle answer!
-private fun renderMap(input: List<CharArray>, filename: String) {
-    val startRow = input.indexOfFirst { 'S' in it }
-    val startCol = input[startRow].indexOf('S')
-    val shapeOfS = determineShapeOfS(input, startRow by startCol)
-    val steps = pathLocations(startRow by startCol, input, shapeOfS)
+private fun renderMap(grid: Grid, filename: String) {
+    val startRow = grid.indexOfFirst { 'S' in it }
+    val startCol = grid[startRow].indexOf('S')
+    val shapeOfS = determineShapeOfS(grid, startRow by startCol)
+    val steps = pathLocations(startRow by startCol, grid, shapeOfS)
         .flatMapIndexed { rowNum, row -> row.mapIndexed { colNum, col -> if (col) rowNum by colNum else null }.filterNotNull() }
     File(filename).writeText(
-        input.mapTo(arrayListOf()) { line ->
+        grid.mapTo(arrayListOf()) { line ->
             line.mapTo(arrayListOf()) {
                 when (it) {
                     '|' -> '│'

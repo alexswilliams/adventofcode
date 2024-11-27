@@ -3,28 +3,25 @@ package aoc2023.day12
 import common.*
 import kotlinx.coroutines.*
 import java.time.*
-import kotlin.test.*
 
 
-private val exampleInput = "aoc2023/day12/example.txt".fromClasspathFileToLines()
-private val puzzleInput = "aoc2023/day12/input.txt".fromClasspathFileToLines()
+private val examples = loadFilesToLines("aoc2023/day12", "example.txt")
+private val puzzles = loadFilesToLines("aoc2023/day12", "input.txt")
 
 internal fun main() {
-    Day12.assertPart1Correct()
-    Day12.assertPart2Correct()
-    benchmark { part1(puzzleInput) } // 715µs
-    benchmark(10) { part2(exampleInput) } // 9ms
+    Day12.assertCorrect()
+    benchmark { part1(puzzles[0]) } // 715µs
+    benchmark(10) { part2(puzzles[0]) } // 9ms
 }
 
-internal object Day12 : TwoPartChallenge {
-    override fun assertPart1Correct() {
-        part1(exampleInput).also { println("[Example] Part 1: $it") }.also { assertEquals(21, it) }
-        part1(puzzleInput).also { println("[Puzzle] Part 1: $it") }.also { assertEquals(7032, it) }
-    }
+internal object Day12 : Challenge {
+    override fun assertCorrect() {
+        check(21, "P1 Example") { part1(examples[0]) }
+        check(7032, "P1 Puzzle") { part1(puzzles[0]) }
 
-    override fun assertPart2Correct() {
-        part2(exampleInput).also { println("[Example] Part 2: $it") }.also { assertEquals(525152, it) }
-        part2(puzzleInput).also { println("[Puzzle] Part 2: $it") } // TODO: dynamic programming
+        check(525152, "P2 Example") { part2(examples[0]) }
+        // TODO: dynamic programming
+        part2(puzzles[0]).also { println("[Puzzle] Part 2: $it") }
     }
 }
 
