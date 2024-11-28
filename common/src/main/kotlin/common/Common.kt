@@ -112,6 +112,8 @@ fun List<String>.transposeToStrings(): List<String> =
         }.toString()
     }
 
+@Suppress("UNCHECKED_CAST")
+fun <T : CharSequence> List<T?>.filterNotNullOrBlank() = this.filter { it != null && it.isNotBlank() } as List<T>
 fun <T : CharSequence> List<T>.filterNotBlank() = this.filter { it.isNotBlank() }
 fun <T : CharSequence> List<T>.mapMatching(regex: Regex) = this.mapNotNull { regex.matchEntire(it)?.destructured }
 
@@ -281,6 +283,20 @@ fun CharSequence.frequency(): List<Pair<Char, Int>> {
         val index = result.indexOfFirst { it.first == element }
         if (index == -1) result.add(element to 1)
         else result[index] = element to (result[index].second + 1)
+    }
+    return result
+}
+
+fun CharSequence.frequency2(): List<Pair<Char, Int>> {
+    val occurrences = IntArray(128)
+    for (element in this) {
+        occurrences[element.code]++
+    }
+    val result = ArrayList<Pair<Char, Int>>(this.length)
+    val added = BooleanArray(128)
+    for (element in this) {
+        if (!added[element.code]) result.add(element to occurrences[element.code])
+        added[element.code] = true
     }
     return result
 }
