@@ -1,6 +1,7 @@
 package ec2024.day16
 
 import common.*
+import java.util.HashMap.*
 
 private val examples = loadFilesToLines("ec2024/day16", "example1.txt", "example3.txt")
 private val puzzles = loadFilesToLines("ec2024/day16", "input1.txt", "input2.txt", "input3.txt")
@@ -8,8 +9,8 @@ private val puzzles = loadFilesToLines("ec2024/day16", "input1.txt", "input2.txt
 internal fun main() {
     Day16.assertCorrect()
     benchmark { part1(puzzles[0]) } // 29.3µs
-    benchmark(100) { part2(puzzles[1]) } // 25.8ms
-//    benchmark(100) { part3(puzzles[2]) }
+    benchmark(100) { part2(puzzles[1]) } // 24.4ms
+    benchmark(50) { part3(puzzles[2]) } // 59.9ms
 }
 
 internal object Day16 : Challenge {
@@ -21,7 +22,7 @@ internal object Day16 : Challenge {
         check(139028598832L, "P2 Puzzle") { part2(puzzles[1]) }
 
         check("627 128", "P3 Example") { part3(examples[1]) }
-//        check("0 0", "P3 Puzzle") { part3(puzzles[2]) }
+        check("601 55", "P3 Puzzle") { part3(puzzles[2]) }
     }
 }
 
@@ -48,80 +49,41 @@ private fun part2(input: List<String>): Long {
 }
 
 private fun part3(input: List<String>): String {
-    // you could start at any of the lcm(wheels.map{size}) states, you no longer start at state 0
-    // the order of the wheels now matters, it's like there's an extra offset
-    val wheels = parse(input) { line, range -> "${line[range.first]}${line[range.last]}" }
+    val parsed = parse(input) { line, range -> "${line[range.first]}${line[range.last]}" }
 
-    /*
-    For 1 right pull:
-    -> [f(0,0,0), f(down(0,0,0)), f(up(0,0,0))]
+    val wheels = parsed.map { (wheel, _) -> wheel.toTypedArray() }.toTypedArray()
+    val sizes = parsed.map { (wheel, _) -> wheel.size }.toIntArray()
+    val steps = parsed.map { (_, step) -> step }.toIntArray()
+    val start = parsed.indices.map { 0 } to 0
 
-    For 2 right pulls:
-    -> [f(f(0,0,0)), f(f(down(0,0,0)), f(f(up(0,0,0)),
-                     f(down(f(0,0,0)), f(up(f(0,0,0))]
+    fun facesAt(positions: Iterable<Int>, wheels: Array<Array<String>>): String =
+        buildString(2 * wheels.size) { positions.forEachIndexed { wheel, offset -> append(wheels[wheel][offset]) } }
 
-    For 3 right pulls:
-    -> [f(f(f(0,0,0))), f(f(f(down(0,0,0))), f(f(f(up(0,0,0))),
-                        f(f(down(f(0,0,0))), f(f(up(f(0,0,0))),
-                        f(down(f(f(0,0,0))), f(up(f(f(0,0,0)))]
-
-    a pattern emerges... where
-        f(a,b,c) -> ((a + step[0]) % size[0]; (b + step[1]) % size[1]; (c + step[2]) % size[2])
-        up(a,b,c) -> ((a-1+size[0]) % size[0]; (b-1+size[1]) % size[1]; (c-1+size[2]) % size[2])
-        down(a,b,c) -> ((a+1) % size[0]; (b+1) % size[1]; (c+1) % size[2])
-
-    f() looks very memoize-able...
-     */
-
-    val sizes = wheels.map { (wheel, step) -> wheel.size }
-    val steps = wheels.map { (wheel, step) -> step }
-    val start = wheels.indices.map { 0 }
-
-    fun facesAt(positions: List<Int>) = positions.mapIndexed { wheel, i -> wheels[wheel].first[i] }.joinToString("")
-    fun valueOfFaces(faces: String): Int = faces.frequency2().sumOf { (_, freq) -> (freq - 2).coerceAtLeast(0) }
-    fun rightLever(positions: List<Int>) = positions.mapIndexed { wheel, i -> (i + steps[wheel]) % sizes[wheel] }
-    fun up(positions: List<Int>) = positions.mapIndexed { wheel, i -> (i - 1 + sizes[wheel]) % sizes[wheel] }
-    fun down(positions: List<Int>) = positions.mapIndexed { wheel, i -> (i + 1) % sizes[wheel] }
-
-    // todo, this needs to export the value at each iteration, not just the positions
-    fun downAt(numberOfFs: Int, downAfterF: Int): List<Int> {
-        var positions = start
-        for (i in 0..<numberOfFs) {
-            if (i == downAfterF)
-                positions = down(positions)
-            positions = rightLever(positions)
+    val valueCache = newHashMap<List<Int>, Int>(lcm(sizes.toList()) * sizes.size)
+    fun valueOfFaces(positions: List<Int>): Int =
+        valueCache.getOrPut(positions) {
+            facesAt(positions, wheels)
+                .frequency2()
+                .sumOf { (_, freq) -> (freq - 2).coerceAtLeast(0) }
         }
-        return positions
+
+    fun noChange(positions: List<Int>) = positions.mapIndexed { wheel, i -> (i + steps[wheel]) % sizes[wheel] }
+    fun push(positions: List<Int>) = positions.mapIndexed { wheel, i -> (i + steps[wheel] - 1) % sizes[wheel] }
+    fun pull(positions: List<Int>) = positions.mapIndexed { wheel, i -> (i + steps[wheel] + 1) % sizes[wheel] }
+
+    var states = listOf(Triple(start.first, 0, 0))
+    repeat(256) { spin ->
+        states = states.flatMapTo(ArrayList(states.size * 3)) { (pos, min, max) ->
+            listOf(
+                noChange(pos).let { valueOfFaces(it).let { coins -> Triple(it, min + coins, max + coins) } },
+                pull(pos).let { valueOfFaces(it).let { coins -> Triple(it, min + coins, max + coins) } },
+                push(pos).let { valueOfFaces(it).let { coins -> Triple(it, min + coins, max + coins) } }
+            )
+        }.groupByTo(newHashMap(spin * 2 + 1)) { it.first }
+            .map { (pos, matches) -> Triple(pos, matches.minOf { (_, mins, _) -> mins }, matches.maxOf { (_, _, maxes) -> maxes }) }
     }
 
-    fun upAt(numberOfFs: Int, upAfterF: Int): List<Int> {
-        var positions = start
-        for (i in 0..<numberOfFs) {
-            if (i == upAfterF)
-                positions = up(positions)
-            positions = rightLever(positions)
-        }
-        return positions
-    }
-
-    fun allFs(numberOfFs: Int): List<Int> {
-        var positions = start
-        for (i in 0..<numberOfFs) {
-            positions = rightLever(positions)
-        }
-        return positions
-    }
-
-    val after1 = listOf(allFs(1), downAt(1, 0), upAt(1, 0))
-    println(after1.map { facesAt(it) })
-    println(after1.map { valueOfFaces(facesAt(it)) })
-
-    val after2 = listOf(allFs(2), downAt(2, 0), upAt(2, 0), downAt(2, 1), upAt(2, 1))
-    println(after2.map { facesAt(it) })
-    println(after2.map { valueOfFaces(facesAt(it)) })
-
-
-    return ""
+    return "${states.maxOf { (_, _, maxes) -> maxes }} ${states.minOf { (_, mins, _) -> mins }}"
 }
 
 private fun parse(input: List<String>, face: (String, IntRange) -> String) =
