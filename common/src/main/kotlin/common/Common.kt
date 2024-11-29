@@ -152,8 +152,8 @@ fun extendedGcd(a: Int, b: Int): Triple<Int, Int, Int> {
     return extendedGcd(a, b, 1, 0, 0, 1)
 }
 
-fun lcm(input: List<Int>) = input.fold(1) { acc, i -> acc * (i / gcd(acc, i)) }
-fun lcm(input: List<Long>) = input.fold(1L) { acc, i -> acc * (i / gcd(acc, i)) }
+fun lcm(input: Iterable<Int>) = input.fold(1) { acc, i -> acc * (i / gcd(acc, i)) }
+fun lcm(input: Iterable<Long>) = input.fold(1L) { acc, i -> acc * (i / gcd(acc, i)) }
 
 
 fun String.linesAsCharArrays(skipEmptyLines: Boolean = false): Grid =

@@ -50,34 +50,23 @@ private fun part2(input: List<String>): Long {
 
 private fun part3(input: List<String>): String {
     val parsed = parse(input) { line, range -> "${line[range.first]}${line[range.last]}" }
-
     val wheels = parsed.map { (wheel, _) -> wheel.toTypedArray() }.toTypedArray()
     val sizes = parsed.map { (wheel, _) -> wheel.size }.toIntArray()
     val steps = parsed.map { (_, step) -> step }.toIntArray()
     val start = parsed.indices.map { 0 } to 0
 
-    fun facesAt(positions: Iterable<Int>, wheels: Array<Array<String>>): String =
-        buildString(2 * wheels.size) { positions.forEachIndexed { wheel, offset -> append(wheels[wheel][offset]) } }
-
-    val valueCache = newHashMap<List<Int>, Int>(lcm(sizes.toList()) * sizes.size)
-    fun valueOfFaces(positions: List<Int>): Int =
-        valueCache.getOrPut(positions) {
-            facesAt(positions, wheels)
-                .frequency2()
-                .sumOf { (_, freq) -> (freq - 2).coerceAtLeast(0) }
-        }
-
-    fun noChange(positions: List<Int>) = positions.mapIndexed { wheel, i -> (i + steps[wheel]) % sizes[wheel] }
-    fun push(positions: List<Int>) = positions.mapIndexed { wheel, i -> (i + steps[wheel] - 1) % sizes[wheel] }
-    fun pull(positions: List<Int>) = positions.mapIndexed { wheel, i -> (i + steps[wheel] + 1) % sizes[wheel] }
+    fun facesAt(pos: Iterable<Int>, wheels: Array<Array<String>>): String = buildString(2 * wheels.size) { pos.forEachIndexed { w, i -> append(wheels[w][i]) } }
+    val valueCache = newHashMap<List<Int>, Int>(lcm(sizes.asIterable()) * (sizes.size + 1))
+    fun valueOfFaces(pos: List<Int>): Int = valueCache.getOrPut(pos) { facesAt(pos, wheels).frequency2().sumOf { (_, freq) -> (freq - 2).coerceAtLeast(0) } }
+    fun advance(pos: List<Int>, offset: Int) = pos.mapIndexed { wheel, i -> (i + steps[wheel] + offset) % sizes[wheel] }
 
     var states = listOf(Triple(start.first, 0, 0))
     repeat(256) { spin ->
         states = states.flatMapTo(ArrayList(states.size * 3)) { (pos, min, max) ->
             listOf(
-                noChange(pos).let { valueOfFaces(it).let { coins -> Triple(it, min + coins, max + coins) } },
-                pull(pos).let { valueOfFaces(it).let { coins -> Triple(it, min + coins, max + coins) } },
-                push(pos).let { valueOfFaces(it).let { coins -> Triple(it, min + coins, max + coins) } }
+                advance(pos, -1).let { valueOfFaces(it).let { coins -> Triple(it, min + coins, max + coins) } },
+                advance(pos, 0).let { valueOfFaces(it).let { coins -> Triple(it, min + coins, max + coins) } },
+                advance(pos, +1).let { valueOfFaces(it).let { coins -> Triple(it, min + coins, max + coins) } }
             )
         }.groupByTo(newHashMap(spin * 2 + 1)) { it.first }
             .map { (pos, matches) -> Triple(pos, matches.minOf { (_, mins, _) -> mins }, matches.maxOf { (_, _, maxes) -> maxes }) }
