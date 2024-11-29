@@ -2,8 +2,8 @@ package ec2024.dayX
 
 import common.*
 
-private val examples = loadFilesToLines("ec2024/dayX", "example.txt", "example2.txt", "example3.txt")
-private val puzzles = loadFilesToLines("ec2024/dayX", "input.txt", "input2.txt", "input3.txt")
+private val examples = loadFilesToLines("ec2024/dayX", "example1.txt", "example2.txt", "example3.txt")
+private val puzzles = loadFilesToLines("ec2024/dayX", "input1.txt", "input2.txt", "input3.txt")
 
 internal fun main() {
     DayX.assertCorrect()
