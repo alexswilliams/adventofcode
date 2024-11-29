@@ -52,9 +52,9 @@ private fun parseTree(input: List<String>): Pair<Map<String, String>, Set<String
     input.forEach { line ->
         val parent = line.substringBefore(':')
         if (parent != "ANT" && parent != "BUG") {
-            line.substring(parent.length + 1).split(',').forEach { it ->
+            line.substring(parent.length + 1).split(',').forEach {
                 if (it == "@") appleParents.add(parent)
-                else if (it != "BUG" && it != "ANT") branchParents.put(it, parent)
+                else if (it != "BUG" && it != "ANT") branchParents[it] = parent
             }
         }
     }

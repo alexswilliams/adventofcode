@@ -31,7 +31,7 @@ private fun part1(input: List<String>): String {
 
     val ruleset: Map<Char, Iterator<Char>> = input.associate { Pair(it[0], it.drop(2).replace(",", "").cyclicIterator()) }
     var state = ruleset.keys.map { knight -> State(knight, 10, 0) }
-    (1..10).forEach { i ->
+    repeat(10) {
         state = state.map { (squire, currentPower, cumulativePower) ->
             val nextMove = ruleset[squire]!!.next()
             val newPower = deriveNextPower('=', currentPower, nextMove)

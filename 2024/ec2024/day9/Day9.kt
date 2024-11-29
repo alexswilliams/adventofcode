@@ -29,19 +29,19 @@ internal object Day9 : Challenge {
 
 private fun part1(input: List<String>): Int {
     val stamps = intArrayOf(1, 3, 5, 10).sortedArrayDescending()
-    val memory = HashMap<Int, Int>(stamps.associate { it to 1 })
+    val memory = HashMap<Int, Int>(stamps.associateWith { 1 })
     return input.sumOf { shortestWayToMake(it.toInt(), memory, stamps) }
 }
 
 private fun part2(input: List<String>): Int {
     val stamps = intArrayOf(1, 3, 5, 10, 15, 16, 20, 24, 25, 30).sortedArrayDescending()
-    val memory = HashMap<Int, Int>(stamps.associate { it to 1 })
+    val memory = HashMap<Int, Int>(stamps.associateWith { 1 })
     return input.sumOf { shortestWayToMake(it.toInt(), memory, stamps) }
 }
 
 private fun part3(input: List<String>): Int {
     val stamps = intArrayOf(1, 3, 5, 10, 15, 16, 20, 24, 25, 30, 37, 38, 49, 50, 74, 75, 100, 101).sortedArrayDescending()
-    val memory = HashMap<Int, Int>(stamps.associate { it to 1 })
+    val memory = HashMap<Int, Int>(stamps.associateWith { 1 })
     return input
         .map { it.toInt() }
         .sumOf { n ->

@@ -1,7 +1,5 @@
 package ec2024.day10
 
-import com.github.ajalt.mordant.rendering.TextColors.*
-import com.github.ajalt.mordant.rendering.TextStyles.*
 import common.*
 
 private val examples = loadFilesToGrids("ec2024/day10", "example.txt", "example3.txt")
@@ -10,7 +8,7 @@ private val puzzles = loadFilesToGrids("ec2024/day10", "input.txt", "input2.txt"
 internal fun main() {
     Day10.assertCorrect()
     benchmark { part1(puzzles[0]) } // 19µs
-    benchmark { part2(puzzles[1]) } // 6569µs
+    benchmark { part2(puzzles[1]) } // 656.9µs
     benchmark { part3(puzzles[2]) } // 1.4ms
 }
 
@@ -32,7 +30,7 @@ private fun part1(input: Grid): String =
     squareToRuneWord(input).joinToString("")
 
 private fun part2(input: Grid): Int =
-    input.asIterable().chunked(9) { chunk -> chunk.dropLastWhile { it.isEmpty() } }
+    input.asSequence().chunked(9) { chunk -> chunk.dropLastWhile { it.isEmpty() } }
         .flatMap { it.splitArrayOnSpaces().transpose() }
         .map { it.asArrayOfCharArrays() }
         .sumOf { squareToRuneWord(it).basePower }
@@ -148,22 +146,3 @@ private val bottomCoords = cartesianProductOf(listOf(6, 7), listOf(2, 3, 4, 5))
 private val leftCoords = cartesianProductOf(listOf(2, 3, 4, 5), listOf(0, 1))
 private val rightCoords = cartesianProductOf(listOf(2, 3, 4, 5), listOf(6, 7))
 private val innerCoords = cartesianProductOf(listOf(2, 3, 4, 5), listOf(2, 3, 4, 5))
-
-private fun printGrid(arrays: Grid, offset: Int = 0) {
-    arrays.forEachIndexed { lineNo, line ->
-        println(
-            " ".repeat(offset) +
-                    line.concatToString().chunked(2).mapIndexed { index, string ->
-                        if (string == "**") "  "
-                        else if (string == "??") brightRed(string)
-                        else if (string[0] == '?') (brightRed(string[0].toString()) + string[1].toString())
-                        else if (string[1] == '?') (string[0].toString() + brightRed(string[1].toString()))
-                        else if (index % 3 == 0 || lineNo % 6 <= 1) string
-                        else if (string == "..") bold(brightCyan(string))
-                        else if (string[0] == '.') (bold(brightCyan(string[0].toString())) + brightCyan(string[1].toString()))
-                        else if (string[1] == '.') (brightCyan(string[0].toString()) + bold(brightCyan(string[1].toString())))
-                        else brightCyan(string)
-                    }.joinToString("")
-        )
-    }
-}

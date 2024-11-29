@@ -39,8 +39,8 @@ private fun shortestPathLength(input: Grid): Int =
 
 
 private fun aStarSearch(starts: Collection<Location1616>, end: Location1616, grid: Grid, heuristic: (Location1616) -> Int = { manhattan(it, end, grid) }): Int {
-    val heap = TreeQueue<Location1616>(heuristic)
-    val shortestPath = Array(grid.size) { row -> IntArray(grid[0].size) { Int.MAX_VALUE } }
+    val heap = TreeQueue(heuristic)
+    val shortestPath = Array(grid.size) { IntArray(grid[0].size) { Int.MAX_VALUE } }
     starts.forEach {
         shortestPath[it.row()][it.col()] = 0
         heap.offer(it, weight = 0)

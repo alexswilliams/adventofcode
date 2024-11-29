@@ -35,19 +35,19 @@ private fun part1(input: List<String>): Long {
 private fun part2(input: List<String>): Long {
     val game = input.map { it.splitToInts(" ") }.transpose()
     val frequencies = mutableMapOf<Long, Int>()
-    val (finalRound, finalGame) = playGame(game) { round, state ->
+    val (finalRound, finalGame) = playGame(game) { _, state ->
         val number = gameNumber(state)
         val count = frequencies.getOrDefault(number, 0) + 1
         frequencies[number] = count
         return@playGame count != 2024 // a more motivated person could hunt for a cycle and skip the bulk of this loop
     }
-    return finalRound.toLong() * gameNumber(finalGame).toLong()
+    return finalRound.toLong() * gameNumber(finalGame)
 }
 
 private fun part3(input: List<String>): Long {
     val game = input.map { it.splitToInts(" ") }.transpose()
     val frequencies = mutableMapOf<Long, Int>()
-    playGame(game) { round, state ->
+    playGame(game) { _, state ->
         val number = gameNumber(state)
         val count = frequencies.getOrDefault(number, 0) + 1
         frequencies[number] = count
@@ -59,7 +59,7 @@ private fun part3(input: List<String>): Long {
 private fun playGame(initial: List<List<Int>>, onRoundComplete: (round: Int, state: List<List<Int>>) -> Boolean): Pair<Int, List<List<Int>>> {
     var game = initial.map { it.toMutableList() }
     var round = 0
-    var keepGoing = true
+    var keepGoing: Boolean
     do {
         game = playRound(game, ++round)
         keepGoing = onRoundComplete(round, game)

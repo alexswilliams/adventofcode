@@ -71,7 +71,7 @@ private fun shortestLengthViaAllHerbs(grid: Array<CharArray>, start: Location161
         .groupBy({ it.second }) { it.first }
 
     val startToEachHerb = herbs.values.flatMap { targets ->
-        targets.map { it to aStarCollectingHerbs(start, it, grid).let { (dist, seen) -> dist to (seen.map { it.lettersToBitSet() }) } }
+        targets.map { target -> target to aStarCollectingHerbs(start, target, grid).let { (dist, seen) -> dist to (seen.map { it.lettersToBitSet() }) } }
     }.toMap()
 
     val startConditions = herbs.values.sortedBy { it.size }.flatMap { places ->
@@ -106,8 +106,8 @@ private fun fillDeadEnds(grid: Array<CharArray>) {
             }
         }
 
-        for (row in 1..grid.lastIndex - 1) {
-            for (col in 1..grid[0].lastIndex - 1) {
+        for (row in 1..<grid.lastIndex) {
+            for (col in 1..<grid[0].lastIndex) {
                 maybeFillCell(row, col)
             }
         }
@@ -205,7 +205,7 @@ private fun aStarCollectingHerbs(
                 offered.add(n)
                 if (floorType.isLetter()) shortestPaths[n.row()][n.col()] = newDistanceToN to pathsToU
                     .map { if (floorType !in it) it + floorType else it }
-                    .let { if (it.isEmpty()) listOf(floorType.toString()) else it }
+                    .let { it.ifEmpty { listOf(floorType.toString()) } }
                     .distinct()
                 else shortestPaths[n.row()][n.col()] = newDistanceToN to pathsToU
             }
@@ -217,7 +217,7 @@ private fun aStarCollectingHerbs(
                 shortestPaths[n.row()][n.col()] =
                     if (floorType.isLetter()) newDistanceToN to pathsToU
                         .map { if (floorType !in it) it + floorType else it }
-                        .let { if (it.isEmpty()) listOf(floorType.toString()) else it }
+                        .let { it.ifEmpty { listOf(floorType.toString()) } }
                         .plus(oldPathsToN).distinct()
                     else newDistanceToN to pathsToU.plus(oldPathsToN).distinct()
             }
@@ -232,8 +232,8 @@ private fun aStarSearch(
     grid: Array<CharArray>,
     heuristic: (Location1616) -> Int = { manhattan(it, end) },
 ): Int {
-    val heap = TreeQueue<Location1616>(heuristic)
-    val shortestPath = Array(grid.size) { row -> IntArray(grid[0].size) { Int.MAX_VALUE } }
+    val heap = TreeQueue(heuristic)
+    val shortestPath = Array(grid.size) { IntArray(grid[0].size) { Int.MAX_VALUE } }
     val neighboursArray = IntArray(4)
     starts.forEach { (start, distanceSoFar) ->
         shortestPath[start.row()][start.col()] = distanceSoFar

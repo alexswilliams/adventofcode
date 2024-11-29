@@ -37,7 +37,7 @@ private fun parseInput(input: List<String>) =
 
 private fun colonySizeFor(start: String, ruleset: Map<String, List<String>>, days: Int): Long {
     var population = mapOf(start to 1L)
-    (1..days).forEach { day ->
+    repeat(days) {
         population = population.flatMap { (category, multiplier) -> ruleset[category]!!.map { it to multiplier } }
             .groupBy({ it.first }) { it.second }
             .mapValues { it.value.sum() }

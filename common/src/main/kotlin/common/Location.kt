@@ -16,8 +16,8 @@ fun Location.minusCol() = this - 1
 
 typealias Location1616 = Int
 
-infix fun Short.by16(col: Int): Location1616 = (this.toInt() shl 16) or col.toInt()
-infix fun Int.by16(col: Int): Location1616 = (this shl 16) or col.toInt()
+infix fun Short.by16(col: Short): Location1616 = (this.toInt() shl 16) or col.toInt()
+infix fun Int.by16(col: Int): Location1616 = (this shl 16) or col
 infix fun Long.by16(col: Long): Location1616 = (this.toInt() shl 16) or col.toInt()
 fun Location1616.row() = (this shr 16) and 0xffff
 fun Location1616.col() = this and 0xffff

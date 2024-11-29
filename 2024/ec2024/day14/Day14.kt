@@ -52,7 +52,7 @@ private fun part3(input: List<String>): Int {
     val allBranches = buildBranches(input)
     val grid = allBranches.flatten().toSet()
     val leaves = allBranches.map { it.last() }.toSet()
-    val neighbourhoods = grid.associate { point -> point to neighboursOfPoint(point, grid) }
+    val neighbourhoods = grid.associateWith { point -> neighboursOfPoint(point, grid) }
     val mainBranch = grid.filter { it.x == 0 && it.y == 0 && it.z != 0 }.distinct()
     return runBlocking(Dispatchers.Default) {
         mainBranch.map { candidate ->

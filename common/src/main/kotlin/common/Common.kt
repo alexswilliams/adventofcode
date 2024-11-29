@@ -22,21 +22,16 @@ fun String.fromClasspathFile(): String {
     return File(url.toURI()).readText()
 }
 
-fun loadFiles(root: String, vararg files: String): List<String> = files.map { file -> "$root/$file".fromClasspathFile() }
-fun loadFilesToLines(root: String, vararg files: String): List<List<String>> = files.map { file -> "$root/$file".fromClasspathFileToLines() }
-fun loadFilesToGrids(root: String, vararg files: String): List<Grid> = files.map { file -> "$root/$file".fromClasspathFile().linesAsCharArrays() }
+fun loadFiles(root: String, vararg files: String): List<String> = files.map { "$root/$it".fromClasspathFile() }
+fun loadFilesToLines(root: String, vararg files: String): List<List<String>> = files.map { "$root/$it".fromClasspathFileToLines() }
+fun loadFilesToGrids(root: String, vararg files: String): List<Grid> = files.map { "$root/$it".fromClasspathFile().linesAsCharArrays() }
 
 
 fun List<String>.splitOnSpaces() = map { it.split(' ') }
 fun List<CharArray>.splitArrayOnSpaces() = map { it.concatToString().split(' ') }
-
-fun List<String>.asArrayOfCharArrays(): Grid {
-    return Array(size) { r -> this[r].toCharArray() }
-}
-
-fun Grid.subGrid(startRow: Int, startCol: Int, width: Int, height: Int): Grid {
-    return Array(height) { r -> this[startRow + r].copyOfRange(startCol, startCol + width) }
-}
+fun List<String>.asArrayOfCharArrays(): Grid = Array(size) { r -> this[r].toCharArray() }
+fun Grid.subGrid(startRow: Int, startCol: Int, width: Int, height: Int): Grid =
+    Array(height) { r -> this[startRow + r].copyOfRange(startCol, startCol + width) }
 
 fun LongRange.intersecting(other: LongRange) = LongRange(max(first, other.first), min(last, other.last))
 fun LongRange.shiftedUpBy(other: Long) = LongRange(first + other, last + other)
@@ -113,7 +108,7 @@ fun List<String>.transposeToStrings(): List<String> =
     }
 
 @Suppress("UNCHECKED_CAST")
-fun <T : CharSequence> List<T?>.filterNotNullOrBlank() = this.filter { it != null && it.isNotBlank() } as List<T>
+fun <T : CharSequence> List<T?>.filterNotNullOrBlank() = this.filter { !it.isNullOrBlank() } as List<T>
 fun <T : CharSequence> List<T>.filterNotBlank() = this.filter { it.isNotBlank() }
 fun <T : CharSequence> List<T>.mapMatching(regex: Regex) = this.mapNotNull { regex.matchEntire(it)?.destructured }
 
@@ -203,7 +198,7 @@ fun String.cyclicIteratorIndexed() = object : Iterator<Pair<Int, Char>> {
     }
 }
 
-fun <Y> List<Y>.cyclicSequence() = sequence<Y> { while (true) yieldAll(this@cyclicSequence) }
+fun <Y> List<Y>.cyclicSequence() = sequence { while (true) yieldAll(this@cyclicSequence) }
 
 fun max(vararg x: Int): Int = x.max()
 
@@ -369,12 +364,12 @@ fun String.locationOfEach(c: Char): List<Int> {
     return result
 }
 
-fun Collection<String>.locationOfEach(c: Char): List<Location> {
-    val result = ArrayList<Location>(this.size * 20)
+fun Collection<String>.locationOfEach(c: Char): List<Location1616> {
+    val result = ArrayList<Location1616>(this.size * 20)
     this.forEachIndexed { rowNum, row ->
         row.forEachIndexed { colNum, cell ->
             if (cell == c)
-                result.add(rowNum by colNum)
+                result.add(rowNum by16 colNum)
         }
     }
     return result
