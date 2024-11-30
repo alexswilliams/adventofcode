@@ -178,9 +178,14 @@ fun factorial(num: Int): Long =
 
 fun String.cyclicIterator() = this.toCharArray().cyclicIterator()
 
-fun CharArray.cyclicIterator() = object : Iterator<Char> {
+interface ResettableIterator<T> : Iterator<T> {
+    fun reset()
+}
+
+fun CharArray.cyclicIterator() = object : ResettableIterator<Char> {
     private var index = 0
     private val lastIndexConst = this@cyclicIterator.lastIndex
+    override fun reset() = Unit.also { index = 0 }
     override fun hasNext() = true
     override fun next(): Char {
         if (index > lastIndexConst) index = 0
@@ -188,9 +193,10 @@ fun CharArray.cyclicIterator() = object : Iterator<Char> {
     }
 }
 
-fun String.cyclicIteratorIndexed() = object : Iterator<Pair<Int, Char>> {
+fun String.cyclicIteratorIndexed() = object : ResettableIterator<Pair<Int, Char>> {
     private var index = 0
     private val lastIndexConst = this@cyclicIteratorIndexed.lastIndex
+    override fun reset() = Unit.also { index = 0 }
     override fun hasNext() = true
     override fun next(): Pair<Int, Char> {
         if (index > lastIndexConst) index = 0
@@ -410,7 +416,6 @@ fun Sequence<Collection<Int>>.intersect(): List<Int> {
     }
     return result
 }
-
 
 
 fun fillDeadEnds(grid: Grid, floor: Char = '.', wall: Char = '#'): Grid {
