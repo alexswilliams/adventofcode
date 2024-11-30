@@ -4,6 +4,7 @@ package common
 
 import java.io.*
 import java.util.*
+import kotlin.collections.indexOf
 import kotlin.math.*
 
 object Common
@@ -32,6 +33,11 @@ fun List<CharArray>.splitArrayOnSpaces() = map { it.concatToString().split(' ') 
 fun List<String>.asArrayOfCharArrays(): Grid = Array(size) { r -> this[r].toCharArray() }
 fun Grid.subGrid(startRow: Int, startCol: Int, width: Int, height: Int): Grid =
     Array(height) { r -> this[startRow + r].copyOfRange(startCol, startCol + width) }
+
+fun Grid.location16Of(ch: Char) : Location1616 {
+    val startRowIndex = indexOfFirst { ch in it }
+    return startRowIndex by16 this[startRowIndex].indexOf(ch)
+}
 
 fun LongRange.intersecting(other: LongRange) = LongRange(max(first, other.first), min(last, other.last))
 fun LongRange.shiftedUpBy(other: Long) = LongRange(first + other, last + other)
