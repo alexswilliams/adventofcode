@@ -9,7 +9,7 @@ internal fun main() {
     Day18.assertCorrect()
     benchmark { part1(puzzles[0]) } // 17µs
     benchmark { part2(puzzles[1]) } // 369µs
-    benchmark(1) { part3(puzzles[2]) } // 2.7s :(
+    benchmark(5) { part3(puzzles[2]) } // 225ms
 }
 
 internal object Day18 : Challenge {
@@ -38,38 +38,29 @@ private fun part2(input: Grid): Int =
 
 private fun part3(input: Grid): Int {
     val grid = fillDeadEnds(input)
-    val possibleStarts = grid.mapCartesianNotNull { row, col, char -> if (char == '.') row by16 col else null }
-    return possibleStarts.minOf { start -> sumOfIndividualTimesUntilAllTreesWatered(grid, start) }
+    val distances = mutableMapOf<Location1616, Int>()
+    val trees = grid.mapCartesianNotNull { row, col, char -> if (char == 'P') row by16 col else null }
+    trees.forEach { tree -> distancesFromTree(grid, tree) { pos, dist -> distances.compute(pos) { _, distanceSoFar -> (distanceSoFar ?: 0) + dist } } }
+    return distances.values.min()
 }
+
 
 private fun pack(pos: Location1616, distance: Int): Long = pos.toLong() or (distance.toLong() shl 32)
 private fun unpackPos(packed: Long): Location1616 = (packed and 0xffff_ffff).toInt()
 private fun unpackDistance(packed: Long): Int = ((packed and 0x7fff_ffff_0000_0000) shr 32).toInt()
 
-private fun sumOfIndividualTimesUntilAllTreesWatered(grid: Grid, start: Location1616): Int {
+private fun distancesFromTree(grid: Grid, start: Location1616, recordDistance: (Location1616, Int) -> Unit) {
     val work = ArrayDeque(listOf(pack(start, 0)))
     val visited = Array(grid.size) { BooleanArray(grid[0].size) { false } }.apply { this[start.row()][start.col()] = true }
-    val numberOfTrees = grid.sumOf { it.count { ch -> ch == 'P' } }
-    var totalPathLengths = 0
-    var treesSeen = if (grid[start.row()][start.col()] == 'P') 1 else 0
-
     val neighbours = IntArray(4)
     while (true) {
-        val packed = work.removeFirstOrNull() ?: throw Error("Explored all squares but palm trees still remain un-irrigated")
-        val u = unpackPos(packed)
-        val dist = unpackDistance(packed)
-
-        for (n in neighboursOf(u, grid, neighbours)) {
+        val u = work.removeFirstOrNull() ?: return
+        for (n in neighboursOf(unpackPos(u), grid, neighbours)) {
             if (n == -1) continue
-            val row = n.row()
-            val col = n.col()
-            if (visited[row][col]) continue
-            visited[row][col] = true
-            if (grid[row][col] == 'P') {
-                totalPathLengths += dist + 1
-                if (++treesSeen == numberOfTrees) return totalPathLengths
-            }
-            work.addLast(pack(n, dist + 1))
+            if (visited[n.row()][n.col()]) continue
+            visited[n.row()][n.col()] = true
+            if (grid[n.row()][n.col()] == '.') recordDistance(n, unpackDistance(u) + 1)
+            work.addLast(pack(n, unpackDistance(u) + 1))
         }
     }
 }
@@ -81,32 +72,25 @@ private fun timeUntilAllTreesWatered(grid: Grid, starts: List<Location1616>): In
     var treesSeen = 0
     val neighbours = IntArray(4)
     while (true) {
-        val packed = work.removeFirstOrNull() ?: throw Error("Explored all squares but palm trees still remain un-irrigated")
-        val u = unpackPos(packed)
-        val dist = unpackDistance(packed)
-
-        for (n in neighboursOf(u, grid, neighbours)) {
+        val u = work.removeFirstOrNull() ?: throw Error("Explored all squares but palm trees still remain un-irrigated")
+        for (n in neighboursOf(unpackPos(u), grid, neighbours)) {
             if (n == -1) continue
-            val row = n.row()
-            val col = n.col()
-            if (visited[row][col]) continue
-            visited[row][col] = true
-            if (grid[row][col] == 'P') {
+            if (visited[n.row()][n.col()]) continue
+            visited[n.row()][n.col()] = true
+            if (grid[n.row()][n.col()] == 'P') {
                 treesSeen++
-                if (treesSeen == numberOfTrees) return dist + 1
+                if (treesSeen == numberOfTrees) return unpackDistance(u) + 1
             }
-            work.addLast(pack(n, dist + 1))
+            work.addLast(pack(n, unpackDistance(u) + 1))
         }
     }
 }
 
 private fun neighboursOf(u: Location1616, grid: Grid, result: IntArray = IntArray(4)): IntArray {
-    val row = u.row()
-    val col = u.col()
-    result[0] = if (row == 0 || grid[row - 1][col] == '#') -1 else u.minusRow()
-    result[1] = if (row == grid.lastIndex || grid[row + 1][col] == '#') -1 else u.plusRow()
-    result[2] = if (col == 0 || grid[row][col - 1] == '#') -1 else u.minusCol()
-    result[3] = if (col == grid[0].lastIndex || grid[row][col + 1] == '#') -1 else u.plusCol()
+    result[0] = if (u.row() == 0 || grid[u.row() - 1][u.col()] == '#') -1 else u.minusRow()
+    result[1] = if (u.row() == grid.lastIndex || grid[u.row() + 1][u.col()] == '#') -1 else u.plusRow()
+    result[2] = if (u.col() == 0 || grid[u.row()][u.col() - 1] == '#') -1 else u.minusCol()
+    result[3] = if (u.col() == grid[0].lastIndex || grid[u.row()][u.col() + 1] == '#') -1 else u.plusCol()
     return result
 }
 
