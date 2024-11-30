@@ -411,3 +411,36 @@ fun Sequence<Collection<Int>>.intersect(): List<Int> {
     return result
 }
 
+
+
+fun fillDeadEnds(grid: Grid, floor: Char = '.', wall: Char = '#'): Grid {
+    var changed: Boolean
+    do {
+        changed = false
+
+        fun maybeFillCell(row: Int, col: Int) {
+            if (grid[row][col] != floor) return
+            val up = grid[row - 1][col]
+            val down = grid[row + 1][col]
+            val left = grid[row][col - 1]
+            val right = grid[row][col + 1]
+            if (up == wall && down == wall && (left == wall || right == wall)) {
+                changed = true
+                grid[row][col] = wall
+                if (left == floor) maybeFillCell(row, col - 1) else maybeFillCell(row, col + 1)
+            }
+            if (left == wall && right == wall && (up == wall || down == wall)) {
+                changed = true
+                grid[row][col] = wall
+                if (up == floor) maybeFillCell(row - 1, col) else maybeFillCell(row + 1, col)
+            }
+        }
+
+        for (row in 1..<grid.lastIndex) {
+            for (col in 1..<grid[0].lastIndex) {
+                maybeFillCell(row, col)
+            }
+        }
+    } while (changed)
+    return grid
+}

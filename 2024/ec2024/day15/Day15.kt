@@ -83,37 +83,6 @@ private fun shortestLengthViaAllHerbs(grid: Array<CharArray>, start: Location161
     return bfsToOtherReachableHerbs(startConditions, startToEachHerb, herbs.keys.lettersToBitSet(), grid)
 }
 
-private fun fillDeadEnds(grid: Array<CharArray>) {
-    var changed: Boolean
-    do {
-        changed = false
-
-        fun maybeFillCell(row: Int, col: Int) {
-            if (grid[row][col] != '.') return
-            val up = grid[row - 1][col]
-            val down = grid[row + 1][col]
-            val left = grid[row][col - 1]
-            val right = grid[row][col + 1]
-            if (up == '#' && down == '#' && (left == '#' || right == '#')) {
-                changed = true
-                grid[row][col] = '#'
-                if (left == '.') maybeFillCell(row, col - 1) else maybeFillCell(row, col + 1)
-            }
-            if (left == '#' && right == '#' && (up == '#' || down == '#')) {
-                changed = true
-                grid[row][col] = '#'
-                if (up == '.') maybeFillCell(row - 1, col) else maybeFillCell(row + 1, col)
-            }
-        }
-
-        for (row in 1..<grid.lastIndex) {
-            for (col in 1..<grid[0].lastIndex) {
-                maybeFillCell(row, col)
-            }
-        }
-    } while (changed)
-}
-
 private fun Iterable<Char>.lettersToBitSet() = this.map { 1L shl (it - 'A') }.asBitSet()
 private fun String.lettersToBitSet() = this.asIterable().lettersToBitSet()
 
