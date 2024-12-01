@@ -96,4 +96,4 @@ private fun part2(grid: Grid): Int {
     }
 }
 
-private fun part3(grid: Grid): Int = 0
+private fun part3(grid: Grid): Int = TODO()
