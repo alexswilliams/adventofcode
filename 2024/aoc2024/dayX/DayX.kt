@@ -2,8 +2,8 @@ package aoc2024.dayX
 
 import common.*
 
-private val example = loadFilesToLines("aoc2024/day", "example.txt").single()
-private val puzzle = loadFilesToLines("aoc2024/day", "input.txt").single()
+private val example = loadFilesToLines("aoc2024/dayX", "example.txt").single()
+private val puzzle = loadFilesToLines("aoc2024/dayX", "input.txt").single()
 
 internal fun main() {
     DayX.assertCorrect()
