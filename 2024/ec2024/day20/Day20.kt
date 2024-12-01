@@ -8,7 +8,7 @@ private val puzzles = loadFilesToGrids("ec2024/day20", "input1.txt", "input2.txt
 internal fun main() {
     Day20.assertCorrect()
     benchmark { part1(puzzles[0]) } // 468µs
-    benchmark(10) { part2(puzzles[1]) } // 1.08s :(
+    benchmark(10) { part2(puzzles[1]) } // 255ms
 //    benchmark(100) { part3(puzzles[2]) }
 }
 
@@ -58,34 +58,36 @@ private fun part1(grid: Grid): Int {
 private fun part2(grid: Grid): Int {
     fillDeadEnds(grid)
     val start = grid.location16Of('S')
-    val lowerBound = 10_000 - (grid.size + grid[0].size) * 2 // actually both *4, but puzzle solves with *2
-    val upperBound = 10_000 + (grid.size + grid[0].size) * 2
+    val heightBounds = (10_000 - (grid.size + grid[0].size) * 4)..(10_000 + (grid.size + grid[0].size) * 4)
 
-    data class Work(val position: Location1616, val previous: Location1616, val timeElapsed: Int, val height: Int, val collected: Int)
+    data class Work(val position: Location1616, val previous: Location1616, val timeElapsed: Int, val collected: Int)
 
-    val work = ArrayDeque(listOf(Work(start, -1, 0, 10_000, 0)))
+    val work = ArrayDeque(listOf(Work(start, -1, 0, 0)))
     val neighbours = IntArray(4)
-    val visitedGrids = Array(4) { Array(upperBound - lowerBound) { Array(grid.size) { BooleanArray(grid[0].size) } } }
-    visitedGrids[0][upperBound - 10_000][start.row()][start.col()] = true
+    val bestHeightAt = Array(4) { Array(grid.size) { IntArray(grid[0].size) { Int.MIN_VALUE } } }
+    bestHeightAt[0][start.row()][start.col()] = 10_000
 
     while (true) {
         val u = work.removeFirstOrNull() ?: throw Error("Explored entire search space without returning to start")
-        if (u.position == start && u.height >= 10_000 && u.collected == 7) return u.timeElapsed
+        val bestHeightSoFar = bestHeightAt[u.collected.countOneBits()][u.position.row()][u.position.col()]
+        if (u.position == start && bestHeightSoFar >= 10_000 && u.collected == 7) return u.timeElapsed
+
         for (n in neighboursOf(u.position, grid, '#', neighbours)) {
             if (n == -1 || n == u.previous) continue
             val op = grid[n.row()][n.col()]
             if (op == 'B' && u.collected != 1 || op == 'C' && u.collected != 3) continue
-            val newHeight = u.height + interpretAirCurrent(op)
-            if (newHeight <= lowerBound || newHeight >= upperBound) continue
+            val newHeight = bestHeightSoFar + interpretAirCurrent(op)
+            if (newHeight !in heightBounds) continue
             val newCollected = when (op) {
                 'A' -> u.collected or 1
                 'B' -> u.collected or 2
                 'C' -> u.collected or 4
                 else -> u.collected
             }
-            if (!visitedGrids[newCollected.countOneBits()][upperBound - newHeight][n.row()][n.col()]) {
-                visitedGrids[newCollected.countOneBits()][upperBound - newHeight][n.row()][n.col()] = true
-                work.addLast(Work(n, u.position, u.timeElapsed + 1, newHeight, newCollected))
+            // you could search every height, but because the target has a minimum height, the shortest solution will only ever need height adding to make it pass
+            if (newHeight > bestHeightAt[newCollected.countOneBits()][n.row()][n.col()]) {
+                bestHeightAt[newCollected.countOneBits()][n.row()][n.col()] = newHeight
+                work.addLast(Work(n, u.position, u.timeElapsed + 1, newCollected))
             }
         }
     }
