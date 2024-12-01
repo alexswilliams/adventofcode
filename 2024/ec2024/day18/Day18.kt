@@ -55,7 +55,7 @@ private fun distancesFromTree(grid: Grid, start: Location1616, recordDistance: (
     val neighbours = IntArray(4)
     while (true) {
         val u = work.removeFirstOrNull() ?: return
-        for (n in neighboursOf(unpackPos(u), grid, neighbours)) {
+        for (n in neighboursOf(unpackPos(u), grid, '#', neighbours)) {
             if (n == -1) continue
             if (visited[n.row()][n.col()]) continue
             visited[n.row()][n.col()] = true
@@ -73,7 +73,7 @@ private fun timeUntilAllTreesWatered(grid: Grid, starts: List<Location1616>): In
     val neighbours = IntArray(4)
     while (true) {
         val u = work.removeFirstOrNull() ?: throw Error("Explored all squares but palm trees still remain un-irrigated")
-        for (n in neighboursOf(unpackPos(u), grid, neighbours)) {
+        for (n in neighboursOf(unpackPos(u), grid, '#', neighbours)) {
             if (n == -1) continue
             if (visited[n.row()][n.col()]) continue
             visited[n.row()][n.col()] = true
@@ -85,12 +85,3 @@ private fun timeUntilAllTreesWatered(grid: Grid, starts: List<Location1616>): In
         }
     }
 }
-
-private fun neighboursOf(u: Location1616, grid: Grid, result: IntArray = IntArray(4)): IntArray {
-    result[0] = if (u.row() == 0 || grid[u.row() - 1][u.col()] == '#') -1 else u.minusRow()
-    result[1] = if (u.row() == grid.lastIndex || grid[u.row() + 1][u.col()] == '#') -1 else u.plusRow()
-    result[2] = if (u.col() == 0 || grid[u.row()][u.col() - 1] == '#') -1 else u.minusCol()
-    result[3] = if (u.col() == grid[0].lastIndex || grid[u.row()][u.col() + 1] == '#') -1 else u.plusCol()
-    return result
-}
-

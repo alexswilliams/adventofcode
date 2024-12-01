@@ -4,7 +4,6 @@ package common
 
 import java.io.*
 import java.util.*
-import kotlin.collections.indexOf
 import kotlin.math.*
 
 object Common
@@ -34,7 +33,7 @@ fun List<String>.asArrayOfCharArrays(): Grid = Array(size) { r -> this[r].toChar
 fun Grid.subGrid(startRow: Int, startCol: Int, width: Int, height: Int): Grid =
     Array(height) { r -> this[startRow + r].copyOfRange(startCol, startCol + width) }
 
-fun Grid.location16Of(ch: Char) : Location1616 {
+fun Grid.location16Of(ch: Char): Location1616 {
     val startRowIndex = indexOfFirst { ch in it }
     return startRowIndex by16 this[startRowIndex].indexOf(ch)
 }
@@ -423,6 +422,21 @@ fun Sequence<Collection<Int>>.intersect(): List<Int> {
     return result
 }
 
+fun neighboursOf(pos: Location1616, grid: Grid, wall: Char, output: IntArray = IntArray(4)): IntArray {
+    output[0] = if (pos.col() > 0 && grid[pos.row()][pos.col() - 1] != wall) pos.minusCol() else -1
+    output[1] = if (pos.row() > 0 && grid[pos.row() - 1][pos.col()] != wall) pos.minusRow() else -1
+    output[2] = if (pos.col() < grid[0].lastIndex && grid[pos.row()][pos.col() + 1] != wall) pos.plusCol() else -1
+    output[3] = if (pos.row() < grid.lastIndex && grid[pos.row() + 1][pos.col()] != wall) pos.plusRow() else -1
+    return output
+}
+
+fun neighboursOf(pos: Location1616, grid: Grid, walls: CharArray, output: IntArray = IntArray(4)): IntArray {
+    output[0] = if (pos.col() > 0 && grid[pos.row()][pos.col() - 1] in walls) pos.minusCol() else -1
+    output[1] = if (pos.row() > 0 && grid[pos.row() - 1][pos.col()] in walls) pos.minusRow() else -1
+    output[2] = if (pos.col() < grid[0].lastIndex && grid[pos.row()][pos.col() + 1] in walls) pos.plusCol() else -1
+    output[3] = if (pos.row() < grid.lastIndex && grid[pos.row() + 1][pos.col()] in walls) pos.plusRow() else -1
+    return output
+}
 
 fun fillDeadEnds(grid: Grid, floor: Char = '.', wall: Char = '#'): Grid {
     var changed: Boolean

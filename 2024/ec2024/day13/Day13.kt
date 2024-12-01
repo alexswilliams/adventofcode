@@ -46,12 +46,14 @@ private fun aStarSearch(starts: Collection<Location1616>, end: Location1616, gri
         heap.offer(it, weight = 0)
     }
 
+    val neighbours = IntArray(4)
     while (true) {
         val u = heap.poll() ?: throw Error("All routes explored with no solution")
         val distanceToU = shortestPath[u.row()][u.col()]
         if (u == end) return distanceToU
 
-        for (n in neighboursOf(u, grid)) {
+        for (n in neighboursOf(u, grid, allowed, neighbours)) {
+            if (n == -1) continue
             val originalDistance = shortestPath[n.row()][n.col()]
             val newDistance = distanceBetween(u, n, grid) + distanceToU + 1
             if (newDistance < originalDistance) {
@@ -70,13 +72,6 @@ private fun manhattan(t1: Location1616, t2: Location1616, grid: Grid) =
 private fun Char.heightOr0(): Int = this.digitToIntOrNull() ?: 0
 
 private val allowed = "SE0123456789".toCharArray()
-
-private fun neighboursOf(tile: Location1616, grid: Grid): Collection<Location1616> = buildList(4) {
-    if (tile.col() > 0 && grid[tile.row()][tile.col() - 1] in allowed) add(tile.minusCol())
-    if (tile.col() < grid[0].lastIndex && grid[tile.row()][tile.col() + 1] in allowed) add(tile.plusCol())
-    if (tile.row() > 0 && grid[tile.row() - 1][tile.col()] in allowed) add(tile.minusRow())
-    if (tile.row() < grid.lastIndex && grid[tile.row() + 1][tile.col()] in allowed) add(tile.plusRow())
-}
 
 private fun distanceBetween(a: Location1616, b: Location1616, grid: Grid): Int {
     val heightA = grid[a.row()][a.col()].heightOr0()

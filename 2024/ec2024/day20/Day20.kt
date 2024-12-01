@@ -35,6 +35,7 @@ private fun part1(grid: Grid): Int {
     data class Work(val position: Location1616, val previous: Location1616, val timeLeft: Int, val height: Int)
 
     val work = ArrayDeque(listOf(Work(start, -1, 100, 1000)))
+    val neighbours = IntArray(4)
     val bestHeightAt = mutableMapOf<Location1616, Int>()
     var bestAfterTimeLimit = 0
     while (true) {
@@ -46,7 +47,7 @@ private fun part1(grid: Grid): Int {
             if (bestAfterTimeLimit < u.height) bestAfterTimeLimit = u.height
             continue
         }
-        for (n in neighboursOf(u.position, grid)) {
+        for (n in neighboursOf(u.position, grid, '#', neighbours)) {
             if (n == -1) continue
             if (n == u.previous) continue
             val op = grid[n.row()][n.col()]
@@ -58,14 +59,6 @@ private fun part1(grid: Grid): Int {
             work.addLast(Work(n, u.position, u.timeLeft - 1, newHeight))
         }
     }
-}
-
-private fun neighboursOf(pos: Location1616, grid: Grid, array: IntArray = IntArray(4)): IntArray {
-    array[0] = if (pos.col() > 0 && grid[pos.row()][pos.col() - 1] != '#') pos.minusCol() else -1
-    array[1] = if (pos.row() > 0 && grid[pos.row() - 1][pos.col()] != '#') pos.minusRow() else -1
-    array[2] = if (pos.col() < grid[0].lastIndex && grid[pos.row()][pos.col() + 1] != '#') pos.plusCol() else -1
-    array[3] = if (pos.row() < grid.lastIndex && grid[pos.row() + 1][pos.col()] != '#') pos.plusRow() else -1
-    return array
 }
 
 private fun part2(input: Grid): Int = 0

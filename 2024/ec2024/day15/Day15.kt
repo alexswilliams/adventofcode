@@ -114,7 +114,7 @@ private fun bfsToOtherReachableHerbs(
         if (distance >= shortestRouteLength) continue
         val visited = visitedGrids.getOrPut(seenSoFar, newPlane)
 
-        for (n in neighboursOf(u, grid, neighboursArray)) {
+        for (n in neighboursOf(u, grid, impassable, neighboursArray)) {
             if (n == -1) continue
             val floorType = grid[n.row()][n.col()]
 
@@ -164,7 +164,7 @@ private fun aStarCollectingHerbs(
         val (distanceToU, pathsToU) = shortestPaths[u.row()][u.col()]
         if (u == end) return distanceToU to pathsToU
 
-        for (n in neighboursOf(u, grid, neighbourArray)) {
+        for (n in neighboursOf(u, grid, impassable, neighbourArray)) {
             if (n == -1) continue
             val (oldDistanceToN, oldPathsToN) = shortestPaths[n.row()][n.col()]
             val newDistanceToN = distanceToU + 1
@@ -212,7 +212,7 @@ private fun aStarSearch(
         val u = heap.poll() ?: throw Error("All routes explored with no solution")
         val distanceToU = shortestPath[u.row()][u.col()]
         if (u == end) return distanceToU
-        for (n in neighboursOf(u, grid, neighboursArray)) {
+        for (n in neighboursOf(u, grid, impassable, neighboursArray)) {
             if (n == -1) continue
             val originalDistance = shortestPath[n.row()][n.col()]
             val newDistance = distanceToU + 1
@@ -227,10 +227,3 @@ private fun aStarSearch(
 private fun manhattan(t1: Location1616, t2: Location1616) = (t1.row() - t2.row()).absoluteValue + (t1.col() - t2.col()).absoluteValue
 
 private val impassable = charArrayOf('#', '~')
-
-private fun neighboursOf(center: Location1616, grid: Array<CharArray>, array: IntArray) = array.apply {
-    this[0] = if (center.col() > 0 && grid[center.row()][center.col() - 1] !in impassable) center.minusCol() else -1
-    this[1] = if (center.col() < grid[0].lastIndex && grid[center.row()][center.col() + 1] !in impassable) center.plusCol() else -1
-    this[2] = if (center.row() > 0 && grid[center.row() - 1][center.col()] !in impassable) center.minusRow() else -1
-    this[3] = if (center.row() < grid.lastIndex && grid[center.row() + 1][center.col()] !in impassable) center.plusRow() else -1
-}
