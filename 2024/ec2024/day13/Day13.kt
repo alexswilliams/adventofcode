@@ -8,9 +8,9 @@ private val puzzles = loadFilesToGrids("ec2024/day13", "input.txt", "input2.txt"
 
 internal fun main() {
     Day13.assertCorrect()
-    benchmark { part1(puzzles[0]) } // 49µs
-    benchmark { part2(puzzles[1]) } // 520µs
-    benchmark(100) { part3(puzzles[2]) } // 5.8ms
+    benchmark { part1(puzzles[0]) } // 47µs
+    benchmark { part2(puzzles[1]) } // 495µs
+    benchmark(100) { part3(puzzles[2]) } // 5.4ms
 }
 
 internal object Day13 : Challenge {
@@ -52,7 +52,7 @@ private fun aStarSearch(starts: Collection<Location1616>, end: Location1616, gri
         val distanceToU = shortestPath[u.row()][u.col()]
         if (u == end) return distanceToU
 
-        for (n in neighboursOf(u, grid, allowed, neighbours)) {
+        for (n in neighboursOf(u, grid, '#', neighbours)) {
             if (n == -1) continue
             val originalDistance = shortestPath[n.row()][n.col()]
             val newDistance = distanceBetween(u, n, grid) + distanceToU + 1
@@ -70,8 +70,6 @@ private fun manhattan(t1: Location1616, t2: Location1616, grid: Grid) =
             (grid[t1.row()][t1.col()].heightOr0() - grid[t2.row()][t2.col()].heightOr0()).absoluteValue
 
 private fun Char.heightOr0(): Int = this.digitToIntOrNull() ?: 0
-
-private val allowed = "SE0123456789".toCharArray()
 
 private fun distanceBetween(a: Location1616, b: Location1616, grid: Grid): Int {
     val heightA = grid[a.row()][a.col()].heightOr0()

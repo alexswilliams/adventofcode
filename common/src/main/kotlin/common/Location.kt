@@ -25,3 +25,8 @@ fun Location1616.plusRow() = this + 0x1_0000
 fun Location1616.minusRow() = this - 0x1_0000
 fun Location1616.plusCol() = this + 1
 fun Location1616.minusCol() = this - 1
+
+fun renderLocation1616s(array: IntArray): String = array.joinToString(prefix = "[", postfix = "]") { renderLocation1616(it) }
+fun renderLocation1616Children(array: IntArray): Array<String> = array.map { renderLocation1616(it) }.toTypedArray()
+fun renderLocation1616(it: Location1616): String = "(${it.row()},${it.col()})"
+fun Location1616.render() = renderLocation1616(this)

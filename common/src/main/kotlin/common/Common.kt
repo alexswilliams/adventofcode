@@ -431,10 +431,10 @@ fun neighboursOf(pos: Location1616, grid: Grid, wall: Char, output: IntArray = I
 }
 
 fun neighboursOf(pos: Location1616, grid: Grid, walls: CharArray, output: IntArray = IntArray(4)): IntArray {
-    output[0] = if (pos.col() > 0 && grid[pos.row()][pos.col() - 1] in walls) pos.minusCol() else -1
-    output[1] = if (pos.row() > 0 && grid[pos.row() - 1][pos.col()] in walls) pos.minusRow() else -1
-    output[2] = if (pos.col() < grid[0].lastIndex && grid[pos.row()][pos.col() + 1] in walls) pos.plusCol() else -1
-    output[3] = if (pos.row() < grid.lastIndex && grid[pos.row() + 1][pos.col()] in walls) pos.plusRow() else -1
+    output[0] = if (pos.col() > 0 && grid[pos.row()][pos.col() - 1] !in walls) pos.minusCol() else -1
+    output[1] = if (pos.row() > 0 && grid[pos.row() - 1][pos.col()] !in walls) pos.minusRow() else -1
+    output[2] = if (pos.col() < grid[0].lastIndex && grid[pos.row()][pos.col() + 1] !in walls) pos.plusCol() else -1
+    output[3] = if (pos.row() < grid.lastIndex && grid[pos.row() + 1][pos.col()] !in walls) pos.plusRow() else -1
     return output
 }
 
