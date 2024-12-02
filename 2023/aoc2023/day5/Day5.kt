@@ -53,7 +53,7 @@ private fun parseMappings(input: String): List<List<Mapping>> =
                 .let { (target, source, count) -> Mapping(source = source..<(source + count), transform = target - source) }
         }.let { mappings ->
             mappings.plus(mappings.sortedBy { it.source.first }
-                .zipWithNext { lower, higher -> Mapping(source = LongRange.gapBetween(lower.source, higher.source), transform = 0) }
+                .zipWithNext { (lower), (higher) -> Mapping(source = LongRange.gapBetween(lower, higher), transform = 0) }
                 .filterNot { it.source.isEmpty() })
         }.sortedBy { it.source.first }
     }

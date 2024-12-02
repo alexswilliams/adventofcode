@@ -1,7 +1,6 @@
 package aoc2023.day7
 
 import common.*
-import kotlin.test.*
 
 private val examples = loadFilesToLines("aoc2023/day7", "example.txt")
 private val puzzles = loadFilesToLines("aoc2023/day7", "input.txt")
@@ -35,17 +34,17 @@ private enum class PokerType(val strength: Int) {
 }
 
 private fun part1(input: List<String>): Int {
-    return input.map { it.split(' ', limit = 2) }
+    return input.asSequence().map { it.split(' ', limit = 2) }
         .map { (cards, bid) -> Hand(classifyPokerHand(cards) * fieldShift + cardOrderingStrength(cards, part1Ordering), bid.toInt()) }
-        .sortedBy { hand -> hand.ordering }
+        .sortedBy { (ordering) -> ordering }
         .withIndex()
         .sumOf { (index, hand) -> (index + 1) * hand.bid }
 }
 
 private fun part2(input: List<String>): Int {
-    return input.map { it.split(' ', limit = 2) }
+    return input.asSequence().map { it.split(' ', limit = 2) }
         .map { (cards, bid) -> Hand(classifyCardsWithJoker(cards) * fieldShift + cardOrderingStrength(cards, part2Ordering), bid.toInt()) }
-        .sortedBy { hand -> hand.ordering }
+        .sortedBy { (ordering) -> ordering }
         .withIndex()
         .sumOf { (index, hand) -> (index + 1) * hand.bid }
 }

@@ -1,6 +1,6 @@
 package common
 
-const val EMPTY_BITSET = 0L
+const val EMPTY_BITSET : BitSet = 0L
 typealias BitSet = Long
 
 operator fun BitSet.contains(other: Long): Boolean = (this and other) == other

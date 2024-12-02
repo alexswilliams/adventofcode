@@ -46,7 +46,7 @@ private fun part1(input: List<String>): Int =
     }.max()
 
 private fun part2(input: List<String>): Int =
-    buildBranches(input).flatten().distinct().count()
+    buildBranches(input).flatten().distinct().size
 
 private fun part3(input: List<String>): Int {
     val allBranches = buildBranches(input)

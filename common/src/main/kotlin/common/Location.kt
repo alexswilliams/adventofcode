@@ -1,3 +1,5 @@
+@file:Suppress("unused", "PublicApiImplicitType")
+
 package common
 
 typealias Location = Long

@@ -59,7 +59,7 @@ private fun part2(input: String): Long {
     //  9 Play the game a final time, requesting only the number of blocks that make up the preamble and the span between the last cycle and 10e12
     // 10 Add on the size of the omitted repeated section and return.
 
-    val (highestRow, tower) = playTetris(input, 4000) // An arbitrarily large tower - number chosen with trial and error
+    val (highestRow, tower, _) = playTetris(input, 4000) // An arbitrarily large tower - number chosen with trial and error
     val endOfMatchRange = highestRow - 50 // trim the top (by a finger-in-air amount), so that partially complete rows are ignored
     var runLength = 5 // also chosen arbitrarily, but wants to be small, so that `byteArraysMatch` can afford to be naïve
     val matches = mutableListOf<Int>()
@@ -92,7 +92,7 @@ private fun part2(input: String): Long {
     val blockStride = blocksToReachSecondRepeat - blocksToReachRepeat // for the example, this is 35; for my input this is 1710
     val repeatCount = (1_000_000_000_000L - blocksToReachRepeat) / blockStride
     val blocksBetweenEndOfRepeatAndTarget = (1_000_000_000_000L - repeatCount * blockStride - blocksToReachRepeat).toInt()
-    val (allRowsWithoutRepeat) = playTetris(input, blocksToReachRepeat + blocksBetweenEndOfRepeatAndTarget)
+    val (allRowsWithoutRepeat, _, _) = playTetris(input, blocksToReachRepeat + blocksBetweenEndOfRepeatAndTarget)
 
     // Now re-inflate the number of rows generated in the final game with the missing repeated section.
     val rowStride = rowsToCheckpoint[1] - rowsToCheckpoint[0] // for the example this is 53; for my input this is 2647

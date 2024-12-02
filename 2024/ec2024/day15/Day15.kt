@@ -100,7 +100,7 @@ private fun bfsToOtherReachableHerbs(
     val width = grid[0].size
     val newPlane = { Array(height) { BooleanArray(width) } }
     val visitedGrids = newHashMap<Long, Array<BooleanArray>>(90)
-        .apply { starts.forEach { (start, seen) -> getOrPut(seen, newPlane)[start.row()][start.col()] = true } }
+        .apply { starts.forEach { (start, seen, _) -> getOrPut(seen, newPlane)[start.row()][start.col()] = true } }
     val work = TreeQueue<Long>()
         .apply { starts.forEach { offer(pack(it.first, it.second), weight = it.third) } }
     var shortestRouteLength: Int = Int.MAX_VALUE

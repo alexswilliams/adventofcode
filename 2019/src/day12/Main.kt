@@ -64,11 +64,11 @@ private fun findRepeatedStates(initialMoons: List<MoonState>): Triple<Long, Long
 }
 
 
-private fun List<PV>.takePVStep(): List<PV> = map { moonAxis ->
-    val newVelocity = fold(moonAxis.vel) { velocity, otherMoon ->
-        velocity + pretendGravity(moonAxis.pos, otherMoon.pos)
+private fun List<PV>.takePVStep(): List<PV> = map { (pos, vel) ->
+    val newVelocity = fold(vel) { velocity, (otherPos) ->
+        velocity + pretendGravity(pos, otherPos)
     }
-    PV(moonAxis.pos + newVelocity, newVelocity)
+    PV(pos + newVelocity, newVelocity)
 }
 
 

@@ -1,3 +1,5 @@
+@file:Suppress("ConvertArgumentToSet")
+
 package ec2024.day10
 
 import common.*
@@ -111,7 +113,7 @@ private fun part3(grid: Grid): Int {
         .sumOf { chars -> chars.basePower }
 }
 
-fun codexToSquare(i: Int) = when (i) {
+private fun codexToSquare(i: Int) = when (i) {
     0, 1 -> i
     2, 3 -> i + 4
     else -> throw Error()

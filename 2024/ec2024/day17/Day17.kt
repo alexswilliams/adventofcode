@@ -31,18 +31,18 @@ private fun part1(input: Grid): Int {
 
     val forest = mutableListOf<MutableSet<Location1616>>()
     var totalWeight = 0
-    for (edge in edges) {
-        val firstTreeIndex = forest.indexOfFirst { tree -> edge.first in tree }
-        val secondTreeIndex = forest.indexOfFirst { tree -> edge.second in tree }
+    for ((a, b, weight) in edges) {
+        val firstTreeIndex = forest.indexOfFirst { tree -> a in tree }
+        val secondTreeIndex = forest.indexOfFirst { tree -> b in tree }
         if (firstTreeIndex == -1 && secondTreeIndex == -1) {
             // new tree in the forest
-            forest.add(mutableSetOf(edge.first, edge.second))
+            forest.add(mutableSetOf(a, b))
         } else if (firstTreeIndex == -1 && secondTreeIndex >= 0) {
             // first star is new, but second star has already been seen
-            forest[secondTreeIndex].add(edge.first)
+            forest[secondTreeIndex].add(a)
         } else if (firstTreeIndex >= 0 && secondTreeIndex == -1) {
             // second star is new, but first star has already been seen
-            forest[firstTreeIndex].add(edge.second)
+            forest[firstTreeIndex].add(b)
         } else if (firstTreeIndex != secondTreeIndex) {
             // this edge joins two trees together
             val secondTree = forest[secondTreeIndex]
@@ -50,7 +50,7 @@ private fun part1(input: Grid): Int {
             forest.removeAt(secondTreeIndex)
         } else continue // this edge would form a loop
 
-        totalWeight += edge.third
+        totalWeight += weight
         if (forest.size == 1 && forest[0].size == stars.size) break
     }
     return totalWeight + stars.size
@@ -66,25 +66,25 @@ private fun part3(input: Grid): Long {
     data class SpanningTree(var weight: Int, val nodes: MutableSet<Location1616>)
 
     val forest = mutableListOf<SpanningTree>()
-    for (edge in closeEdges) {
-        val firstTreeIndex = forest.indexOfFirst { tree -> edge.first in tree.nodes }
-        val secondTreeIndex = forest.indexOfFirst { tree -> edge.second in tree.nodes }
+    for ((a, b, weight) in closeEdges) {
+        val firstTreeIndex = forest.indexOfFirst { tree -> a in tree.nodes }
+        val secondTreeIndex = forest.indexOfFirst { tree -> b in tree.nodes }
         if (firstTreeIndex == -1 && secondTreeIndex == -1) {
             // new tree in the forest
-            forest.add(SpanningTree(edge.third, mutableSetOf(edge.first, edge.second)))
+            forest.add(SpanningTree(weight, mutableSetOf(a, b)))
         } else if (firstTreeIndex == -1 && secondTreeIndex >= 0) {
             // first star is new, but second star has already been seen
             val secondTree = forest[secondTreeIndex]
-            if (secondTree.nodes.any { star -> manhattan(star, edge.first) < 6 }) {
-                secondTree.weight += edge.third
-                secondTree.nodes.add(edge.first)
+            if (secondTree.nodes.any { star -> manhattan(star, a) < 6 }) {
+                secondTree.weight += weight
+                secondTree.nodes.add(a)
             } else continue // edge would have brought in a star that expanded the constellation beyond a size of 6
         } else if (firstTreeIndex >= 0 && secondTreeIndex == -1) {
             // second star is new, but first star has already been seen
             val firstTree = forest[firstTreeIndex]
-            if (firstTree.nodes.any { star -> manhattan(star, edge.second) < 6 }) {
-                firstTree.weight += edge.third
-                firstTree.nodes.add(edge.second)
+            if (firstTree.nodes.any { star -> manhattan(star, b) < 6 }) {
+                firstTree.weight += weight
+                firstTree.nodes.add(b)
             } else continue // edge would have brought in a star that expanded the constellation beyond a size of 6
         } else if (firstTreeIndex != secondTreeIndex) {
             // this edge joins two trees together
@@ -92,7 +92,7 @@ private fun part3(input: Grid): Long {
             val secondTree = forest[secondTreeIndex]
             if (firstTree.nodes.any { star1 -> secondTree.nodes.any { star2 -> manhattan(star1, star2) < 6 } }) {
                 // only merge the two forests if at least one star in each falls within 6 units
-                firstTree.weight += secondTree.weight + edge.third
+                firstTree.weight += secondTree.weight + weight
                 firstTree.nodes.addAll(secondTree.nodes)
                 forest.removeAt(secondTreeIndex)
             } else continue

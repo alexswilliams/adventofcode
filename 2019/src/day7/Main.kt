@@ -20,11 +20,11 @@ fun main() {
     assertEquals(15432220, maxByPhaseLoop.second)
 }
 
-fun IntArray.runAmplifier(phase: Int, input: Int) = runProgram(RunState(this, listOf(phase, input))).outputs[0]
+private fun IntArray.runAmplifier(phase: Int, input: Int) = runProgram(RunState(this, listOf(phase, input))).outputs[0]
 
-fun IntArray.runAmplifierChain(phases: List<Int>) = phases.fold(0) { acc, phase -> this.runAmplifier(phase, acc) }
+private fun IntArray.runAmplifierChain(phases: List<Int>) = phases.fold(0) { acc, phase -> this.runAmplifier(phase, acc) }
 
-fun IntArray.runAmplifierLoop(phases: List<Int>): Int {
+private fun IntArray.runAmplifierLoop(phases: List<Int>): Int {
     val initialStates = phases.map { RunState(this, listOf(it)) } to 0
 
     tailrec fun runUntilHalt(states: Pair<List<RunState>, Int>): Int {
@@ -42,7 +42,7 @@ fun IntArray.runAmplifierLoop(phases: List<Int>): Int {
 }
 
 
-fun Set<Int>.permutations(): Set<List<Int>> = when {
+private fun Set<Int>.permutations(): Set<List<Int>> = when {
     isEmpty() -> emptySet()
     size == 1 -> setOf(listOf(this.first()))
     else -> {
@@ -66,7 +66,7 @@ private data class RunState(
 private fun IntArray.withValue(address: Int, value: Int) = this.clone().apply { this[address] = value }
 
 private tailrec fun runProgram(state: RunState): RunState {
-    val (memory, inputs, outputs, ip) = state
+    val (memory, inputs, outputs, ip, _) = state
     val (opcode, modes) = decodeInstruction(memory[ip])
     return when (opcode) {
         Opcode.ADD -> runProgram(

@@ -94,33 +94,33 @@ private fun part2(input: Grid, faceSize: Int, boundaryTransitions: List<CubeEdge
                 after = it.before.copy(facing = it.before.facing.opposite())
             )
         )
-    }.flatMap { rule ->
+    }.flatMap { (before, after, indicesReversed) ->
         val beforeIndexes = cartesianProductOf(
-            when (rule.before.facing) {
-                Facing.LEFT, Facing.RIGHT -> rule.before.row * faceSize until (rule.before.row + 1) * faceSize
-                Facing.UP -> rule.before.row * faceSize..rule.before.row * faceSize
-                Facing.DOWN -> (rule.before.row + 1) * faceSize - 1 until (rule.before.row + 1) * faceSize
+            when (before.facing) {
+                Facing.LEFT, Facing.RIGHT -> before.row * faceSize until (before.row + 1) * faceSize
+                Facing.UP -> before.row * faceSize..before.row * faceSize
+                Facing.DOWN -> (before.row + 1) * faceSize - 1 until (before.row + 1) * faceSize
             },
-            when (rule.before.facing) {
-                Facing.LEFT -> rule.before.col * faceSize..rule.before.col * faceSize
-                Facing.RIGHT -> (rule.before.col + 1) * faceSize - 1 until (rule.before.col + 1) * faceSize
-                Facing.UP, Facing.DOWN -> rule.before.col * faceSize until (rule.before.col + 1) * faceSize
+            when (before.facing) {
+                Facing.LEFT -> before.col * faceSize..before.col * faceSize
+                Facing.RIGHT -> (before.col + 1) * faceSize - 1 until (before.col + 1) * faceSize
+                Facing.UP, Facing.DOWN -> before.col * faceSize until (before.col + 1) * faceSize
             }
-        ).map { (r, c) -> Point2DAndDirection(r, c, rule.before.facing) }
+        ).map { (r, c) -> Point2DAndDirection(r, c, before.facing) }
         val afterIndexes = cartesianProductOf(
-            when (rule.after.facing) {
-                Facing.LEFT, Facing.RIGHT -> rule.after.row * faceSize until (rule.after.row + 1) * faceSize
-                Facing.UP -> (rule.after.row + 1) * faceSize - 1 until (rule.after.row + 1) * faceSize
-                Facing.DOWN -> rule.after.row * faceSize..rule.after.row * faceSize
+            when (after.facing) {
+                Facing.LEFT, Facing.RIGHT -> after.row * faceSize until (after.row + 1) * faceSize
+                Facing.UP -> (after.row + 1) * faceSize - 1 until (after.row + 1) * faceSize
+                Facing.DOWN -> after.row * faceSize..after.row * faceSize
             },
-            when (rule.after.facing) {
-                Facing.LEFT -> (rule.after.col + 1) * faceSize - 1 until (rule.after.col + 1) * faceSize
-                Facing.RIGHT -> rule.after.col * faceSize..rule.after.col * faceSize
-                Facing.UP, Facing.DOWN -> rule.after.col * faceSize until (rule.after.col + 1) * faceSize
+            when (after.facing) {
+                Facing.LEFT -> (after.col + 1) * faceSize - 1 until (after.col + 1) * faceSize
+                Facing.RIGHT -> after.col * faceSize..after.col * faceSize
+                Facing.UP, Facing.DOWN -> after.col * faceSize until (after.col + 1) * faceSize
             }
-        ).map { (r, c) -> Point2DAndDirection(r, c, rule.after.facing) }
+        ).map { (r, c) -> Point2DAndDirection(r, c, after.facing) }
 
-        beforeIndexes.zip(if (rule.indicesReversed) afterIndexes.asReversed() else afterIndexes)
+        beforeIndexes.zip(if (indicesReversed) afterIndexes.asReversed() else afterIndexes)
     }.toMap()
 
     tailrec fun positionAfterFollowing(row: Int, col: Int, facing: Facing, remainingInstructions: List<String>): Int {

@@ -1,4 +1,4 @@
-@file:Suppress("SameReturnValue")
+@file:Suppress("SameReturnValue", "PublicApiImplicitType", "unused", "DuplicatedCode")
 
 package common
 

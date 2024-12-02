@@ -68,7 +68,7 @@ private fun part3(input: List<String>): Int {
         runes.forEach { runeWord -> findPositions(line, runeWord) { row -> scalePositions.add(row by col) } }
         runes.forEach { runeWord -> findPositions(reversedLine, runeWord) { row -> scalePositions.add(line.lastIndex - row by col) } }
     }
-    return scalePositions.count()
+    return scalePositions.size
 }
 
 private fun findPositions(line: String, runeWord: String, onFound: (Int) -> Unit) {

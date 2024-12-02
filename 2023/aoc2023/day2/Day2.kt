@@ -55,16 +55,16 @@ private fun parseRound(round: String, startAt: Int, endAt: Int): Round {
 private fun part1(input: List<String>) =
     input.map { line -> parseGame(line) }
         .filter { game -> game.rounds.all { it.red <= 12 && it.green <= 13 && it.blue <= 14 } }
-        .sumOf { game -> game.id }
+        .sumOf { (id) -> id }
 
 private fun part2(input: List<String>) =
     input.sumOf { game ->
         parseGame(game).rounds
-            .reduce { maxSoFar: Round, round: Round ->
+            .reduce { (maxRed, maxGreen, maxBlue): Round, (red, green, blue): Round ->
                 Round(
-                    red = round.red.coerceAtLeast(maxSoFar.red),
-                    green = round.green.coerceAtLeast(maxSoFar.green),
-                    blue = round.blue.coerceAtLeast(maxSoFar.blue),
+                    red = red.coerceAtLeast(maxRed),
+                    green = green.coerceAtLeast(maxGreen),
+                    blue = blue.coerceAtLeast(maxBlue),
                 )
             }
             .let { it.red * it.green * it.blue }

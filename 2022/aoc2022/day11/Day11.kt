@@ -26,7 +26,7 @@ private fun part2(input: String) = runPuzzle(parseInput(input), iterations = 10_
 
 private fun runPuzzle(monkeys: List<Monkey>, iterations: Int, boredomDivisor: Int, lookForCyclesUntilPercent: Int): Long {
     val modulus = lcm(monkeys.map { it.divisor })
-    val allItems = monkeys.flatMapIndexed { index, monkey -> monkey.initialItems.map { it to index } }
+    val allItems = monkeys.flatMapIndexed { index, (initialItems) -> initialItems.map { it to index } }
     val roundToGiveUpLookingForCycles = (iterations * lookForCyclesUntilPercent) / 100
 
     val counts = LongArray(monkeys.size)

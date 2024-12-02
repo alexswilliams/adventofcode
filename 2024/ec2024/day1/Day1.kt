@@ -34,7 +34,7 @@ private fun part2(input: String): Int =
 
 private fun part3(input: String): Int =
     input.chunked(3).sumOf {
-        baseValue(it[0]) + baseValue(it[1]) + baseValue(it[2]) + when (it.count { it == 'x' }) {
+        baseValue(it[0]) + baseValue(it[1]) + baseValue(it[2]) + when (it.count { ch -> ch == 'x' }) {
             0 -> 6
             1 -> 2
             else -> 0

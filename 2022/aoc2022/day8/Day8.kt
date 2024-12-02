@@ -35,7 +35,7 @@ private fun beautyScores(rowMajorGrid: Grid): Int {
     return cartesianProductOf(0..rowMajorGrid.lastIndex, 0..rowMajorGrid.first().lastIndex)
         .maxOf { (row, col) ->
             treesOnEachAxisOrdered(row, col, rowMajorGrid, colMajorGrid)
-                .map { treeList -> treeList.takeUntilIncludingItemThatBreaksCondition { it >= rowMajorGrid[row][col] }.count() }
+                .map { treeList -> treeList.takeUntilIncludingItemThatBreaksCondition { it >= rowMajorGrid[row][col] }.size }
                 .product()
         }
 }

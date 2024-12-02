@@ -28,7 +28,7 @@ fun main() {
 
 
 private fun bestPosition(asteroids: Set<XY>): Pair<XY, Int> =
-    asteroids.associateWith { asteroids.visibleFrom(it).count() }
+    asteroids.associateWith { asteroids.visibleFrom(it).size }
         .maxBy { it.value }.toPair()
 
 private fun Set<XY>.visibleFrom(station: XY): Set<XY> {

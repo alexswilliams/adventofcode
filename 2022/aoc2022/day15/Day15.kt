@@ -37,7 +37,7 @@ private fun part2(input: List<String>, maxSize: Int): Long {
                         val ranges = sensorRangesForRow(sensors, row).clampTo(0, maxSize)
                         if (ranges.size > 1) {
                             val beaconsOnRow = sensors.filter { sensor -> sensor.yB == row }.map { it.xB }.toSet()
-                            val gaps = ranges.allValuesMissingBetween(0, maxSize).minus(beaconsOnRow)
+                            val gaps = ranges.allValuesMissingBefore(maxSize).minus(beaconsOnRow)
                             if (gaps.isNotEmpty()) {
                                 return@async row + gaps.single() * 4_000_000L
                             }
@@ -49,8 +49,8 @@ private fun part2(input: List<String>, maxSize: Int): Long {
     }.first { it > 0 }
 }
 
-private fun List<IntRange>.allValuesMissingBetween(minInclusive: Int, maxInclusive: Int): List<Int> {
-    tailrec fun itr(range: List<IntRange>, soFar: List<Int>, startAt: Int = minInclusive): List<Int> {
+private fun List<IntRange>.allValuesMissingBefore(maxInclusive: Int): List<Int> {
+    tailrec fun itr(range: List<IntRange>, soFar: List<Int>, startAt: Int = 0): List<Int> {
         val iInAny = this.find { startAt in it }
         return when {
             startAt >= maxInclusive -> soFar

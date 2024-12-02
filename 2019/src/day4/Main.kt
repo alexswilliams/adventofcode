@@ -39,7 +39,7 @@ private fun hasIncreasingDigits(candidate: Long) =
 private fun containsRunsOfExactlyTwo(candidate: Long): Boolean {
     val startsOfRuns = listOf(0) +
             candidate.toString().zipWithNext()
-                .mapIndexedNotNull { index, pair -> if (pair.first != pair.second) index + 1 else null }
+                .mapIndexedNotNull { index, (a, b) -> if (a != b) index + 1 else null }
     val runRanges = (startsOfRuns.plus(candidate.toString().length)).zipWithNext()
     val runLengths = runRanges.map { it.second - it.first }
     return runLengths.contains(2)

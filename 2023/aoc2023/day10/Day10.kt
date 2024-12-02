@@ -94,6 +94,12 @@ private fun pathLocations(startLocation: Location, grid: Grid, shapeOfS: Char): 
     )
 }
 
+
+private val excludeUp = listOf('|', 'J', 'L')
+private val excludeDown = listOf('|', 'F', '7')
+private val excludeLeft = listOf('-', 'J', '7')
+private val excludeRight = listOf('-', 'L', 'F')
+
 private fun determineShapeOfS(grid: Grid, start: Location): Char {
     val row = start.rowInt()
     val col = start.colInt()
@@ -102,11 +108,12 @@ private fun determineShapeOfS(grid: Grid, start: Location): Char {
     val left = if (col == 0) null else grid[row][col - 1]
     val right = if (col == grid[row].lastIndex) null else grid[row][col + 1]
 
+
     val possibleShapes = mutableListOf('|', '-', 'J', 'L', 'F', '7')
-    if (up != '|' && up != 'F' && up != '7') possibleShapes.removeAll(listOf('|', 'J', 'L'))
-    if (down != '|' && down != 'L' && down != 'J') possibleShapes.removeAll(listOf('|', 'F', '7'))
-    if (left != '-' && left != 'F' && left != 'L') possibleShapes.removeAll(listOf('-', 'J', '7'))
-    if (right != '-' && right != 'J' && right != '7') possibleShapes.removeAll(listOf('-', 'L', 'F'))
+    if (up != '|' && up != 'F' && up != '7') possibleShapes.removeAll(excludeUp)
+    if (down != '|' && down != 'L' && down != 'J') possibleShapes.removeAll(excludeDown)
+    if (left != '-' && left != 'F' && left != 'L') possibleShapes.removeAll(excludeLeft)
+    if (right != '-' && right != 'J' && right != '7') possibleShapes.removeAll(excludeRight)
     return possibleShapes.single()
 }
 

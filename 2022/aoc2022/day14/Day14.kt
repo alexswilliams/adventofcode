@@ -98,6 +98,7 @@ private typealias Pos = Pair<Int, Int>
 private fun symmetricRange(a: Int, b: Int): IntProgression = if (a < b) a..b else a downTo b
 
 // Just used to generate some pretty pictures
+@Suppress("unused")
 private fun printGrid(grid: Map<Pos, Char>, part: String, grain: Int = 0) {
     val xMin = grid.keys.minOf { it.first }
     val xMax = grid.keys.maxOf { it.first }

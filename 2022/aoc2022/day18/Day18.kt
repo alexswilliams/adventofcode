@@ -21,13 +21,13 @@ private fun part1(input: List<String>): Int {
 
     val allPointsAsInt = allPoints.map { xyzAsInt(it.x, it.y, it.z) }.toSet()
     var openFaces = 0
-    for (point in allPoints) {
-        if (xyzAsInt(point.x, point.y, point.z - 1) !in allPointsAsInt) openFaces++
-        if (xyzAsInt(point.x, point.y, point.z + 1) !in allPointsAsInt) openFaces++
-        if (xyzAsInt(point.x, point.y - 1, point.z) !in allPointsAsInt) openFaces++
-        if (xyzAsInt(point.x, point.y + 1, point.z) !in allPointsAsInt) openFaces++
-        if (xyzAsInt(point.x - 1, point.y, point.z) !in allPointsAsInt) openFaces++
-        if (xyzAsInt(point.x + 1, point.y, point.z) !in allPointsAsInt) openFaces++
+    for ((x, y, z) in allPoints) {
+        if (xyzAsInt(x, y, z - 1) !in allPointsAsInt) openFaces++
+        if (xyzAsInt(x, y, z + 1) !in allPointsAsInt) openFaces++
+        if (xyzAsInt(x, y - 1, z) !in allPointsAsInt) openFaces++
+        if (xyzAsInt(x, y + 1, z) !in allPointsAsInt) openFaces++
+        if (xyzAsInt(x - 1, y, z) !in allPointsAsInt) openFaces++
+        if (xyzAsInt(x + 1, y, z) !in allPointsAsInt) openFaces++
     }
     return openFaces
 }
@@ -78,13 +78,13 @@ private fun part2(input: List<String>): Int {
 
     // Test to see what's touching just steam
     var openFaces = 0
-    for (point in allPoints) {
-        if (xyzAsInt(point.x, point.y, point.z - 1) in steam) openFaces++
-        if (xyzAsInt(point.x, point.y, point.z + 1) in steam) openFaces++
-        if (xyzAsInt(point.x, point.y - 1, point.z) in steam) openFaces++
-        if (xyzAsInt(point.x, point.y + 1, point.z) in steam) openFaces++
-        if (xyzAsInt(point.x - 1, point.y, point.z) in steam) openFaces++
-        if (xyzAsInt(point.x + 1, point.y, point.z) in steam) openFaces++
+    for ((x, y, z) in allPoints) {
+        if (xyzAsInt(x, y, z - 1) in steam) openFaces++
+        if (xyzAsInt(x, y, z + 1) in steam) openFaces++
+        if (xyzAsInt(x, y - 1, z) in steam) openFaces++
+        if (xyzAsInt(x, y + 1, z) in steam) openFaces++
+        if (xyzAsInt(x - 1, y, z) in steam) openFaces++
+        if (xyzAsInt(x + 1, y, z) in steam) openFaces++
     }
     return openFaces
 }

@@ -13,7 +13,7 @@ data class RunState(
 )
 
 tailrec fun runProgram(state: RunState): RunState {
-    val (memory, inputs, outputs, ip) = state
+    val (memory, inputs, outputs, ip, _, _, _) = state
     val (opcode, modes) = decodeInstruction(memory[ip])
     return when (opcode) {
         Opcode.ADD -> runProgram(
