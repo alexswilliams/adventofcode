@@ -132,7 +132,7 @@ private fun part3(grid: Grid): Int {
             var height = heightAfterFirstCycle - cyclesAdvancedOver * -lossFromFutureCycles
             while (height > 0) {
                 distanceSouth++
-                height = height + interpretAirCurrent(grid[distanceSouth % grid.size][col])
+                height += interpretAirCurrent(grid[distanceSouth % grid.size][col])
             }
             distanceSouth
         }
