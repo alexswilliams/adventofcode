@@ -8,7 +8,7 @@ private val puzzle = loadFilesToLines("aoc2024/day2", "input.txt").single()
 internal fun main() {
     Day2.assertCorrect()
     benchmark { part1(puzzle) } // 134µs
-    benchmark { part2(puzzle) } // 325µs
+    benchmark { part2(puzzle) } // 314µs
 }
 
 internal object Day2 : Challenge {
@@ -30,7 +30,7 @@ private fun part2(input: List<String>): Int = input.map { it.splitToInts(" ") }.
     val unsafeIndexDesc = pairs.indexOfFirst { !descending(it) }
     if (unsafeIndexAsc == -1 || unsafeIndexDesc == -1)
         true
-    else listOf(
+    else sequenceOf(
         line.subList(0, unsafeIndexAsc) + line.subList(unsafeIndexAsc + 1, line.size),
         line.subList(0, unsafeIndexAsc + 1) + line.subList(unsafeIndexAsc + 2, line.size),
         line.subList(0, unsafeIndexDesc) + line.subList(unsafeIndexDesc + 1, line.size),
