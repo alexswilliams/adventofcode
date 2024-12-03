@@ -116,6 +116,7 @@ fun List<String>.transposeToStrings(): List<String> =
 fun <T : CharSequence> List<T?>.filterNotNullOrBlank() = this.filter { !it.isNullOrBlank() } as List<T>
 fun <T : CharSequence> List<T>.filterNotBlank() = this.filter { it.isNotBlank() }
 fun <T : CharSequence> List<T>.mapMatching(regex: Regex) = this.mapNotNull { regex.matchEntire(it)?.destructured }
+fun String.matching(regex: Regex) = this.let { regex.matchEntire(it)?.destructured }
 
 tailrec fun <T> List<T>.startsWith(other: List<T>): Boolean {
     if (other.isEmpty()) return true
