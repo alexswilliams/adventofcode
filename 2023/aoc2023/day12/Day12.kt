@@ -9,7 +9,7 @@ private val puzzle = loadFilesToLines("aoc2023/day12", "input.txt").single()
 internal fun main() {
     Day12.assertCorrect()
     benchmark { part1(puzzle) } // 715µs now 2.7ms
-    benchmark(100) { part2(puzzle) } // 9ms now 44.4ms
+    benchmark(100) { part2(puzzle) } // 9ms now 40.7ms
 }
 
 internal object Day12 : Challenge {
@@ -36,24 +36,35 @@ private fun part2(input: List<String>): Long =
 private typealias SearchState = Int
 
 private fun searchState(patternStartAt: Int, runStartAt: Int): SearchState = (patternStartAt shl 8) or runStartAt
-private val SearchState.startAt get() = this shr 8
-private val SearchState.runStartAt get() = this and 0xff
+private val SearchState.startAt
+    get() = this shr 8
+private val SearchState.runStartAt
+    get() = this and 0xff
 
 private fun sumOfPlacementsForAll(springs: List<Pair<String, List<Int>>>): Long =
     springs.sumOf { (pattern, runLengths) -> countPlacements(pattern, runLengths, searchState(0, 0)) }
 
 
-private fun countPlacements(pattern: String, runLengths: List<Int>, state: SearchState, cache: MutableMap<SearchState, Long> = mutableMapOf()): Long {
+private fun countPlacements(
+    pattern: String,
+    runLengths: List<Int>,
+    state: SearchState,
+    cache: MutableMap<SearchState, Long> = mutableMapOf(),
+    groupCache: Array<String> = Array(pattern.length) { i ->
+        val endOfGroup = pattern.indexOf('.', i)
+        pattern.substring(i, if (endOfGroup == -1) pattern.length else endOfGroup)
+    },
+): Long {
     cache[state]?.let { return it }
     if (isSuccess(pattern, runLengths, state)) return 1
     if (willNeverSucceed(pattern, runLengths, state)) return 0
 
-    val proposedNextStates = placeRunInGroup(pattern, state.startAt, runLengths, state.runStartAt)
+    val proposedNextStates = placeRunInGroup(pattern, state.startAt, runLengths, state.runStartAt, groupCache)
 
     val successStateCount = proposedNextStates.count { isSuccess(pattern, runLengths, it) }
     val needFurtherWork = proposedNextStates.filterNot { isSuccess(pattern, runLengths, it) || willNeverSucceed(pattern, runLengths, it) }
     return successStateCount + needFurtherWork.sumOf { next ->
-        countPlacements(pattern, runLengths, next, cache)
+        countPlacements(pattern, runLengths, next, cache, groupCache)
             .also { cache[next] = it }
     }
 }
@@ -69,9 +80,8 @@ private fun willNeverSucceed(pattern: String, runLengths: List<Int>, state: Sear
 
 private fun nextNonDotIndex(index: Int, pattern: String): Int = if (index <= pattern.lastIndex && pattern[index] == '.') index + 1 else index
 
-private fun placeRunInGroup(pattern: String, startAt: Int, runLengths: List<Int>, runIndex: Int): List<SearchState> {
-    val endOfGroup = pattern.indexOf('.', startAt)
-    val group = pattern.substring(startAt, if (endOfGroup == -1) pattern.length else endOfGroup)
+private fun placeRunInGroup(pattern: String, startAt: Int, runLengths: List<Int>, runIndex: Int, groupCache: Array<String>): List<SearchState> {
+    val group = groupCache[startAt]
     val runLen = runLengths[runIndex]
     val results = mutableListOf<SearchState>()
     // if the group is all ???? it's valid to skip it entirely
@@ -82,13 +92,17 @@ private fun placeRunInGroup(pattern: String, startAt: Int, runLengths: List<Int>
         position++
         val endOfRun = position + runLen
         if (group.length == runLen && position == 0
-            || ('#' !in group.substring(0, position) && (endOfRun == group.length || group[endOfRun] != '#'))
+            || (group.doesNotAppearBefore('#', position) && (endOfRun == group.length || group[endOfRun] != '#'))
         ) results.add(searchState(nextNonDotIndex(startAt + runLen + position + 1, pattern), runIndex + 1))
     }
     return results
 }
 
-fun simplify(springs: String, groupings: List<Int>): Pair<String, List<Int>> {
+fun String.doesNotAppearBefore(ch: Char, endExcl: Int): Boolean {
+    return (0..<endExcl).none { this[it] == ch }
+}
+
+private fun simplify(springs: String, groupings: List<Int>): Pair<String, List<Int>> {
     var str = springs
     var lst = groupings.toMutableList()
     val removeTrivialCases = {
