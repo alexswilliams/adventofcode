@@ -469,3 +469,12 @@ fun fillDeadEnds(grid: Grid, floor: Char = '.', wall: Char = '#'): Grid {
     } while (changed)
     return grid
 }
+
+fun <T> List<T>.repeat(n: Int): List<T> = when (n) {
+    0 -> emptyList()
+    1 -> this
+    else -> when (size) {
+        0 -> emptyList()
+        else -> buildList(n * size) { repeat(n) { this.addAll(this@repeat) } }
+    }
+}
