@@ -8,8 +8,8 @@ private val puzzle = loadFilesToLines("aoc2023/day12", "input.txt").single()
 
 internal fun main() {
     Day12.assertCorrect()
-    benchmark { part1(puzzle) } // 715µs now 2.7ms
-    benchmark(100) { part2(puzzle) } // 9ms now 40.7ms
+    benchmark { part1(puzzle) } // 2.19ms
+    benchmark(100) { part2(puzzle) } // 33.1ms
 }
 
 internal object Day12 : Challenge {
@@ -57,24 +57,21 @@ private fun countPlacements(
 ): Long {
     cache[state]?.let { return it }
     if (isSuccess(pattern, runLengths, state)) return 1
-    if (willNeverSucceed(pattern, runLengths, state)) return 0
 
-    val proposedNextStates = placeRunInGroup(pattern, state.startAt, runLengths, state.runStartAt, groupCache)
-
-    val successStateCount = proposedNextStates.count { isSuccess(pattern, runLengths, it) }
-    val needFurtherWork = proposedNextStates.filterNot { isSuccess(pattern, runLengths, it) || willNeverSucceed(pattern, runLengths, it) }
-    return successStateCount + needFurtherWork.sumOf { next ->
-        countPlacements(pattern, runLengths, next, cache, groupCache)
-            .also { cache[next] = it }
-    }
+    return placeRunInGroup(pattern, state.startAt, runLengths, state.runStartAt, groupCache)
+        .sumOf { next ->
+            if (isSuccess(pattern, runLengths, next)) 1
+            else if (willNeverSucceed(pattern, runLengths, next)) 0
+            else countPlacements(pattern, runLengths, next, cache, groupCache).also { cache[next] = it }
+        }
 }
 
 private fun isSuccess(pattern: String, runLengths: List<Int>, state: SearchState): Boolean =
     state.runStartAt > runLengths.lastIndex
-            && (state.startAt > pattern.lastIndex || '#' !in pattern.substring(state.startAt))
+            && (state.startAt > pattern.lastIndex || !pattern.appearsOnOrAfter('#', state.startAt))
 
 private fun willNeverSucceed(pattern: String, runLengths: List<Int>, state: SearchState): Boolean =
-    ((state.runStartAt > runLengths.lastIndex && state.startAt <= pattern.lastIndex && '#' in pattern.substring(state.startAt))
+    ((state.runStartAt > runLengths.lastIndex && state.startAt <= pattern.lastIndex && pattern.appearsOnOrAfter('#', state.startAt))
             || (state.runStartAt <= runLengths.lastIndex && state.startAt > pattern.lastIndex)
             || (runLengths.sumFrom(state.runStartAt) + runLengths.size - state.runStartAt - 1 > pattern.length - state.startAt))
 
@@ -87,49 +84,39 @@ private fun placeRunInGroup(pattern: String, startAt: Int, runLengths: List<Int>
     // if the group is all ???? it's valid to skip it entirely
     if ('#' !in group) results.add(searchState(nextNonDotIndex(startAt + group.length + 1, pattern), runIndex))
 
-    var position = -1
-    while (group.length >= runLen + position + 1) {
-        position++
-        val endOfRun = position + runLen
+    (0..(group.length - runLen)).forEach { position ->
         if (group.length == runLen && position == 0
-            || (group.doesNotAppearBefore('#', position) && (endOfRun == group.length || group[endOfRun] != '#'))
+            || (group.doesNotAppearBefore('#', position)
+                    && (position + runLen == group.length || group[position + runLen] != '#'))
         ) results.add(searchState(nextNonDotIndex(startAt + runLen + position + 1, pattern), runIndex + 1))
     }
     return results
 }
 
-fun String.doesNotAppearBefore(ch: Char, endExcl: Int): Boolean {
-    return (0..<endExcl).none { this[it] == ch }
-}
-
 private fun simplify(springs: String, groupings: List<Int>): Pair<String, List<Int>> {
-    var str = springs
+    var str = springs.removeDuplicatesOf('.')
     var lst = groupings.toMutableList()
-    val removeTrivialCases = {
-        while (true) {
-            str = removeDuplicatesOfChar(str, '.').trimStart('.')
-            val groups = str.split('.')
-            if (str.isEmpty() || lst.isEmpty() || groups.isEmpty()) break
-            val length = groups[0].length
-            val runLen = lst[0]
-            str = if (length == runLen && '#' in groups[0])
-                str.removeRange(0, runLen).also { lst.removeFirst() }
-            else if (length < runLen) {
-                if ('#' in groups[0]) throw Error("Group to remove contained hash")
-                else str.removeRange(0, length)
-            } else if (groups[0][0] == '#' && groups[0][runLen] != '#')
-                str.removeRange(0, (runLen + 1).coerceAtMost(length)).also { lst.removeFirst() }
-            else if (length > runLen && groups[0].startsWith("?#") && groups[0][runLen] == '#' && (length == runLen + 1 || groups[0][runLen + 1] != '#'))
-                str.removeRange(0, (runLen + 2).coerceAtMost(length)).also { lst.removeFirst() }
-            else break
-        }
-    }
 
     var strBefore: String
     do {
         strBefore = str
         repeat(2) {
-            removeTrivialCases()
+            while (true) {
+                str = str.trimStart('.')
+                val group = str.substringBefore('.')
+                if (str.isEmpty() || lst.isEmpty() || group.isEmpty()) break
+                val length = group.length
+                val runLen = lst[0]
+                str = if (length == runLen && '#' in group)
+                    str.removeRange(0, runLen).also { lst.removeFirst() }
+                else if (length < runLen)
+                    str.removeRange(0, length)
+                else if (group[0] == '#' && group[runLen] != '#')
+                    str.removeRange(0, (runLen + 1).coerceAtMost(length)).also { lst.removeFirst() }
+                else if (length > runLen && group.startsWith("?#") && group[runLen] == '#' && (length == runLen + 1 || group[runLen + 1] != '#'))
+                    str.removeRange(0, (runLen + 2).coerceAtMost(length)).also { lst.removeFirst() }
+                else break
+            }
             str = str.reversed()
             lst.reverse()
         }
@@ -140,16 +127,3 @@ private fun simplify(springs: String, groupings: List<Int>): Pair<String, List<I
     return str to lst
 }
 
-private fun removeDuplicatesOfChar(workingList: String, ch: Char): String {
-    var output = workingList
-    var i = 0
-    while (i < output.length - 1) {
-        if (output[i] == ch && output[i + 1] == ch) {
-            var j = i + 1
-            while (j < output.length && output[j] == ch) j++
-            output = output.removeRange(i + 1, j)
-        }
-        i++
-    }
-    return output
-}

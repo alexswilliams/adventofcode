@@ -480,3 +480,24 @@ fun <T> List<T>.repeat(n: Int): List<T> = when (n) {
 }
 
 fun List<Int>.sumFrom(startAt: Int): Int = (startAt..this.lastIndex).sumOf { this[it] }
+
+fun String.doesNotAppearBefore(ch: Char, endExcl: Int): Boolean = (0..<endExcl).none { this[it] == ch }
+fun String.appearsOnOrAfter(ch: Char, startIncl: Int): Boolean = (startIncl..this.lastIndex).any { this[it] == ch }
+
+fun String.removeDuplicatesOf(ch: Char): String {
+    if (isEmpty()) return this
+    var output = this
+    var i = 0
+    var last = output[i]
+    while (i < output.length - 1) {
+        val next = output[i + 1]
+        if (last == ch && next == ch) {
+            var j = i + 2
+            while (j < output.length && output[j] == ch) j++
+            output = output.removeRange(i + 1, j - 1)
+        }
+        i++
+        last = next
+    }
+    return output
+}
