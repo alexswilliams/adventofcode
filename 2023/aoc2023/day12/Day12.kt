@@ -1,6 +1,7 @@
 package aoc2023.day12
 
 import common.*
+import kotlinx.coroutines.*
 
 
 private val example = loadFilesToLines("aoc2023/day12", "example.txt").single()
@@ -8,8 +9,8 @@ private val puzzle = loadFilesToLines("aoc2023/day12", "input.txt").single()
 
 internal fun main() {
     Day12.assertCorrect()
-    benchmark { part1(puzzle) } // 2.19ms
-    benchmark(100) { part2(puzzle) } // 33.1ms
+    benchmark { part1(puzzle) } // 2.19ms, 2.18ms parallel
+    benchmark(100) { part2(puzzle) } // 33.1ms, 7.2ms parallel
 }
 
 internal object Day12 : Challenge {
@@ -42,7 +43,11 @@ private val SearchState.runStartAt
     get() = this and 0xff
 
 private fun sumOfPlacementsForAll(springs: List<Pair<String, List<Int>>>): Long =
-    springs.sumOf { (pattern, runLengths) -> countPlacements(pattern, runLengths, searchState(0, 0)) }
+    runBlocking(Dispatchers.Default) {
+        springs.map { (pattern, runLengths) -> async { countPlacements(pattern, runLengths, searchState(0, 0)) } }
+            .awaitAll()
+            .sum()
+    }
 
 
 private fun countPlacements(
