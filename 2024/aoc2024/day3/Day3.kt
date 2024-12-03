@@ -7,8 +7,8 @@ private val puzzle = loadFiles("aoc2024/day3", "input.txt").single()
 
 internal fun main() {
     Day3.assertCorrect()
-    benchmark { part1(puzzle) } // 253µs
-    benchmark(10) { part2(puzzle) } // 1.25ms
+    benchmark { part1(puzzle) } // 192µs
+    benchmark(10) { part2(puzzle) } // 979µs
 }
 
 internal object Day3 : Challenge {
@@ -26,17 +26,12 @@ private fun part1(input: String): Int =
     mulRegex.findAll(input)
         .sumOf { asPairOfIntegers(it).product() }
 
-private fun part2(input: String): Int {
-    val doPositions = input.locationOfEach("do()")
-    val dontPositions = input.locationOfEach("don't()")
-    return mulRegex.findAll(input).sumOf { match ->
-        val lastDoBefore = doPositions.lastOrNull { it < match.range.first } ?: Int.MIN_VALUE
-        val lastDontBefore = dontPositions.lastOrNull { it < match.range.first } ?: Int.MIN_VALUE
-        if (max(lastDoBefore, lastDontBefore) == lastDoBefore)
-            asPairOfIntegers(match).product()
-        else 0
+private fun part2(input: String): Int =
+    mulRegex.findAll(input).sumOf {
+        val lastDo = input.lastIndexOf("do()", startIndex = it.range.first)
+        val lastDont = input.lastIndexOf("don't()", startIndex = it.range.first)
+        if (lastDo >= lastDont) asPairOfIntegers(it).product() else 0
     }
-}
 
 
 private val mulRegex = Regex("mul\\([0-9]{1,3},[0-9]{1,3}\\)")
