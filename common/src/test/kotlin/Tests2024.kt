@@ -4,7 +4,7 @@ import org.junit.jupiter.api.*
 
 class Tests2024 {
     @TestFactory
-    fun aoc2023(): List<DynamicTest> =
+    fun aoc2024(): List<DynamicTest> =
         allChallengesUnder<Challenge>("aoc2024")
             .map {
                 DynamicTest.dynamicTest(it::class.simpleName) {
