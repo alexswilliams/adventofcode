@@ -8,8 +8,8 @@ private val puzzle = loadFilesToLines("aoc2023/day12", "input.txt").single()
 
 internal fun main() {
     Day12.assertCorrect()
-    benchmark { part1(puzzle) } // 715µs now 3.3ms
-    benchmark(100) { part2(puzzle) } // 9ms now 73.8ms
+    benchmark { part1(puzzle) } // 715µs now 2.7ms
+    benchmark(100) { part2(puzzle) } // 9ms now 44.4ms
 }
 
 internal object Day12 : Challenge {
@@ -32,50 +32,60 @@ private fun part2(input: List<String>): Long =
         input.splitOnSpaces()
             .map { simplify(listOf(it[0]).repeat(5).joinToString("?"), it[1].splitToInts(",").repeat(5)) })
 
-private data class SearchState(val startAt: Int, val runs: List<Int>)
+
+private typealias SearchState = Int
+
+private fun searchState(patternStartAt: Int, runStartAt: Int): SearchState = (patternStartAt shl 8) or runStartAt
+private val SearchState.startAt get() = this shr 8
+private val SearchState.runStartAt get() = this and 0xff
 
 private fun sumOfPlacementsForAll(springs: List<Pair<String, List<Int>>>): Long =
-    springs.sumOf { (pattern, runLengths) -> countPlacements(pattern, SearchState(0, runLengths)) }
+    springs.sumOf { (pattern, runLengths) -> countPlacements(pattern, runLengths, searchState(0, 0)) }
 
 
-private fun countPlacements(pattern: String, state: SearchState, cache: MutableMap<SearchState, Long> = mutableMapOf()): Long {
+private fun countPlacements(pattern: String, runLengths: List<Int>, state: SearchState, cache: MutableMap<SearchState, Long> = mutableMapOf()): Long {
     cache[state]?.let { return it }
-    if (isSuccess(pattern, state)) return 1
-    if (willNeverSucceed(pattern, state)) return 0
-    val proposedNextStates = placeRunInGroup(pattern, state.startAt, state.runs)
-    val successStateCount = proposedNextStates.count { isSuccess(pattern, it) }
-    val needFurtherWork = proposedNextStates.filterNot { isSuccess(pattern, it) || willNeverSucceed(pattern, it) }
-    return successStateCount + needFurtherWork.sumOf { countPlacements(pattern, it, cache).also { weight -> cache[it] = weight } }
+    if (isSuccess(pattern, runLengths, state)) return 1
+    if (willNeverSucceed(pattern, runLengths, state)) return 0
+
+    val proposedNextStates = placeRunInGroup(pattern, state.startAt, runLengths, state.runStartAt)
+
+    val successStateCount = proposedNextStates.count { isSuccess(pattern, runLengths, it) }
+    val needFurtherWork = proposedNextStates.filterNot { isSuccess(pattern, runLengths, it) || willNeverSucceed(pattern, runLengths, it) }
+    return successStateCount + needFurtherWork.sumOf { next ->
+        countPlacements(pattern, runLengths, next, cache)
+            .also { cache[next] = it }
+    }
 }
 
-private fun isSuccess(pattern: String, state: SearchState): Boolean =
-    state.runs.isEmpty()
+private fun isSuccess(pattern: String, runLengths: List<Int>, state: SearchState): Boolean =
+    state.runStartAt > runLengths.lastIndex
             && (state.startAt > pattern.lastIndex || '#' !in pattern.substring(state.startAt))
 
-private fun willNeverSucceed(pattern: String, state: SearchState): Boolean =
-    ((state.runs.isEmpty() && state.startAt <= pattern.lastIndex && '#' in pattern.substring(state.startAt))
-            || (state.runs.isNotEmpty() && state.startAt > pattern.lastIndex)
-            || (state.runs.sum() + state.runs.size - 1 > pattern.length - state.startAt))
+private fun willNeverSucceed(pattern: String, runLengths: List<Int>, state: SearchState): Boolean =
+    ((state.runStartAt > runLengths.lastIndex && state.startAt <= pattern.lastIndex && '#' in pattern.substring(state.startAt))
+            || (state.runStartAt <= runLengths.lastIndex && state.startAt > pattern.lastIndex)
+            || (runLengths.sumFrom(state.runStartAt) + runLengths.size - state.runStartAt - 1 > pattern.length - state.startAt))
 
-private fun placeRunInGroup(pattern: String, startAt: Int, runLengths: List<Int>): List<SearchState> {
-    val group = pattern.substring(startAt).substringBefore('.')
-    val runLen = runLengths.first()
+private fun nextNonDotIndex(index: Int, pattern: String): Int = if (index <= pattern.lastIndex && pattern[index] == '.') index + 1 else index
+
+private fun placeRunInGroup(pattern: String, startAt: Int, runLengths: List<Int>, runIndex: Int): List<SearchState> {
+    val endOfGroup = pattern.indexOf('.', startAt)
+    val group = pattern.substring(startAt, if (endOfGroup == -1) pattern.length else endOfGroup)
+    val runLen = runLengths[runIndex]
     val results = mutableListOf<SearchState>()
     // if the group is all ???? it's valid to skip it entirely
-    if ('#' !in group) results.add(SearchState(startAt + group.length + 1, runLengths))
+    if ('#' !in group) results.add(searchState(nextNonDotIndex(startAt + group.length + 1, pattern), runIndex))
 
     var position = -1
     while (group.length >= runLen + position + 1) {
         position++
         val endOfRun = position + runLen
-
-        val isPerfectLength = group.length == runLen && position == 0
-        val noHashBefore = '#' !in group.substring(0, position)
-        val noHashImmediatelyAfter = endOfRun == group.length || group[endOfRun] != '#'
-        if (isPerfectLength || (noHashBefore && noHashImmediatelyAfter))
-            results.add(SearchState(startAt + runLen + position + 1, runLengths.tail()))
+        if (group.length == runLen && position == 0
+            || ('#' !in group.substring(0, position) && (endOfRun == group.length || group[endOfRun] != '#'))
+        ) results.add(searchState(nextNonDotIndex(startAt + runLen + position + 1, pattern), runIndex + 1))
     }
-    return results.map { if (it.startAt <= pattern.lastIndex && pattern[it.startAt] == '.') it.copy(startAt = it.startAt + 1) else it }
+    return results
 }
 
 fun simplify(springs: String, groupings: List<Int>): Pair<String, List<Int>> {

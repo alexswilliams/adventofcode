@@ -478,3 +478,5 @@ fun <T> List<T>.repeat(n: Int): List<T> = when (n) {
         else -> buildList(n * size) { repeat(n) { this.addAll(this@repeat) } }
     }
 }
+
+fun List<Int>.sumFrom(startAt: Int): Int = (startAt..this.lastIndex).sumOf { this[it] }
