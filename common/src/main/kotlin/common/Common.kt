@@ -10,6 +10,11 @@ object Common
 
 typealias Grid = Array<CharArray>
 
+val Grid.height get() = this.size
+val Grid.width get() = this[0].size
+val Grid.rowIndices get() = this.indices
+val Grid.colIndices get() = this[0].indices
+
 fun String.fromClasspathFileToLines(): List<String> {
     val url = Common::class.java.classLoader.getResource(this)
         ?: throw Exception("Could not find file '$this'")
