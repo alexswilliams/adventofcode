@@ -507,3 +507,25 @@ fun String.removeDuplicatesOf(ch: Char): String {
     }
     return output
 }
+
+@Suppress("UseWithIndex")
+fun <T> List<T>.allIndexed(predicate: (index: Int, T) -> Boolean): Boolean {
+    if (isEmpty()) return true
+    var index = 0
+    for (element in this) {
+        if (!predicate(index, element)) return false
+        index++
+    }
+    return true
+}
+
+@Suppress("UseWithIndex")
+fun <T> List<T>.anyIndexed(predicate: (index: Int, T) -> Boolean): Boolean {
+    if (isEmpty()) return false
+    var index = 0
+    for (element in this) {
+        if (predicate(index, element)) return true
+        index++
+    }
+    return false
+}

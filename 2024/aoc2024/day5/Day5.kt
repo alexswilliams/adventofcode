@@ -7,8 +7,8 @@ private val puzzle = loadFilesToLines("aoc2024/day5", "input.txt").single()
 
 internal fun main() {
     Day5.assertCorrect()
-    benchmark { part1(puzzle) } // 2.6ms
-    benchmark(10) { part2(puzzle) } // 15.3ms
+    benchmark { part1(puzzle) } // 722µs
+    benchmark(10) { part2(puzzle) } // 7.9ms
 }
 
 internal object Day5 : Challenge {
@@ -23,30 +23,41 @@ internal object Day5 : Challenge {
 
 
 private fun part1(input: List<String>): Int {
-    val rules = input.takeWhile { it.isNotBlank() }.map { it.split("|") }.groupBy({ it[0].toInt() }, { it[1].toInt() }).mapValues { it.value.toSet() }
-    val pages = input.takeLastWhile { it.isNotBlank() }.map { it.splitToInts(",") }
-    return pages.filter { pageList ->
-        pageList.mapIndexed { index, page -> (rules[page].orEmpty() intersect pageList.take(index)).isEmpty() }.all { it }
-    }.sumOf { it[it.size / 2] }
+    val ruleset = parseRuleset(input)
+    return parsePageLists(input)
+        .filter { pageList -> pageListIsSorted(pageList, ruleset) }
+        .sumOf { it[it.size / 2] }
 }
 
 private fun part2(input: List<String>): Int {
-    val rules = input.takeWhile { it.isNotBlank() }.map { it.split("|") }.groupBy({ it[0].toInt() }, { it[1].toInt() }).mapValues { it.value.toSet() }
-    val pages = input.takeLastWhile { it.isNotBlank() }.map { it.splitToInts(",") }
-    val failingPageLists = pages.filter { pageList ->
-        pageList.mapIndexed { index, page -> (rules[page].orEmpty() intersect pageList.take(index)).isNotEmpty() }.any { it }
-    }
-    return failingPageLists.sumOf { list ->
-        val tail = mutableListOf<Int>()
-        val prefix = list.toMutableList()
-        while (prefix.isNotEmpty()) {
-            val relevantRules = (rules.keys intersect prefix).map { it to (rules[it].orEmpty() intersect prefix) }
-            val fewestFollowers = relevantRules.minByOrNull { it.second.size } ?: (prefix.last() to emptySet())
-            fewestFollowers.second.forEach { if (it !in tail) tail.addFirst(it) }
-            if (fewestFollowers.first !in tail) tail.addFirst(fewestFollowers.first)
-            prefix.remove(fewestFollowers.first)
+    val ruleset = parseRuleset(input)
+    return parsePageLists(input)
+        .filterNot { pageList -> pageListIsSorted(pageList, ruleset) }
+        .sumOf { pageList ->
+            val sortedTail = mutableSetOf<Int>()
+            val unsortedPrefix = pageList.toMutableSet()
+            var middleItem: Int
+            do {
+                val (nextMiddleItem, itemsThatMustFollow) = ruleWithFewestConstraintsStillApplicableToPrefix(ruleset, unsortedPrefix)
+                sortedTail.addAll(itemsThatMustFollow)
+                sortedTail.add(nextMiddleItem)
+                unsortedPrefix.remove(nextMiddleItem)
+                middleItem = nextMiddleItem
+            } while (sortedTail.size < unsortedPrefix.size)
+            middleItem
         }
-        tail[tail.size / 2]
-    }
 }
 
+private fun parseRuleset(input: List<String>) =
+    input.takeWhile { it.isNotBlank() }.map { it.split("|") }.groupBy({ it[0].toInt() }, { it[1].toInt() }).mapValues { it.value.toSet() }
+
+private fun parsePageLists(input: List<String>) =
+    input.takeLastWhile { it.isNotBlank() }.map { it.splitToInts(",") }
+
+private fun pageListIsSorted(pageList: Collection<Int>, ruleset: Map<Int, Set<Int>>): Boolean =
+    with(mutableSetOf<Int>()) { pageList.all { page -> intersect(ruleset[page].orEmpty()).isEmpty().also { add(page) } } }
+
+private fun ruleWithFewestConstraintsStillApplicableToPrefix(ruleset: Map<Int, Set<Int>>, unsortedPrefix: MutableSet<Int>) =
+    (ruleset.keys intersect unsortedPrefix)
+        .map { leader -> leader to (ruleset[leader].orEmpty() intersect unsortedPrefix) }
+        .minByOrNull { (_, followers) -> followers.size } ?: (unsortedPrefix.first() to emptySet())
