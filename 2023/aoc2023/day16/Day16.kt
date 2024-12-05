@@ -2,6 +2,7 @@ package aoc2023.day16
 
 import aoc2023.day16.Heading.*
 import common.*
+import kotlinx.coroutines.*
 
 
 private val examples = loadFilesToGrids("aoc2023/day16", "example.txt")
@@ -10,7 +11,7 @@ private val puzzles = loadFilesToGrids("aoc2023/day16", "input.txt")
 internal fun main() {
     Day16.assertCorrect()
     benchmark { part1(puzzles[0]) } // 432µs
-    benchmark(100) { part2(puzzles[0]) } // 86ms
+    benchmark(100) { part2(puzzles[0]) } // 86ms or 44.8ms parallel
 }
 
 internal object Day16 : Challenge {
@@ -32,12 +33,14 @@ private enum class Heading(val nextCell: (Location1616) -> Location1616) {
 
 private fun part1(grid: Grid): Int = countCellsEnergisedByStartingAt(grid, 0 by16 0, Right)
 
-private fun part2(grid: Grid): Int = max(
-    grid.rowIndices.maxOf { row -> countCellsEnergisedByStartingAt(grid, row by16 0, Right) },
-    grid.rowIndices.maxOf { row -> countCellsEnergisedByStartingAt(grid, row by16 grid.colIndices.last, Left) },
-    grid.colIndices.maxOf { col -> countCellsEnergisedByStartingAt(grid, 0 by16 col, Down) },
-    grid.colIndices.maxOf { col -> countCellsEnergisedByStartingAt(grid, grid.rowIndices.last by16 col, Up) }
-)
+private fun part2(grid: Grid): Int = runBlocking(Dispatchers.Default) {
+    listOf(
+        async { grid.rowIndices.maxOf { row -> countCellsEnergisedByStartingAt(grid, row by16 0, Right) } },
+        async { grid.rowIndices.maxOf { row -> countCellsEnergisedByStartingAt(grid, row by16 grid.colIndices.last, Left) } },
+        async { grid.colIndices.maxOf { col -> countCellsEnergisedByStartingAt(grid, 0 by16 col, Down) } },
+        async { grid.colIndices.maxOf { col -> countCellsEnergisedByStartingAt(grid, grid.rowIndices.last by16 col, Up) } }
+    ).awaitAll().max()
+}
 
 
 private fun countCellsEnergisedByStartingAt(grid: Grid, startAt: Location1616, startHeading: Heading): Int {
