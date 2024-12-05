@@ -23,51 +23,25 @@ internal object Day4 : Challenge {
 
 
 private fun part1(grid: Grid): Int =
-    grid.mapCartesianNotNull { row, col, char -> if (char == 'X') row by16 col else null }.sumOf {
-        countTrue(
-            grid.cellsEqualTo(MAS, startAt = it, offsets = LEFT),
-            grid.cellsEqualTo(MAS, startAt = it, offsets = RIGHT),
-            grid.cellsEqualTo(MAS, startAt = it, offsets = UP),
-            grid.cellsEqualTo(MAS, startAt = it, offsets = DOWN),
-            grid.cellsEqualTo(MAS, startAt = it, offsets = LEFT_UP),
-            grid.cellsEqualTo(MAS, startAt = it, offsets = RIGHT_UP),
-            grid.cellsEqualTo(MAS, startAt = it, offsets = LEFT_DOWN),
-            grid.cellsEqualTo(MAS, startAt = it, offsets = RIGHT_DOWN),
-        )
-    }
-
-private val MAS = charArrayOf('M', 'A', 'S')
-private val LEFT_UP = listOf(-1 to -1, -2 to -2, -3 to -3)
-private val RIGHT_UP = listOf(-1 to 1, -2 to 2, -3 to 3)
-private val LEFT_DOWN = listOf(1 to -1, 2 to -2, 3 to -3)
-private val RIGHT_DOWN = listOf(1 to 1, 2 to 2, 3 to 3)
-private val LEFT = listOf(0 to -1, 0 to -2, 0 to -3)
-private val RIGHT = listOf(0 to 1, 0 to 2, 0 to 3)
-private val UP = listOf(-1 to 0, -2 to 0, -3 to 0)
-private val DOWN = listOf(1 to 0, 2 to 0, 3 to 0)
-
+    grid.mapCartesianNotNull { row, col, char -> if (char == 'X') row by16 col else null }
+        .sumOf { center -> ALL_8_AXES.count { grid.cellsEqualTo("MAS", center, it) } }
 
 private fun part2(grid: Grid): Int =
     grid.mapCartesianNotNull { row, col, char -> if (char == 'A' && row in 1..grid.height - 2 && col in 1..grid.width - 2) row by16 col else null }
-        .count { a ->
-            2 == countTrue(
-                grid.cellsEqualTo(MS, startAt = a, offsets = LEFT_UP__RIGHT_DOWN),
-                grid.cellsEqualTo(MS, startAt = a, offsets = LEFT_DOWN__RIGHT_UP),
-                grid.cellsEqualTo(MS, startAt = a, offsets = RIGHT_UP__LEFT_DOWN),
-                grid.cellsEqualTo(MS, startAt = a, offsets = RIGHT_DOWN__LEFT_UP)
-            )
-        }
-
-private val MS = charArrayOf('M', 'S')
-private val LEFT_UP__RIGHT_DOWN = listOf(-1 to -1, 1 to 1)
-private val LEFT_DOWN__RIGHT_UP = listOf(1 to -1, -1 to 1)
-private val RIGHT_UP__LEFT_DOWN = listOf(-1 to 1, 1 to -1)
-private val RIGHT_DOWN__LEFT_UP = listOf(1 to 1, -1 to -1)
+        .count { center -> 2 == X.count { grid.cellsEqualTo("MS", center, it) } }
 
 
-private fun countTrue(vararg condition: Boolean): Int = condition.count { it }
+private val X = (0..3).map { i -> listOf(-1 to -1, 1 to 1).map { rotateAntiClockwise(it, times = i) } }
+private val ALL_8_AXES =
+    (0..3).map { i -> listOf(1 to 1, 2 to 2, 3 to 3).map { rotateAntiClockwise(it, times = i) } } +
+            (0..3).map { i -> listOf(0 to 1, 0 to 2, 0 to 3).map { rotateAntiClockwise(it, times = i) } }
 
-private fun Grid.cellsEqualTo(expected: CharArray, startAt: Location1616, offsets: List<Pair<Int, Int>>): Boolean {
+
+private tailrec fun rotateAntiClockwise(a: Pair<Int, Int>, times: Int = 1): Pair<Int, Int> =
+    if (times == 0) a
+    else rotateAntiClockwise(-a.second to a.first, times = times - 1)
+
+private fun Grid.cellsEqualTo(expected: String, startAt: Location1616, offsets: List<Pair<Int, Int>>): Boolean {
     expected.forEachIndexed { index, ch ->
         val r = startAt.row() + offsets[index].first
         val c = startAt.col() + offsets[index].second
