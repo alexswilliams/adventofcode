@@ -28,18 +28,18 @@ private fun part1(grid: Grid): Int =
 
 private fun part2(grid: Grid): Int =
     grid.mapCartesianNotNull { row, col, char -> if (char == 'A' && row in 1..grid.height - 2 && col in 1..grid.width - 2) row by16 col else null }
-        .count { center -> 2 == X.count { grid.cellsEqualTo("MS", center, it) } }
+        .count { center -> 2 == X_1BY1.count { grid.cellsEqualTo("MS", center, it) } }
 
 
-private val X = (0..3).map { i -> listOf(-1 to -1, 1 to 1).map { rotateAntiClockwise(it, times = i) } }
-private val ALL_8_AXES =
-    (0..3).map { i -> listOf(1 to 1, 2 to 2, 3 to 3).map { rotateAntiClockwise(it, times = i) } } +
-            (0..3).map { i -> listOf(0 to 1, 0 to 2, 0 to 3).map { rotateAntiClockwise(it, times = i) } }
+private val X_1BY1 = (0..3).map { rotation -> listOf(-1, 1).map { rotateACW(it to it, rotation) } }
+private val DIAGONALS = (0..3).map { rotation -> (1..3).map { rotateACW(it to it, rotation) } }
+private val HORIZ_VERT = (0..3).map { rotation -> (1..3).map { rotateACW(0 to it, rotation) } }
+private val ALL_8_AXES = DIAGONALS + HORIZ_VERT
 
 
-private tailrec fun rotateAntiClockwise(a: Pair<Int, Int>, times: Int = 1): Pair<Int, Int> =
+private tailrec fun rotateACW(a: Pair<Int, Int>, times: Int = 1): Pair<Int, Int> =
     if (times == 0) a
-    else rotateAntiClockwise(-a.second to a.first, times = times - 1)
+    else rotateACW(-a.second to a.first, times = times - 1)
 
 private fun Grid.cellsEqualTo(expected: String, startAt: Location1616, offsets: List<Pair<Int, Int>>): Boolean {
     expected.forEachIndexed { index, ch ->
