@@ -9,8 +9,8 @@ private val puzzles = loadFilesToGrids("aoc2023/day16", "input.txt")
 
 internal fun main() {
     Day16.assertCorrect()
-    benchmark { part1(puzzles[0]) } // 1.2ms
-    benchmark(10) { part2(puzzles[0]) } // 492ms
+    benchmark { part1(puzzles[0]) } // 432µs
+    benchmark(100) { part2(puzzles[0]) } // 86ms
 }
 
 internal object Day16 : Challenge {
@@ -44,15 +44,15 @@ private fun countCellsEnergisedByStartingAt(grid: Grid, startAt: Location1616, s
     data class Work(val pos: Location1616, val heading: Heading)
 
     val work = ArrayDeque<Work>(listOf(Work(startAt, startHeading)))
-    val visitedByDirection = Array(4) { Array(grid.height) { BooleanArray(grid.width) } }
-        .apply { this[startHeading.ordinal][startAt.row()][startAt.col()] = true }
+    val visitedByDirection = Array(grid.height) { IntArray(grid.width) }
+        .apply { this[startAt.row()][startAt.col()] = 1 shl startHeading.ordinal }
 
+    val rows = grid.rowIndices
+    val cols = grid.colIndices
     fun visit(next: Location1616, heading: Heading) {
-        if (next.row() in grid.rowIndices && next.col() in grid.colIndices) {
-            if (!visitedByDirection[heading.ordinal][next.row()][next.col()]) {
-                visitedByDirection[heading.ordinal][next.row()][next.col()] = true
-                work.addLast(Work(next, heading))
-            }
+        if (next.row() in rows && next.col() in cols && visitedByDirection[next.row()][next.col()] and (1 shl heading.ordinal) == 0) {
+            visitedByDirection[next.row()][next.col()] = visitedByDirection[next.row()][next.col()] or (1 shl heading.ordinal)
+            work.addLast(Work(next, heading))
         }
     }
 
@@ -84,5 +84,5 @@ private fun countCellsEnergisedByStartingAt(grid: Grid, startAt: Location1616, s
             else -> throw Error()
         }
     }
-    return grid.mapCartesianNotNull { row, col, _ -> (0..3).any { visitedByDirection[it][row][col] } }.count { it }
+    return visitedByDirection.sumOf { it.count { i -> i != 0 } }
 }
