@@ -24,17 +24,17 @@ internal object Day4 : Challenge {
 
 private fun part1(grid: Grid): Int =
     grid.mapCartesianNotNull { row, col, char -> if (char == 'X') row by16 col else null }
-        .sumOf { center -> ALL_8_AXES.count { grid.cellsEqualTo("MAS", center, it) } }
+        .sumOf { center -> ALL_8_DIRECTIONS.count { grid.cellsEqualTo("MAS", center, it) } }
 
 private fun part2(grid: Grid): Int =
     grid.mapCartesianNotNull { row, col, char -> if (char == 'A' && row in 1..grid.height - 2 && col in 1..grid.width - 2) row by16 col else null }
-        .count { center -> 2 == X_1BY1.count { grid.cellsEqualTo("MS", center, it) } }
+        .count { center -> 2 == DIAG_OPPOSITES.count { grid.cellsEqualTo("MS", center, it) } }
 
 
-private val X_1BY1 = (0..3).map { rotation -> listOf(-1, 1).map { rotateACW(it to it, rotation) } }
 private val DIAGONALS = (0..3).map { rotation -> (1..3).map { rotateACW(it to it, rotation) } }
 private val HORIZ_VERT = (0..3).map { rotation -> (1..3).map { rotateACW(0 to it, rotation) } }
-private val ALL_8_AXES = DIAGONALS + HORIZ_VERT
+private val ALL_8_DIRECTIONS = DIAGONALS + HORIZ_VERT
+private val DIAG_OPPOSITES = (0..3).map { rotation -> listOf(-1, 1).map { rotateACW(it to it, rotation) } }
 
 
 private tailrec fun rotateACW(a: Pair<Int, Int>, times: Int = 1): Pair<Int, Int> =
