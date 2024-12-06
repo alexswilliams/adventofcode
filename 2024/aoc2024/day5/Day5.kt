@@ -7,8 +7,8 @@ private val puzzle = loadFilesToLines("aoc2024/day5", "input.txt").single()
 
 internal fun main() {
     Day5.assertCorrect()
-    benchmark { part1(puzzle) } // 722µs
-    benchmark(10) { part2(puzzle) } // 7.9ms
+    benchmark { part1(puzzle) } // 528µs
+    benchmark(10) { part2(puzzle) } // 733µs
 }
 
 internal object Day5 : Challenge {
@@ -33,18 +33,12 @@ private fun part2(input: List<String>): Int {
     val ruleset = parseRuleset(input)
     return parsePageLists(input)
         .filterNot { pageList -> pageListIsSorted(pageList, ruleset) }
-        .sumOf { pageList ->
-            val sortedTail = mutableSetOf<Int>()
-            val unsortedPrefix = pageList.toMutableSet()
-            var middleItem: Int
-            do {
-                val nextMiddleItem = ruleWithFewestConstraintsStillApplicableToPrefix(ruleset, unsortedPrefix)
-                ruleset[nextMiddleItem].orEmpty().forEach { if (it in unsortedPrefix) sortedTail.add(it) }
-                sortedTail.add(nextMiddleItem)
-                unsortedPrefix.remove(nextMiddleItem)
-                middleItem = nextMiddleItem
-            } while (sortedTail.size < unsortedPrefix.size)
-            middleItem
+        .sumOf {
+            it.sortedWith { a, b ->
+                if (a in ruleset[b].orEmpty()) -1
+                else if (b in ruleset[a].orEmpty()) 1
+                else 0
+            }[it.size / 2]
         }
 }
 
@@ -56,7 +50,3 @@ private fun parsePageLists(input: List<String>) =
 
 private fun pageListIsSorted(pageList: Collection<Int>, ruleset: Map<Int, Set<Int>>): Boolean =
     with(mutableListOf<Int>()) { pageList.all { page -> hasNoOverlapWith(ruleset[page].orEmpty()).also { add(page) } } }
-
-private fun ruleWithFewestConstraintsStillApplicableToPrefix(ruleset: Map<Int, Set<Int>>, unsortedPrefix: Collection<Int>) =
-    (ruleset.keys.filter { it in unsortedPrefix })
-        .minByOrNull { leader -> ruleset[leader].orEmpty().count { it in unsortedPrefix } } ?: unsortedPrefix.first()
