@@ -434,6 +434,14 @@ fun <T> Collection<T>.hasNoOverlapWith(other: Iterable<T>): Boolean {
     return true
 }
 
+fun neighboursOf(pos: Location1616, grid: Grid, output: IntArray = IntArray(4)): IntArray {
+    output[0] = if (pos.col() > 0) pos.minusCol() else -1
+    output[1] = if (pos.row() > 0) pos.minusRow() else -1
+    output[2] = if (pos.col() < grid[0].lastIndex) pos.plusCol() else -1
+    output[3] = if (pos.row() < grid.lastIndex) pos.plusRow() else -1
+    return output
+}
+
 fun neighboursOf(pos: Location1616, grid: Grid, wall: Char, output: IntArray = IntArray(4)): IntArray {
     output[0] = if (pos.col() > 0 && grid[pos.row()][pos.col() - 1] != wall) pos.minusCol() else -1
     output[1] = if (pos.row() > 0 && grid[pos.row() - 1][pos.col()] != wall) pos.minusRow() else -1
