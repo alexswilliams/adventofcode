@@ -1,6 +1,6 @@
-package aoc2024.day5
+package aoc2024.day6
 
-import aoc2024.day5.Facing.*
+import aoc2024.day6.Facing.*
 import common.*
 import kotlinx.coroutines.*
 
