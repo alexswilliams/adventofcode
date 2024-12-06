@@ -10,7 +10,7 @@ private val puzzle = loadFilesToGrids("aoc2024/day6", "input.txt").single()
 internal fun main() {
     Day6.assertCorrect()
     benchmark { part1(puzzle) } // 67µs
-    benchmark(50) { part2(puzzle) } // 20ms
+    benchmark(50) { part2(puzzle) } // 111.9ms single or 22.5ms parallel
 }
 
 internal object Day6 : Challenge {
@@ -29,6 +29,7 @@ private fun part1(grid: Grid): Int = visitedOnWalk(grid).countTrue()
 private fun part2(grid: Grid): Int = runBlocking(Dispatchers.Default) {
     val start = grid.locationOf('^')
     visitedOnWalk(grid, start).filterTrue()
+//        .count { walkUntilLoop(grid, it, start) }
         .map { async { walkUntilLoop(grid, it, start) } }.awaitAll()
         .count { it }
 }
