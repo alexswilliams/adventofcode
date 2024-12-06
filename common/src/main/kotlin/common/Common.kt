@@ -10,6 +10,7 @@ object Common
 
 typealias Grid = Array<CharArray>
 typealias DigitGrid = Array<IntArray>
+typealias BooleanGrid = Array<BooleanArray>
 
 fun Grid.toDigitGrid() = Array(this.height) { r -> IntArray(this.width) { c -> this[r][c].digitToInt() } }
 
@@ -17,11 +18,16 @@ val Grid.height get() = this.size
 val Grid.width get() = this[0].size
 val Grid.rowIndices get() = this.indices
 val Grid.colIndices get() = this[0].indices
+fun Grid.at(pos: Location1616) = this[pos.row()][pos.col()]
+infix fun Location1616.isWithin(grid: Grid) = row() in grid.rowIndices && col() in grid.colIndices
 
 val DigitGrid.height get() = this.size
 val DigitGrid.width get() = this[0].size
 val DigitGrid.rowIndices get() = this.indices
 val DigitGrid.colIndices get() = this[0].indices
+fun DigitGrid.at(pos: Location1616) = this[pos.row()][pos.col()]
+
+fun BooleanGrid.at(pos: Location1616) = this[pos.row()][pos.col()]
 
 fun String.fromClasspathFileToLines(): List<String> {
     val url = Common::class.java.classLoader.getResource(this)

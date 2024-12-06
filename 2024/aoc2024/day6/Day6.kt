@@ -38,7 +38,7 @@ private data class Result(val tilesCovered: Int, val loopFormed: Boolean)
 private fun walk(grid: Grid, blocker: Location1616? = null): Result {
     val start = grid.location16Of('^')
     val visited = Array(grid.height) { BooleanArray(grid.width) }.apply { this[start.row()][start.col()] = true }
-    val visitedWithDirection = Array(4) { Array(grid.height) { BooleanArray(grid.width) } }.apply { this[Up.ordinal][start.row()][start.col()] = true }
+    val visitedWithDirection = Array(Facing.entries.size) { Array(grid.height) { BooleanArray(grid.width) } }.apply { this[Up.ordinal][start.row()][start.col()] = true }
 
     var facing = Up
     var next = start
@@ -46,13 +46,13 @@ private fun walk(grid: Grid, blocker: Location1616? = null): Result {
     while (true) {
         val candidate = facing.nextCell(next, 1)
         if (!(candidate isWithin grid)) return Result(count, false)
-        if (visitedWithDirection[facing.ordinal][candidate.row()][candidate.col()]) return Result(count, true)
+        if (visitedWithDirection[facing.ordinal].at(candidate)) return Result(count, true)
 
-        if (candidate == blocker || grid[candidate.row()][candidate.col()] == '#')
+        if (candidate == blocker || grid.at(candidate) == '#')
             facing = facing.turnRight()
         else {
             next = candidate
-            if (!visited[next.row()][next.col()]) {
+            if (!visited.at(next)) {
                 visited[next.row()][next.col()] = true
                 count++
             }
@@ -60,8 +60,6 @@ private fun walk(grid: Grid, blocker: Location1616? = null): Result {
         }
     }
 }
-
-private infix fun Location1616.isWithin(grid: Grid) = row() in grid.rowIndices && col() in grid.colIndices
 
 private enum class Facing(val nextCell: (Location1616, Int) -> Location1616) {
     Up({ pos, amt -> pos.minusRow(amt) }),
