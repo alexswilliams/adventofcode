@@ -9,8 +9,8 @@ private val puzzles = loadFilesToGrids("aoc2023/day17", "input.txt")
 
 internal fun main() {
     Day17.assertCorrect()
-    benchmark(50) { part1(puzzles[0]) } // 55ms
-    benchmark(50) { part2(puzzles[0]) } // 125ms
+    benchmark(50) { part1(puzzles[0]) } // 34ms
+    benchmark(50) { part2(puzzles[0]) } // 80ms
 }
 
 internal object Day17 : Challenge {
@@ -48,7 +48,7 @@ private fun totalHeatLoss(grid: DigitGrid, minStraight: Int, maxStraight: Int): 
     work.offer(Work(start, Heading.Down), 0)
     val shortest = hashMapOf<Work, Int>()
 
-    val neighbours = Array<Work>((maxStraight - minStraight + 1) * 2) { Work(0, Heading.Right) }
+    val neighbours = Array((maxStraight - minStraight + 1) * 2) { Work(0, Heading.Right) }
 
     while (true) {
         val u = work.poll() ?: throw Error("Map explored with no route to target")
@@ -62,6 +62,7 @@ private fun totalHeatLoss(grid: DigitGrid, minStraight: Int, maxStraight: Int): 
                     neighbours[(it - minStraight) * 2] = Work(Heading.Left.nextCell(u.pos, it), Heading.Left)
                     neighbours[(it - minStraight) * 2 + 1] = Work(Heading.Right.nextCell(u.pos, it), Heading.Right)
                 }
+
                 Heading.Left, Heading.Right -> {
                     neighbours[(it - minStraight) * 2] = Work(Heading.Up.nextCell(u.pos, it), Heading.Up)
                     neighbours[(it - minStraight) * 2 + 1] = Work(Heading.Down.nextCell(u.pos, it), Heading.Down)

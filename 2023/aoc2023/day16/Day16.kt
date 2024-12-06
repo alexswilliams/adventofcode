@@ -46,7 +46,7 @@ private fun part2(grid: Grid): Int = runBlocking(Dispatchers.Default) {
 private fun countCellsEnergisedByStartingAt(grid: Grid, startAt: Location1616, startHeading: Heading): Int {
     data class Work(val pos: Location1616, val heading: Heading)
 
-    val work = ArrayDeque<Work>(listOf(Work(startAt, startHeading)))
+    val work = ArrayDeque(listOf(Work(startAt, startHeading)))
     val visitedByDirection = Array(grid.height) { IntArray(grid.width) }
         .apply { this[startAt.row()][startAt.col()] = 1 shl startHeading.ordinal }
 
