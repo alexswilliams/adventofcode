@@ -28,7 +28,7 @@ private fun part1(grid: Grid): Int = visitedOnWalk(grid).countTrue()
 
 private fun part2(grid: Grid): Int = runBlocking(Dispatchers.Default) {
     val start = grid.locationOf('^')
-    visitedOnWalk(grid).filterTrue()
+    visitedOnWalk(grid, start).filterTrue()
         .map { async { walkUntilLoop(grid, it, start) } }.awaitAll()
         .count { it }
 }
