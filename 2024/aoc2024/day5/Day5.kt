@@ -38,8 +38,8 @@ private fun part2(input: List<String>): Int {
             val unsortedPrefix = pageList.toMutableSet()
             var middleItem: Int
             do {
-                val (nextMiddleItem, itemsThatMustFollow) = ruleWithFewestConstraintsStillApplicableToPrefix(ruleset, unsortedPrefix)
-                sortedTail.addAll(itemsThatMustFollow)
+                val nextMiddleItem = ruleWithFewestConstraintsStillApplicableToPrefix(ruleset, unsortedPrefix)
+                ruleset[nextMiddleItem].orEmpty().forEach { if (it in unsortedPrefix) sortedTail.add(it) }
                 sortedTail.add(nextMiddleItem)
                 unsortedPrefix.remove(nextMiddleItem)
                 middleItem = nextMiddleItem
@@ -55,9 +55,8 @@ private fun parsePageLists(input: List<String>) =
     input.takeLastWhile { it.isNotBlank() }.map { it.splitToInts(",") }
 
 private fun pageListIsSorted(pageList: Collection<Int>, ruleset: Map<Int, Set<Int>>): Boolean =
-    with(mutableSetOf<Int>()) { pageList.all { page -> intersect(ruleset[page].orEmpty()).isEmpty().also { add(page) } } }
+    with(mutableListOf<Int>()) { pageList.all { page -> hasNoOverlapWith(ruleset[page].orEmpty()).also { add(page) } } }
 
-private fun ruleWithFewestConstraintsStillApplicableToPrefix(ruleset: Map<Int, Set<Int>>, unsortedPrefix: MutableSet<Int>) =
-    (ruleset.keys intersect unsortedPrefix)
-        .map { leader -> leader to (ruleset[leader].orEmpty() intersect unsortedPrefix) }
-        .minByOrNull { (_, followers) -> followers.size } ?: (unsortedPrefix.first() to emptySet())
+private fun ruleWithFewestConstraintsStillApplicableToPrefix(ruleset: Map<Int, Set<Int>>, unsortedPrefix: Collection<Int>) =
+    (ruleset.keys.filter { it in unsortedPrefix })
+        .minByOrNull { leader -> ruleset[leader].orEmpty().count { it in unsortedPrefix } } ?: unsortedPrefix.first()

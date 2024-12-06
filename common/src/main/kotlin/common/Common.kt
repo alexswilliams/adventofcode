@@ -428,6 +428,12 @@ fun Sequence<Collection<Int>>.intersect(): List<Int> {
     return result
 }
 
+fun <T> Collection<T>.hasNoOverlapWith(other: Iterable<T>): Boolean {
+    for (elem in other)
+        if (elem in this) return false
+    return true
+}
+
 fun neighboursOf(pos: Location1616, grid: Grid, wall: Char, output: IntArray = IntArray(4)): IntArray {
     output[0] = if (pos.col() > 0 && grid[pos.row()][pos.col() - 1] != wall) pos.minusCol() else -1
     output[1] = if (pos.row() > 0 && grid[pos.row() - 1][pos.col()] != wall) pos.minusRow() else -1
