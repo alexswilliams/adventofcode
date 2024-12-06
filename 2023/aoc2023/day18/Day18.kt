@@ -1,15 +1,14 @@
 package aoc2023.day18
 
 import common.*
-import kotlin.math.*
 
 private val examples = loadFilesToLines("aoc2023/day18", "example.txt")
 private val puzzles = loadFilesToLines("aoc2023/day18", "input.txt")
 
 internal fun main() {
     Day18.assertCorrect()
-    benchmark(100) { part1(puzzles[0]) } // 418µs
-    benchmark(1) { part2(puzzles[0]) } // 8.3s :(
+    benchmark(100) { part1(puzzles[0]) } // 1.24ms
+    benchmark(100) { part2(puzzles[0]) } // 914µs
 }
 
 internal object Day18 : Challenge {
@@ -33,45 +32,55 @@ private val directions = mapOf('0' to 'R', '1' to 'D', '2' to 'L', '3' to 'U')
 
 
 private fun countFilledSquares(instructions: List<Pair<Char, Int>>): Long {
-    val vertical = mutableMapOf<Int, MutableList<Pair<Int, Char>>>()
     val horizontal = mutableMapOf<Int, MutableList<Pair<Int, Int>>>()
+    val verticalRanges = mutableListOf<Triple<Int, Char, IntRange>>()
 
     var pos = 0 to 0
     for ((direction, amount) in instructions) {
         when (direction) {
             'L' -> pos = pos.moveH(-amount, horizontal)
             'R' -> pos = pos.moveH(amount, horizontal)
-            'U' -> pos = pos.moveV(-amount, vertical)
-            'D' -> pos = pos.moveV(amount, vertical)
+            'U' -> pos = pos.moveV(-amount, verticalRanges)
+            'D' -> pos = pos.moveV(amount, verticalRanges)
         }
     }
 
-    return vertical.entries.sumOf { (rowIndex, row) ->
-        val scans = row.sortedBy { it.first }.zipWithNext()
-        val horizontalRuns = horizontal[rowIndex].orEmpty()
-        var nextIsInside = true
-        var total = 0L
-        for ((a, b) in scans) {
-            when ("${a.second}${b.second}") {
-                "DD", "UU" ->
-                    total += b.first - a.first
+    val rowsOfInterest = horizontal.keys.sorted()
+    val rowsWithHorizontals = rowsOfInterest
+        .sumOf { rowNumber -> countFilledSquaresInRow(verticalRanges, horizontal, rowNumber) }
+    val rowsWithOnlyVerticals = rowsOfInterest.zipWithNext().filterNot { it.first + 1 == it.second }.map { (a, b) -> (a + 1)..<b }
+        .sumOf { rowRange -> rowRange.size * countFilledSquaresInRow(verticalRanges, horizontal, rowRange.first) }
 
-                "DU", "UD" -> {
-                    total += if (nextIsInside || a.first to b.first in horizontalRuns) b.first - a.first else 1
-                    nextIsInside = !nextIsInside
-                }
-            }
-        }
-        total + 1
-    }
+    return rowsWithHorizontals + rowsWithOnlyVerticals
 }
 
-private fun Pair<Int, Int>.moveH(amount: Int, map: MutableMap<Int, MutableList<Pair<Int, Int>>>): Pair<Int, Int> =
-    (first + amount to second)
-        .also { map.addToListAtKey(second, if (amount < 0) it.first to first else first to it.first) }
+private fun countFilledSquaresInRow(verticalRanges: List<Triple<Int, Char, IntRange>>, horizontal: Map<Int, List<Pair<Int, Int>>>, rowNumber: Int): Long {
+    val scans = verticalRanges.filter { rowNumber in it.third }.sortedBy { it.first }.zipWithNext()
+    val horizontalRuns = horizontal[rowNumber].orEmpty()
+    var nextIsInside = true
+    var total = 0L
+    for ((a, b) in scans) {
+        when ("${a.second}${b.second}") {
+            "DD", "UU" ->
+                total += b.first - a.first
 
-private fun Pair<Int, Int>.moveV(amount: Int, map: MutableMap<Int, MutableList<Pair<Int, Char>>>): Pair<Int, Int> {
-    repeat(abs(amount) + 1) { r -> map.addToListAtKey(second + r * amount.sign, first to (if (amount < 0) 'U' else 'D')) }
+            "DU", "UD" -> {
+                total += if (nextIsInside || a.first to b.first in horizontalRuns) b.first - a.first else 1
+                nextIsInside = !nextIsInside
+            }
+        }
+    }
+    return total + 1
+}
+
+private fun Pair<Int, Int>.moveH(amount: Int, map: MutableMap<Int, MutableList<Pair<Int, Int>>>): Pair<Int, Int> {
+    val next = (first + amount to second)
+    map.addToListAtKey(second, if (amount < 0) next.first to first else first to next.first)
+    return next
+}
+
+private fun Pair<Int, Int>.moveV(amount: Int, verticalRanges: MutableList<Triple<Int, Char, IntRange>>): Pair<Int, Int> {
+    verticalRanges.add(Triple(first, if (amount < 0) 'U' else 'D', if (amount < 0) second + amount..second else second..second + amount))
     return first to second + amount
 }
 
