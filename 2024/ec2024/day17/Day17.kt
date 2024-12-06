@@ -26,7 +26,7 @@ internal object Day17 : Challenge {
 }
 
 private fun part1(input: Grid): Int {
-    val stars = input.mapCartesianNotNull { row, col, char -> if (char == '*') row by16 col else null }
+    val stars = input.allLocationOf('*')
     val edges = distancesBetweenStars(stars).sortedBy { (_, _, distance) -> distance }
 
     val forest = mutableListOf<MutableSet<Location1616>>()
@@ -59,7 +59,7 @@ private fun part1(input: Grid): Int {
 private fun part2(input: Grid): Int = part1(input)
 
 private fun part3(input: Grid): Long {
-    val stars = input.mapCartesianNotNull { row, col, char -> if (char == '*') row by16 col else null }
+    val stars = input.allLocationOf('*')
     val edges = distancesBetweenStars(stars, lengthLimit = 6)
     val closeEdges = edges.sortedBy { (_, _, distance) -> distance }
 

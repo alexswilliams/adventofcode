@@ -29,7 +29,7 @@ internal object Day15 : Challenge {
 private fun part1(input: List<String>): Int {
     val grid = input.asArrayOfCharArrays()
     val start = 0 by16 grid[0].indexOf('.')
-    val herbs = grid.mapCartesianNotNull { row, col, char -> if (char == 'H') row by16 col else null }
+    val herbs = grid.allLocationOf('H')
     return 2 * aStarSearch(herbs.map { it to 0 }, start, grid)
 }
 

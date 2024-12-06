@@ -39,7 +39,7 @@ private fun part2(input: Grid): Int =
 private fun part3(input: Grid): Int {
     val grid = fillDeadEnds(input)
     val distances = mutableMapOf<Location1616, Int>()
-    val trees = grid.mapCartesianNotNull { row, col, char -> if (char == 'P') row by16 col else null }
+    val trees = grid.allLocationOf('P')
     trees.forEach { tree -> distancesFromTree(grid, tree) { pos, dist -> distances.compute(pos) { _, distanceSoFar -> (distanceSoFar ?: 0) + dist } } }
     return distances.values.min()
 }

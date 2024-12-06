@@ -23,7 +23,7 @@ internal object Day4 : Challenge {
 
 
 private fun part1(grid: Grid): Int =
-    grid.mapCartesianNotNull { row, col, char -> if (char == 'X') row by16 col else null }
+    grid.allLocationOf('X')
         .sumOf { center -> ALL_8_DIRECTIONS.count { grid.cellsEqualTo("MAS", center, it) } }
 
 private fun part2(grid: Grid): Int =

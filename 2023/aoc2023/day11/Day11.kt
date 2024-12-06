@@ -31,8 +31,8 @@ private fun sumDistances(expanded: List<Location>): Long = expanded.sumOfIndexed
 }
 
 private fun expandGalaxy(input: Grid, scaleFactor: Int): List<Location> {
-    val galaxies = input.mapCartesianNotNull { rowNum, colNum, c -> if (c == '#') rowNum by colNum else null }
-    val blankRowsBefore = (input.indices).runningFold(0) { prev: Int, index: Int -> if (galaxies.any { it.rowInt() == index + 1 }) prev else prev + 1 }
-    val blankColsBefore = (input[0].indices).runningFold(0) { prev: Int, index: Int -> if (galaxies.any { it.colInt() == index + 1 }) prev else prev + 1 }
-    return galaxies.map { galaxy -> (galaxy.row() + blankRowsBefore[galaxy.rowInt()] * (scaleFactor - 1)) by (galaxy.col() + blankColsBefore[galaxy.colInt()] * (scaleFactor - 1)) }
+    val galaxies = input.allLocationOf('#')
+    val blankRowsBefore = (input.indices).runningFold(0) { prev: Int, index: Int -> if (galaxies.any { it.row() == index + 1 }) prev else prev + 1 }
+    val blankColsBefore = (input[0].indices).runningFold(0) { prev: Int, index: Int -> if (galaxies.any { it.col() == index + 1 }) prev else prev + 1 }
+    return galaxies.map { galaxy -> (galaxy.row() + blankRowsBefore[galaxy.row()] * (scaleFactor - 1)) by (galaxy.col() + blankColsBefore[galaxy.col()] * (scaleFactor - 1)) }
 }

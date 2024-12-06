@@ -21,6 +21,18 @@ val Grid.colIndices get() = this[0].indices
 fun Grid.at(pos: Location1616) = this[pos.row()][pos.col()]
 infix fun Location1616.isWithin(grid: Grid) = row() in grid.rowIndices && col() in grid.colIndices
 
+fun Grid.subGrid(startRow: Int, startCol: Int, width: Int, height: Int): Grid =
+    Array(height) { r -> this[startRow + r].copyOfRange(startCol, startCol + width) }
+
+fun Grid.locationOf(ch: Char): Location1616 {
+    val startRowIndex = indexOfFirst { ch in it }
+    return startRowIndex by16 this[startRowIndex].indexOf(ch)
+}
+
+fun Grid.allLocationOf(ch: Char): List<Location1616> {
+    return this.mapCartesianNotNull { row, col, char -> if (char == ch) row by16 col else null }
+}
+
 val DigitGrid.height get() = this.size
 val DigitGrid.width get() = this[0].size
 val DigitGrid.rowIndices get() = this.indices
@@ -49,13 +61,6 @@ fun loadFilesToGrids(root: String, vararg files: String): List<Grid> = files.map
 fun List<String>.splitOnSpaces() = map { it.split(' ') }
 fun List<CharArray>.splitArrayOnSpaces() = map { it.concatToString().split(' ') }
 fun List<String>.asArrayOfCharArrays(): Grid = Array(size) { r -> this[r].toCharArray() }
-fun Grid.subGrid(startRow: Int, startCol: Int, width: Int, height: Int): Grid =
-    Array(height) { r -> this[startRow + r].copyOfRange(startCol, startCol + width) }
-
-fun Grid.location16Of(ch: Char): Location1616 {
-    val startRowIndex = indexOfFirst { ch in it }
-    return startRowIndex by16 this[startRowIndex].indexOf(ch)
-}
 
 fun LongRange.intersecting(other: LongRange) = LongRange(max(first, other.first), min(last, other.last))
 fun LongRange.shiftedUpBy(other: Long) = LongRange(first + other, last + other)

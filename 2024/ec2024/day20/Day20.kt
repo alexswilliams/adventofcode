@@ -30,7 +30,7 @@ internal object Day20 : Challenge {
 
 private fun part1(grid: Grid): Int {
     fillDeadEnds(grid)
-    val start = grid.location16Of('S')
+    val start = grid.locationOf('S')
 
     data class Work(val position: Location1616, val previous: Location1616, val timeLeft: Int, val height: Int)
 
@@ -57,7 +57,7 @@ private fun part1(grid: Grid): Int {
 
 private fun part2(grid: Grid): Int {
     fillDeadEnds(grid)
-    val start = grid.location16Of('S')
+    val start = grid.locationOf('S')
     val heightBounds = (10_000 - (grid.size + grid[0].size) * 4)..(10_000 + (grid.size + grid[0].size) * 4)
 
     data class Work(val position: Location1616, val previous: Location1616, val timeElapsed: Int, val collected: Int)
@@ -95,7 +95,7 @@ private fun part2(grid: Grid): Int {
 
 private fun part3(grid: Grid): Int {
     fillDeadEnds(grid)
-    val start = grid.location16Of('S')
+    val start = grid.locationOf('S')
 
     // observation - after a short preamble, flying down one column yields the best solutions
     val lossFromColumns =

@@ -27,7 +27,7 @@ internal object Day6 : Challenge {
 private fun part1(grid: Grid): Int = walk(grid).tilesCovered
 
 private fun part2(grid: Grid): Int = runBlocking(Dispatchers.Default) {
-    grid.mapCartesianNotNull { row, col, char -> if (char == '.') row by16 col else null }
+    grid.allLocationOf('.')
         .map { async { walk(grid, it) } }.awaitAll()
         .count { it.loopFormed }
 }
@@ -36,7 +36,7 @@ private fun part2(grid: Grid): Int = runBlocking(Dispatchers.Default) {
 private data class Result(val tilesCovered: Int, val loopFormed: Boolean)
 
 private fun walk(grid: Grid, blocker: Location1616? = null): Result {
-    val start = grid.location16Of('^')
+    val start = grid.locationOf('^')
     val visited = Array(grid.height) { BooleanArray(grid.width) }.apply { this[start.row()][start.col()] = true }
     val visitedWithDirection = Array(Facing.entries.size) { Array(grid.height) { BooleanArray(grid.width) } }.apply { this[Up.ordinal][start.row()][start.col()] = true }
 

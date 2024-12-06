@@ -32,8 +32,8 @@ private fun part3(input: Grid): Int = shortestPathLength(input)
 
 private fun shortestPathLength(input: Grid): Int =
     aStarSearch(
-        starts = input.mapCartesianNotNull { row, col, char -> if (char == 'S') row by16 col else null },
-        end = input.mapCartesianNotNull { row, col, char -> if (char == 'E') row by16 col else null }.single(),
+        starts = input.allLocationOf('S'),
+        end = input.locationOf('E'),
         grid = input
     )
 
