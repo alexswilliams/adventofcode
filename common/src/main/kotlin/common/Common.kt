@@ -40,6 +40,21 @@ val DigitGrid.colIndices get() = this[0].indices
 fun DigitGrid.at(pos: Location1616) = this[pos.row()][pos.col()]
 
 fun BooleanGrid.at(pos: Location1616) = this[pos.row()][pos.col()]
+fun BooleanGrid.filterTrue(): List<Location1616> {
+    val result = ArrayList<Location1616>(this.size * 10)
+    this.forEachIndexed { rowNum, row ->
+        row.forEachIndexed { colNum, c ->
+            if (c) result.add(rowNum by16 colNum)
+        }
+    }
+    return result
+}
+
+fun BooleanGrid.countTrue(): Int {
+    var result = 0
+    this.forEach { row -> result += row.count { it } }
+    return result
+}
 
 fun String.fromClasspathFileToLines(): List<String> {
     val url = Common::class.java.classLoader.getResource(this)
