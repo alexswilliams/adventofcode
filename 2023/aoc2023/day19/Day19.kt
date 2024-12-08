@@ -9,8 +9,8 @@ private val puzzle = loadFilesToLines("aoc2023/day19", "input.txt").single()
 
 internal fun main() {
     Day19.assertCorrect()
-    benchmark { part1(puzzle) } // 457µs
-    benchmark { part2(puzzle) } // 145µs
+    benchmark { part1(puzzle) } // 203µs
+    benchmark { part2(puzzle) } // 142µs
 }
 
 internal object Day19 : Challenge {
@@ -24,33 +24,44 @@ internal object Day19 : Challenge {
 }
 
 private data class Part(val x: Int, val m: Int, val a: Int, val s: Int)
-private data class Condition(val text: String, val predicate: (Part) -> Boolean, val sink: String)
+private data class Condition(val predicate: (Part) -> Boolean, val sink: String)
 private data class Rule(val name: String, val defaultSink: String, val conditions: List<Condition>)
 
 private fun part1(input: List<String>): Int {
-    val parts = input.takeLastWhile { it.isNotBlank() }.mapMatching(Regex("\\{x=(\\d+),m=(\\d+),a=(\\d+),s=(\\d+)}")).map { (x, m, a, s) -> Part(x.toInt(), m.toInt(), a.toInt(), s.toInt()) }
-    val ruleset = input.takeWhile { it.isNotBlank() }.map {
+    val parts = input.asSequence().dropWhile { it.isNotBlank() }.drop(1)
+        .map { line ->
+            val x = line.toIntFromIndex(3)
+            val mIndex = line.indexOf('=', 6)
+            val m = line.toIntFromIndex(mIndex + 1)
+            val aIndex = line.indexOf('=', mIndex + 4)
+            val a = line.toIntFromIndex(aIndex + 1)
+            val sIndex = line.indexOf('=', aIndex + 4)
+            val s = line.toIntFromIndex(sIndex + 1)
+            Part(x, m, a, s)
+        }
+    val ruleset = input.asSequence().takeWhile { it.isNotBlank() }.map { rule ->
+        val name = rule.substringBefore('{')
+        val defaultSink = rule.substring(rule.lastIndexOf(',') + 1, rule.length - 1)
         Rule(
-            name = it.substringBefore('{'),
-            defaultSink = it.substringAfterLast(',').dropLast(1),
-            conditions = it.substringAfter('{').substringBeforeLast(',').split(',').map { c ->
-                val amount = c.drop(2).substringBeforeLast(':').toInt()
-                Condition(
-                    text = c,
-                    predicate = when (c.take(2)) {
-                        "x<" -> { part -> part.x < amount }
-                        "x>" -> { part -> part.x > amount }
-                        "m<" -> { part -> part.m < amount }
-                        "m>" -> { part -> part.m > amount }
-                        "a<" -> { part -> part.a < amount }
-                        "a>" -> { part -> part.a > amount }
-                        "s<" -> { part -> part.s < amount }
-                        "s>" -> { part -> part.s > amount }
-                        else -> error("Invalid Rule: $c")
-                    },
-                    sink = c.substringAfterLast(':')
-                )
-            })
+            name = name,
+            defaultSink = defaultSink,
+            conditions = rule.substring(name.length + 1, rule.length - defaultSink.length - 2)
+                .splitMappingRanges(",") { it, start, end ->
+                    val amount = it.toIntFromIndex(start + 2)
+                    Condition(
+                        predicate = when (it.substring(start, start + 2)) {
+                            "x<" -> { part -> part.x < amount }
+                            "x>" -> { part -> part.x > amount }
+                            "m<" -> { part -> part.m < amount }
+                            "m>" -> { part -> part.m > amount }
+                            "a<" -> { part -> part.a < amount }
+                            "a>" -> { part -> part.a > amount }
+                            "s<" -> { part -> part.s < amount }
+                            "s>" -> { part -> part.s > amount }
+                            else -> error("Invalid Rule: ${it.substring(start, end + 1)}")
+                        },
+                        sink = it.substring(it.lastIndexOf(':', end) + 1, end + 1))
+                })
     }.associateBy { it.name }
     return parts.filter { part -> isAccepted(ruleset, part) }.sumOf { it.x + it.m + it.a + it.s }
 }
@@ -67,12 +78,17 @@ private fun isAccepted(ruleset: Map<String, Rule>, part: Part): Boolean {
     } while (true)
 }
 
+private fun part2(input: List<String>): Long =
+    validRanges(parseRuleset(input), "in", 1..4000, 1..4000, 1..4000, 1..4000)
+        .sumOf { 1L * it.x.size * it.m.size * it.a.size * it.s.size }
+
+
 private data class Rule2(val name: String, val defaultSink: String, val conditions: List<Condition2>)
 private data class Condition2(val field: Char, val sign: Char, val number: Int, val targetRule: String)
 private data class XmasRange(val x: IntRange, val m: IntRange, val a: IntRange, val s: IntRange)
 
-private fun part2(input: List<String>): Long {
-    val ruleset = input.asSequence()
+private fun parseRuleset(input: List<String>): Map<String, Rule2> =
+    input.asSequence()
         .takeWhile { it.isNotBlank() }
         .map { rule ->
             val name = rule.substringBefore('{')
@@ -81,10 +97,6 @@ private fun part2(input: List<String>): Long {
                 .splitMappingRanges(",") { it, start, end -> Condition2(it[start], it[start + 1], it.toIntFromIndex(start + 2), it.substring(it.lastIndexOf(':', end) + 1, end + 1)) }
             Rule2(name, defaultSink, conditions)
         }.associateBy { it.name }
-
-    return validRanges(ruleset, "in", 1..4000, 1..4000, 1..4000, 1..4000)
-        .sumOf { 1L * it.x.size * it.m.size * it.a.size * it.s.size }
-}
 
 private fun constrain(i: IntRange, c: Condition2, fieldName: Char): IntRange =
     if (c.field != fieldName) i
