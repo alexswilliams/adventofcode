@@ -8,7 +8,7 @@ private val puzzle = loadFilesToGrids("aoc2024/day8", "input.txt").single()
 internal fun main() {
     Day8.assertCorrect()
     benchmark { part1(puzzle) } // 52µs
-    benchmark(10) { part2(puzzle) } // 302µs
+    benchmark(10) { part2(puzzle) } // 167µs
 }
 
 internal object Day8 : Challenge {
@@ -40,25 +40,30 @@ private fun part1(grid: Grid): Int =
 private fun part2(grid: Grid): Int =
     buildSet {
         findReflectingAntennae(grid).forEach { (_, nodes) ->
-            nodes.forEach { (_, pos) ->
-                nodes.forEach { (_, otherPos) ->
-                    if (pos != otherPos) {
-                        add(otherPos)
-                        val hDist = pos.col() - otherPos.col()
-                        val vDist = pos.row() - otherPos.row()
-                        var i = 1
-                        var antiNode = (otherPos.row() - vDist * i) by16 (otherPos.col() - hDist * i)
-                        while (antiNode isWithin grid) {
-                            add(antiNode)
-                            i++
-                            antiNode = (otherPos.row() - vDist * i) by16 (otherPos.col() - hDist * i)
-                        }
-                    }
+            nodes.forEachIndexed { n, (_, pos) ->
+                for (m in (n + 1)..nodes.lastIndex) {
+                    val otherPos = nodes[m].second
+                    val vDist = pos.row() - otherPos.row()
+                    val hDist = pos.col() - otherPos.col()
+                    add(otherPos)
+                    addAntiNodes(otherPos, vDist, hDist, grid, 1)
+                    add(pos)
+                    addAntiNodes(pos, vDist, hDist, grid, -1)
                 }
             }
         }
     }.size
 
+
+private fun MutableSet<Location1616>.addAntiNodes(otherPos: Location1616, vDist: Int, hDist: Int, grid: Grid, step: Int) {
+    var i = step
+    var antiNode = (otherPos.row() - vDist * i) by16 (otherPos.col() - hDist * i)
+    while (antiNode isWithin grid) {
+        add(antiNode)
+        i += step
+        antiNode = (otherPos.row() - vDist * i) by16 (otherPos.col() - hDist * i)
+    }
+}
 
 private fun findReflectingAntennae(grid: Grid) = grid
     .mapCartesianNotNull { row, col, char -> if (char != '.') char to (row by16 col) else null }
