@@ -8,7 +8,7 @@ private val puzzle = loadFilesToGrids("aoc2024/day8", "input.txt").single()
 internal fun main() {
     Day8.assertCorrect()
     benchmark { part1(puzzle) } // 52µs
-    benchmark(10) { part2(puzzle) } // 167µs
+    benchmark { part2(puzzle) } // 48µs
 }
 
 internal object Day8 : Challenge {
