@@ -8,7 +8,7 @@ private val puzzle = loadFilesToGrids("aoc2024/day8", "input.txt").single()
 internal fun main() {
     Day8.assertCorrect()
     benchmark { part1(puzzle) } // 52µs
-    benchmark(10) { part2(puzzle) } // 325µs
+    benchmark(10) { part2(puzzle) } // 302µs
 }
 
 internal object Day8 : Challenge {
@@ -43,7 +43,6 @@ private fun part2(grid: Grid): Int =
             nodes.forEach { (_, pos) ->
                 nodes.forEach { (_, otherPos) ->
                     if (pos != otherPos) {
-                        add(pos)
                         add(otherPos)
                         val hDist = pos.col() - otherPos.col()
                         val vDist = pos.row() - otherPos.row()
