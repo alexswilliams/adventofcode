@@ -7,8 +7,8 @@ private val puzzle = loadFilesToGrids("aoc2024/day8", "input.txt").single()
 
 internal fun main() {
     Day8.assertCorrect()
-    benchmark { part1(puzzle) } // 52µs
-    benchmark { part2(puzzle) } // 48µs
+    benchmark(10000) { part1(puzzle) } // 18µs
+    benchmark(10000) { part2(puzzle) } // 34µs
 }
 
 internal object Day8 : Challenge {
@@ -25,9 +25,9 @@ internal object Day8 : Challenge {
 
 private fun part1(grid: Grid): Int =
     buildSet {
-        findReflectingAntennae(grid).forEach { (_, nodes) ->
-            nodes.forEach { (_, pos) ->
-                nodes.forEach { (_, otherPos) ->
+        findReflectingAntennae(grid).forEach { nodes ->
+            nodes.forEach { pos ->
+                nodes.forEach { otherPos ->
                     if (pos != otherPos) {
                         val antiNode = (2 * otherPos.row() - pos.row()) by16 (2 * otherPos.col() - pos.col())
                         if (antiNode isWithin grid) add(antiNode)
@@ -39,34 +39,34 @@ private fun part1(grid: Grid): Int =
 
 private fun part2(grid: Grid): Int =
     buildSet {
-        findReflectingAntennae(grid).forEach { (_, nodes) ->
-            nodes.forEachIndexed { n, (_, pos) ->
+        findReflectingAntennae(grid).forEach { nodes ->
+            nodes.forEachIndexed { n, pos ->
                 for (m in (n + 1)..nodes.lastIndex) {
-                    val otherPos = nodes[m].second
+                    val otherPos = nodes[m]
                     val vDist = pos.row() - otherPos.row()
                     val hDist = pos.col() - otherPos.col()
-                    add(otherPos)
-                    addAntiNodes(otherPos, vDist, hDist, grid, 1)
                     add(pos)
-                    addAntiNodes(pos, vDist, hDist, grid, -1)
+                    add(otherPos)
+                    addAntiNodes(pos, -vDist, -hDist, grid)
+                    addAntiNodes(otherPos, vDist, hDist, grid)
                 }
             }
         }
     }.size
 
 
-private fun MutableSet<Location1616>.addAntiNodes(otherPos: Location1616, vDist: Int, hDist: Int, grid: Grid, step: Int) {
-    var i = step
-    var antiNode = (otherPos.row() - vDist * i) by16 (otherPos.col() - hDist * i)
+private fun MutableSet<Location1616>.addAntiNodes(antenna: Location1616, vDist: Int, hDist: Int, grid: Grid) {
+    var i = 1
+    var antiNode = (antenna.row() - vDist * i) by16 (antenna.col() - hDist * i)
     while (antiNode isWithin grid) {
         add(antiNode)
-        i += step
-        antiNode = (otherPos.row() - vDist * i) by16 (otherPos.col() - hDist * i)
+        i++
+        antiNode = (antenna.row() - vDist * i) by16 (antenna.col() - hDist * i)
     }
 }
 
-private fun findReflectingAntennae(grid: Grid) = grid
-    .mapCartesianNotNull { row, col, char -> if (char != '.') char to (row by16 col) else null }
-    .groupBy { it.first }.entries
-    .asSequence()
-    .filterNot { it.value.size == 1 }
+private fun findReflectingAntennae(grid: Grid): Sequence<List<Location1616>> {
+    val byChar = mutableMapOf<Char, MutableList<Location1616>>()
+    grid.forEachIndexed { rowNum, row -> row.forEachIndexed { colNum, c -> if (c != '.') byChar.getOrPut(c) { mutableListOf() }.add(rowNum by16 colNum) } }
+    return byChar.values.asSequence().filterNot { it.size == 1 }
+}
