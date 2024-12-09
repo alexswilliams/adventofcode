@@ -11,7 +11,7 @@ private val puzzle = loadFiles("aoc2024/day9", "input.txt").single().toCharArray
 internal fun main() {
     Day9.assertCorrect()
     benchmark { part1(puzzle) } // 350µs
-    benchmark(10) { part2(puzzle) } // 57ms :(
+    benchmark(10) { part2(puzzle) } // 35.3ms :(
 }
 
 internal object Day9 : Challenge {
@@ -33,6 +33,7 @@ private fun part1(input: CharArray): Long {
         val gap = freeSpaceMap.removeFirst()
         val lastFile = unmovedFiles.pop()
         checksumForRelocatedFiles += checksum(lastFile.id, gap.startIndex, min(gap.length, lastFile.length))
+
         if (gap.length < lastFile.length)
             unmovedFiles.push(File(lastFile.id, lastFile.startIndex, lastFile.length - gap.length))
         else if (lastFile.length < gap.length)
@@ -49,7 +50,7 @@ private fun part2(input: CharArray): Long {
 
     while (originalFiles.isNotEmpty() && freeSpaceMap.isNotEmpty() && originalFiles.peek().startIndex > freeSpaceMap.first().startIndex) {
         val file = originalFiles.pop()
-        val indexOfGap = findFirstGap(freeSpaceMap, file)
+        val indexOfGap = findFirstGapForWholeFile(freeSpaceMap, file)
         if (indexOfGap >= 0) {
             val gap = freeSpaceMap[indexOfGap]
             checksumForRelocatedFiles += checksum(file.id, gap.startIndex, file.length)
@@ -62,18 +63,18 @@ private fun part2(input: CharArray): Long {
     return checksumForRelocatedFiles + checksumForConsideredButUnchangedFiles + originalFiles.sumOf { it.checksum() }
 }
 
-private fun findFirstGap(freeSpaceMap: ArrayDeque<FreeSpace>, file: File): Int {
-    return freeSpaceMap.indexOfFirst { it.length >= file.length && it.startIndex < file.startIndex }
-}
 
-private data class File(val id: Long, val startIndex: Int, val length: Int) {
+private data class File(val id: Int, val startIndex: Int, val length: Int) {
     fun checksum() = checksum(id, startIndex, length)
 }
 
 private data class FreeSpace(val startIndex: Int, val length: Int)
 
 
-private fun checksum(id: Long, startIndex: Int, length: Int): Long = id * (startIndex * length + (length * (length - 1) / 2))
+private fun checksum(id: Int, startIndex: Int, length: Int): Long = id.toLong() * (startIndex * length + (length * (length - 1) / 2))
+
+private fun findFirstGapForWholeFile(freeSpaceMap: List<FreeSpace>, file: File): Int =
+    freeSpaceMap.indexOfFirst { it.length >= file.length && it.startIndex < file.startIndex }
 
 private fun parseInputToFilesAndFreeSpace(input: CharArray): Pair<Stack<File>, ArrayDeque<FreeSpace>> {
     val unmovedFiles = Stack<File>()
@@ -81,7 +82,7 @@ private fun parseInputToFilesAndFreeSpace(input: CharArray): Pair<Stack<File>, A
 
     var startIndex = 0
     for (id in 0..input.size / 2) {
-        unmovedFiles.push(File(id.toLong(), startIndex, input[id * 2].digitToInt()))
+        unmovedFiles.push(File(id, startIndex, input[id * 2].digitToInt()))
         startIndex += input[id * 2].digitToInt()
         if (id * 2 + 1 <= input.lastIndex) {
             freeSpaceMap.addLast(FreeSpace(startIndex, input[id * 2 + 1].digitToInt()))
