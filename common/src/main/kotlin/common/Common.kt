@@ -21,6 +21,15 @@ val Grid.colIndices get() = this[0].indices
 fun Grid.at(pos: Location1616) = this[pos.row()][pos.col()]
 infix fun Location1616.isWithin(grid: Grid) = row() in grid.rowIndices && col() in grid.colIndices
 
+fun DigitGrid.locationOf(i: Int): Location1616 {
+    val startRowIndex = indexOfFirst { i in it }
+    return startRowIndex by16 this[startRowIndex].indexOf(i)
+}
+
+fun DigitGrid.allLocationOf(i: Int): List<Location1616> {
+    return this.mapCartesianNotNull { row, col, int -> if (int == i) row by16 col else null }
+}
+
 fun Grid.subGrid(startRow: Int, startCol: Int, width: Int, height: Int): Grid =
     Array(height) { r -> this[startRow + r].copyOfRange(startCol, startCol + width) }
 
@@ -383,6 +392,18 @@ inline fun <R> Grid.mapCartesianNotNull(transform: (row: Int, col: Int, char: Ch
     this.forEachIndexed { rowNum, row ->
         row.forEachIndexed { colNum, c ->
             val transformed = transform(rowNum, colNum, c)
+            if (transformed != null) {
+                result.add(transformed)
+            }
+        }
+    }
+    return result
+}
+inline fun <R> DigitGrid.mapCartesianNotNull(transform: (row: Int, col: Int, char: Int) -> R?): List<R> {
+    val result = ArrayList<R>(this.size * 10)
+    this.forEachIndexed { rowNum, row ->
+        row.forEachIndexed { colNum, i ->
+            val transformed = transform(rowNum, colNum, i)
             if (transformed != null) {
                 result.add(transformed)
             }
