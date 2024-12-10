@@ -7,8 +7,8 @@ private val puzzle = loadFilesToGrids("aoc2024/day10", "input.txt").single()
 
 internal fun main() {
     Day10.assertCorrect()
-    benchmark { part1(puzzle) } // 325µs
-    benchmark { part2(puzzle) } // 164µs
+    benchmark { part1(puzzle) } // 306µs
+    benchmark { part2(puzzle) } // 148µs
 }
 
 internal object Day10 : Challenge {
@@ -37,15 +37,14 @@ private fun part1(grid: Grid): Int {
     val neighbours = IntArray(4)
 
     while (true) {
-        val pos = work.removeFirstOrNull() ?: return tops.sumOf { reachableByStart[it.row()][it.col()].count { b -> b } }
-        val startsSeenBefore = reachableByStart[pos.row()][pos.col()]
-        for (n in neighboursOf(pos, grid, neighbours)) {
+        val pos = work.removeFirstOrNull() ?: break
+        for (n in neighboursOf(pos, grid, neighbours) { it == grid.at(pos) + 1 }) {
             if (n == -1) continue
-            if (grid.at(n) != grid.at(pos) + 1) continue
-            startsSeenBefore.forEachIndexed { index, b -> reachableByStart[n.row()][n.col()][index] = reachableByStart[n.row()][n.col()][index] or b }
+            reachableByStart[pos.row()][pos.col()].forEachIndexed { index, b -> reachableByStart[n.row()][n.col()][index] = reachableByStart[n.row()][n.col()][index] or b }
             work.addLast(n)
         }
     }
+    return tops.sumOf { reachableByStart[it.row()][it.col()].countTrue() }
 }
 
 
@@ -59,7 +58,7 @@ private fun part2(grid: Grid): Int {
     val neighbours = IntArray(4)
 
     while (true) {
-        val pos = work.removeFirstOrNull() ?: return tops.sumOf { reachableByStart[it.row()][it.col()] }
+        val pos = work.removeFirstOrNull() ?: break
         for (n in neighboursOf(pos, grid, neighbours)) {
             if (n == -1) continue
             if (grid.at(n) != grid.at(pos) + 1) continue
@@ -67,4 +66,5 @@ private fun part2(grid: Grid): Int {
             work.addLast(n)
         }
     }
+    return tops.sumOf { reachableByStart[it.row()][it.col()] }
 }

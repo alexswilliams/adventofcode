@@ -65,6 +65,8 @@ fun BooleanGrid.countTrue(): Int {
     return result
 }
 
+fun BooleanArray.countTrue(): Int = this.count { it }
+
 fun String.fromClasspathFileToLines(): List<String> {
     val url = Common::class.java.classLoader.getResource(this)
         ?: throw Exception("Could not find file '$this'")
@@ -399,6 +401,7 @@ inline fun <R> Grid.mapCartesianNotNull(transform: (row: Int, col: Int, char: Ch
     }
     return result
 }
+
 inline fun <R> DigitGrid.mapCartesianNotNull(transform: (row: Int, col: Int, char: Int) -> R?): List<R> {
     val result = ArrayList<R>(this.size * 10)
     this.forEachIndexed { rowNum, row ->
@@ -494,6 +497,14 @@ fun neighboursOf(pos: Location1616, grid: Grid, output: IntArray = IntArray(4)):
     output[1] = if (pos.row() > 0) pos.minusRow() else -1
     output[2] = if (pos.col() < grid[0].lastIndex) pos.plusCol() else -1
     output[3] = if (pos.row() < grid.lastIndex) pos.plusRow() else -1
+    return output
+}
+
+fun neighboursOf(pos: Location1616, grid: Grid, output: IntArray = IntArray(4), admit: (ch: Char) -> Boolean): IntArray {
+    output[0] = if (pos.col() > 0 && admit(grid.at(pos.minusCol()))) pos.minusCol() else -1
+    output[1] = if (pos.row() > 0 && admit(grid.at(pos.minusRow()))) pos.minusRow() else -1
+    output[2] = if (pos.col() < grid[0].lastIndex && admit(grid.at(pos.plusCol()))) pos.plusCol() else -1
+    output[3] = if (pos.row() < grid.lastIndex && admit(grid.at(pos.plusRow()))) pos.plusRow() else -1
     return output
 }
 
