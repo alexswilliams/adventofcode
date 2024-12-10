@@ -10,8 +10,8 @@ private val puzzle = loadFiles("aoc2024/day9", "input.txt").single().toCharArray
 
 internal fun main() {
     Day9.assertCorrect()
-    benchmark { part1(puzzle) } // 350µs
-    benchmark(10) { part2(puzzle) } // 35.3ms :(
+    benchmark { part1(puzzle) } // 316µs
+    benchmark { part2(puzzle) } // 9.3ms
 }
 
 internal object Day9 : Challenge {
@@ -82,11 +82,13 @@ private fun parseInputToFilesAndFreeSpace(input: CharArray): Pair<Stack<File>, A
 
     var startIndex = 0
     for (id in 0..input.size / 2) {
-        unmovedFiles.push(File(id, startIndex, input[id * 2].digitToInt()))
-        startIndex += input[id * 2].digitToInt()
+        val fileLength = input[id * 2].digitToInt()
+        if (fileLength > 0) unmovedFiles.push(File(id, startIndex, fileLength))
+        startIndex += fileLength
         if (id * 2 + 1 <= input.lastIndex) {
-            freeSpaceMap.addLast(FreeSpace(startIndex, input[id * 2 + 1].digitToInt()))
-            startIndex += input[id * 2 + 1].digitToInt()
+            val gapLength = input[id * 2 + 1].digitToInt()
+            if (gapLength > 0) freeSpaceMap.addLast(FreeSpace(startIndex, gapLength))
+            startIndex += gapLength
         }
     }
     return Pair(unmovedFiles, freeSpaceMap)
