@@ -8,8 +8,8 @@ private val puzzle = loadFilesToLines("aoc2024/day1", "input.txt").single()
 
 internal fun main() {
     Day1.assertCorrect()
-    benchmark { part1(puzzle) } // 552µs
-    benchmark { part2(puzzle) } // 764µs
+    benchmark { part1(puzzle) } // 385µs
+    benchmark { part2(puzzle) } // 464µs
 }
 
 internal object Day1 : Challenge {
