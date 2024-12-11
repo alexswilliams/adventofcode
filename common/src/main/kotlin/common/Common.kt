@@ -609,3 +609,9 @@ fun <T> List<T>.anyIndexed(predicate: (index: Int, T) -> Boolean): Boolean {
     }
     return false
 }
+
+inline fun <T, K, V> Iterable<T>.groupByToSet(keySelector: (T) -> K, valueTransform: (T) -> V): MutableMap<K, MutableSet<V>> {
+    val destination = LinkedHashMap<K, MutableSet<V>>()
+    for (element in this) destination.getOrPut(keySelector(element)) { LinkedHashSet(20) }.add(valueTransform(element))
+    return destination
+}

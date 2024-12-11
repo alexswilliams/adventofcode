@@ -7,8 +7,8 @@ private val puzzle = loadFilesToLines("aoc2024/day5", "input.txt").single()
 
 internal fun main() {
     Day5.assertCorrect()
-    benchmark { part1(puzzle) } // 470µs
-    benchmark { part2(puzzle) } // 436µs
+    benchmark { part1(puzzle) } // 400µs
+    benchmark { part2(puzzle) } // 414µs
 }
 
 internal object Day5 : Challenge {
@@ -43,7 +43,7 @@ private fun part2(input: List<String>): Int {
 }
 
 private fun parseRuleset(input: List<String>) =
-    input.takeWhile { it.isNotBlank() }.map { it.split("|") }.groupBy({ it[0].toInt() }, { it[1].toInt() }).mapValues { it.value.toSet() }
+    input.takeWhile { it.isNotBlank() }.groupByToSet({ it.toIntFromIndex(0) }, { it.toIntFromIndex(3) })
 
 private fun parsePageLists(input: List<String>) =
     input.takeLastWhile { it.isNotBlank() }.map { it.splitToInts(",") }
