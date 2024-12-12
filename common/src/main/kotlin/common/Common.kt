@@ -415,6 +415,19 @@ inline fun <R> DigitGrid.mapCartesianNotNull(transform: (row: Int, col: Int, cha
     return result
 }
 
+fun Grid.allLocations(): List<Location1616> = allLocationsWhere { _, _, _ -> true }
+inline fun Grid.allLocationsWhere(predicate: (row: Int, col: Int, char: Char) -> Boolean): List<Location1616> {
+    val result = ArrayList<Location1616>(this.size * 10)
+    this.forEachIndexed { rowNum, row ->
+        row.forEachIndexed { colNum, c ->
+            if (predicate(rowNum, colNum, c)) {
+                result.add(rowNum by16 colNum)
+            }
+        }
+    }
+    return result
+}
+
 fun String.countOccurrences(s: String): Int {
     var count = 0
     this.indices.forEach { index ->

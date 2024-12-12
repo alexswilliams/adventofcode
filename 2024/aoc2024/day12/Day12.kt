@@ -7,8 +7,8 @@ private val puzzle = loadFilesToGrids("aoc2024/day12", "input.txt").single()
 
 internal fun main() {
     Day12.assertCorrect()
-    benchmark(10) { part1(puzzle) } // 29.3ms
-    benchmark(10) { part2(puzzle) } // 48.6ms
+    benchmark(10) { part1(puzzle) } // 13.9ms
+    benchmark(10) { part2(puzzle) } // 12.8ms
 }
 
 internal object Day12 : Challenge {
@@ -28,122 +28,69 @@ internal object Day12 : Challenge {
 
 
 private fun part1(grid: Grid): Int {
-    val bordersBeneath = grid.mapCartesianNotNull { row, col, char -> if (row == grid.lastIndex || char != grid[row + 1][col]) char to (row by16 col) else null }.groupBy({ it.first }) { it.second }
-    val bordersAbove = grid.mapCartesianNotNull { row, col, char -> if (row == 0 || char != grid[row - 1][col]) char to (row by16 col) else null }.groupBy({ it.first }) { it.second }
-    val bordersLeft = grid.mapCartesianNotNull { row, col, char -> if (col == 0 || char != grid[row][col - 1]) char to (row by16 col) else null }.groupBy({ it.first }) { it.second }
-    val bordersRight = grid.mapCartesianNotNull { row, col, char -> if (col == grid[0].lastIndex || char != grid[row][col + 1]) char to (row by16 col) else null }.groupBy({ it.first }) { it.second }
+    val bordersBeneath = grid.allLocationsWhere(grid::hasBorderBeneath)
+    val bordersAbove = grid.allLocationsWhere(grid::hasBorderAbove)
+    val bordersLeft = grid.allLocationsWhere(grid::hasBorderLeft)
+    val bordersRight = grid.allLocationsWhere(grid::hasBorderRight)
+    val borders = (bordersBeneath + bordersAbove + bordersLeft + bordersRight).groupBy { grid.at(it) }
 
-
-    val shapes = mutableListOf<Pair<Char, Collection<Location1616>>>()
-    val unvisited = mutableSetOf<Location1616>().apply { addAll(grid.mapCartesianNotNull { row, col, _ -> row by16 col }) }
-    while (unvisited.isNotEmpty()) {
-        val start = unvisited.first()
-        val thisLetter = grid.at(start)
-        val shape = mutableListOf(start)
-        val work = ArrayDeque(listOf(start))
-        while (work.isNotEmpty()) {
-            val current = work.removeFirst()
-            unvisited.remove(current)
-            for (n in neighboursOf(current, grid) { ch -> ch == thisLetter }) {
-                if (n == -1) continue
-                if (n in shape) continue
-                shape.add(n)
-                unvisited.remove(n)
-                work.add(n)
-            }
-        }
-        shapes.add(thisLetter to shape)
-    }
-
-    return shapes.sumOf { (letter, pieces) ->
-        val perimeter = bordersBeneath[letter]!!.count { it in pieces } +
-                bordersAbove[letter]!!.count { it in pieces } +
-                bordersLeft[letter]!!.count { it in pieces } +
-                bordersRight[letter]!!.count { it in pieces }
-        val area = pieces.size
-        area * perimeter
-    }
+    return findShapes(grid)
+        .sumOf { (letter, pieces) -> pieces.size * borders[letter]!!.count { it in pieces } }
 }
 
 
 private fun part2(grid: Grid): Int {
-    val bordersBeneath = grid.mapCartesianNotNull { row, col, char -> if (row == grid.lastIndex || char != grid[row + 1][col]) char to (row by16 col) else null }.groupBy({ it.first }) { it.second }
-    val bordersAbove = grid.mapCartesianNotNull { row, col, char -> if (row == 0 || char != grid[row - 1][col]) char to (row by16 col) else null }.groupBy({ it.first }) { it.second }
-    val bordersLeft = grid.mapCartesianNotNull { row, col, char -> if (col == 0 || char != grid[row][col - 1]) char to (row by16 col) else null }.groupBy({ it.first }) { it.second }
-    val bordersRight = grid.mapCartesianNotNull { row, col, char -> if (col == grid[0].lastIndex || char != grid[row][col + 1]) char to (row by16 col) else null }.groupBy({ it.first }) { it.second }
+    val bordersBeneath = grid.allLocationsWhere(grid::hasBorderBeneath).groupBy { grid.at(it) }.mapValues { foldToSides(it.value) }
+    val bordersAbove = grid.allLocationsWhere(grid::hasBorderAbove).groupBy { grid.at(it) }.mapValues { foldToSides(it.value) }
+    val bordersLeft = grid.allLocationsWhere(grid::hasBorderLeft).groupBy { grid.at(it) }.mapValues { foldToSides(it.value, flip = true) }
+    val bordersRight = grid.allLocationsWhere(grid::hasBorderRight).groupBy { grid.at(it) }.mapValues { foldToSides(it.value, flip = true) }
 
-    val shapes = mutableListOf<Pair<Char, Collection<Location1616>>>()
-    val unvisited = mutableSetOf<Location1616>().apply { addAll(grid.mapCartesianNotNull { row, col, _ -> row by16 col }) }
+    return findShapes(grid)
+        .sumOf { (letter, pieces) ->
+            val perimeter = bordersBeneath[letter]!!.count { it in pieces } +
+                    bordersAbove[letter]!!.count { it in pieces } +
+                    bordersLeft[letter]!!.count { it in pieces } +
+                    bordersRight[letter]!!.count { it in pieces }
+            pieces.size * perimeter
+        }
+}
+
+
+private fun Grid.hasBorderRight(row: Int, col: Int, char: Char) = col == this[0].lastIndex || char != this[row][col + 1]
+private fun Grid.hasBorderLeft(row: Int, col: Int, char: Char) = col == 0 || char != this[row][col - 1]
+private fun Grid.hasBorderAbove(row: Int, col: Int, char: Char) = row == 0 || char != this[row - 1][col]
+private fun Grid.hasBorderBeneath(row: Int, col: Int, char: Char) = row == lastIndex || char != this[row + 1][col]
+
+private fun findShapes(grid: Grid): List<Pair<Char, Collection<Location1616>>> = buildList {
+    val unvisited = mutableSetOf<Location1616>().apply { addAll(grid.allLocations()) }
     while (unvisited.isNotEmpty()) {
         val start = unvisited.first()
-        val thisLetter = grid.at(start)
-        val shape = mutableListOf(start)
-        val work = ArrayDeque(listOf(start))
-        while (work.isNotEmpty()) {
-            val current = work.removeFirst()
-            unvisited.remove(current)
-            for (n in neighboursOf(current, grid) { ch -> ch == thisLetter }) {
-                if (n == -1) continue
-                if (n in shape) continue
-                shape.add(n)
-                unvisited.remove(n)
-                work.add(n)
-            }
+        val shape = findShapeStartingAt(start, grid)
+        add(grid.at(start) to shape)
+        unvisited.removeAll(shape)
+    }
+}
+
+private fun findShapeStartingAt(start: Location1616, grid: Grid, thisLetter: Char = grid.at(start)): Set<Location1616> {
+    val shape = mutableSetOf(start)
+    val work = ArrayDeque<Location1616>().apply { add(start) }
+    while (true) {
+        val current = work.removeFirstOrNull() ?: return shape
+        for (n in neighboursOf(current, grid) { it == thisLetter }) {
+            if (n == -1) continue
+            if (n in shape) continue
+            shape.add(n)
+            work.add(n)
         }
-        shapes.add(thisLetter to shape)
-    }
-
-    return shapes.sumOf { (letter, pieces) ->
-        val perimeter = startsOfBorders(bordersBeneath[letter]!!.filter { it in pieces }).size +
-                startsOfBorders(bordersAbove[letter]!!.filter { it in pieces }).size +
-                startsOfBordersCols(bordersLeft[letter]!!.filter { it in pieces }).size +
-                startsOfBordersCols(bordersRight[letter]!!.filter { it in pieces }).size
-        val area = pieces.size
-        area * perimeter
     }
 }
 
-private fun startsOfBorders(borders: List<Location1616>): List<Location1616> {
-    val bordersForShape = borders.sorted()
-    var last = -1
-    val result = arrayListOf<Location1616>()
-    bordersForShape.forEach { pos: Int ->
-        if (pos.row() != last.row() || pos.col() != last.col() + 1)
-            result.add(pos)
-        last = pos
-    }
-    return result
+private fun foldToSides(borders: List<Location1616>, flip: Boolean = false): List<Location1616> = buildList {
+    borders.sortedBy { if (flip) it.flip() else it }
+        .fold(-1) { last, pos: Int ->
+            val current = if (flip) pos.flip() else pos
+            if (current.row() != last.row() || current.col() != last.col() + 1)
+                add(pos)
+            current
+        }
 }
-
-
-private fun startsOfBordersCols(borders: List<Location1616>): List<Location1616> {
-    val bordersForShape = borders.sortedWith(compareBy<Location1616> { it.col() }.thenBy { it.row() })
-    var last = -1
-    val result = arrayListOf<Location1616>()
-    bordersForShape.forEach { pos: Int ->
-        if (pos.col() != last.col() || pos.row() != last.row() + 1)
-            result.add(pos)
-        last = pos
-    }
-    return result
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
