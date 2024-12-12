@@ -28,16 +28,14 @@ internal object Day12 : Challenge {
 
 
 private fun part1(grid: Grid): Int {
-    val bordersBeneath = grid.allLocationsWhere(grid::hasBorderBeneath)
-    val bordersAbove = grid.allLocationsWhere(grid::hasBorderAbove)
-    val bordersLeft = grid.allLocationsWhere(grid::hasBorderLeft)
-    val bordersRight = grid.allLocationsWhere(grid::hasBorderRight)
-    val borders = (bordersBeneath + bordersAbove + bordersLeft + bordersRight).groupBy { grid.at(it) }
+    val borders = (grid.allLocationsWhere(grid::hasBorderBeneath) +
+            grid.allLocationsWhere(grid::hasBorderAbove) +
+            grid.allLocationsWhere(grid::hasBorderLeft) +
+            grid.allLocationsWhere(grid::hasBorderRight)).groupBy { grid.at(it) }
 
     return findShapes(grid)
         .sumOf { (letter, pieces) -> pieces.size * borders[letter]!!.count { it in pieces } }
 }
-
 
 private fun part2(grid: Grid): Int {
     val bordersBeneath = grid.allLocationsWhere(grid::hasBorderBeneath).groupBy { grid.at(it) }.mapValues { foldToSides(it.value) }
@@ -61,6 +59,16 @@ private fun Grid.hasBorderLeft(row: Int, col: Int, char: Char) = col == 0 || cha
 private fun Grid.hasBorderAbove(row: Int, col: Int, char: Char) = row == 0 || char != this[row - 1][col]
 private fun Grid.hasBorderBeneath(row: Int, col: Int, char: Char) = row == lastIndex || char != this[row + 1][col]
 
+private fun foldToSides(borders: List<Location1616>, flip: Boolean = false): List<Location1616> = buildList {
+    borders.sortedBy { if (flip) it.flip() else it }
+        .fold(-1) { last, pos: Int ->
+            val current = if (flip) pos.flip() else pos
+            if (current.row() != last.row() || current.col() != last.col() + 1)
+                add(pos)
+            current
+        }
+}
+
 private fun findShapes(grid: Grid): List<Pair<Char, Collection<Location1616>>> = buildList {
     val unvisited = mutableSetOf<Location1616>().apply { addAll(grid.allLocations()) }
     while (unvisited.isNotEmpty()) {
@@ -83,14 +91,4 @@ private fun findShapeStartingAt(start: Location1616, grid: Grid, thisLetter: Cha
             work.add(n)
         }
     }
-}
-
-private fun foldToSides(borders: List<Location1616>, flip: Boolean = false): List<Location1616> = buildList {
-    borders.sortedBy { if (flip) it.flip() else it }
-        .fold(-1) { last, pos: Int ->
-            val current = if (flip) pos.flip() else pos
-            if (current.row() != last.row() || current.col() != last.col() + 1)
-                add(pos)
-            current
-        }
 }
