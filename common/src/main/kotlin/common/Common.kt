@@ -167,6 +167,8 @@ fun <T : CharSequence> List<T?>.filterNotNullOrBlank() = this.filter { !it.isNul
 fun <T : CharSequence> List<T>.filterNotBlank() = this.filter { it.isNotBlank() }
 fun <T : CharSequence> List<T>.mapMatching(regex: Regex) = this.mapNotNull { regex.matchEntire(it)?.destructured }
 fun String.matching(regex: Regex) = this.let { regex.matchEntire(it)?.destructured }
+fun String.matchingAsIntList(regex: Regex) = this.let { regex.matchEntire(it)?.groupValues?.tail()?.map(String::toInt) }
+fun String.matchingAsLongList(regex: Regex) = this.let { regex.matchEntire(it)?.groupValues?.tail()?.map(String::toLong) }
 
 tailrec fun <T> List<T>.startsWith(other: List<T>): Boolean {
     if (other.isEmpty()) return true
