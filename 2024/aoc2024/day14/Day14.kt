@@ -22,23 +22,23 @@ internal object Day14 : Challenge {
 }
 
 
-private fun part1(input: List<String>, height: Int, width: Int): Int {
-    val robots = input.map { it.matchingAsIntList(Regex("p=(\\d+),(\\d+) v=(-?\\d+),(-?\\d+)"))!! }
-    return safetyFactor(robots, height, width, 100)
-}
+private fun part1(input: List<String>, height: Int, width: Int): Int =
+    safetyFactor(parseRobots(input), height, width, 100)
 
 private fun part2(input: List<String>, height: Int, width: Int): Int {
-    val robots = input.map { it.matchingAsIntList(Regex("p=(\\d+),(\\d+) v=(-?\\d+),(-?\\d+)"))!! }
+    val robots = parseRobots(input)
     var i = 1
     var minSeconds = 0 to Int.MAX_VALUE
     while (true) {
-        val sf = safetyFactor(robots, height, width, i)
-        if (sf < minSeconds.second) minSeconds = i to sf
-        if (minSeconds.first + 10_000 < i) return minSeconds.first
-        i++
+        safetyFactor(robots, height, width, i)
+            .also { if (it < minSeconds.second) minSeconds = i to it }
+        if (minSeconds.first + 10_000 < i++) return minSeconds.first
     }
 }
 
+
+private fun parseRobots(input: List<String>): List<List<Int>> =
+    input.map { it.matchingAsIntList(Regex("p=(\\d+),(\\d+) v=(-?\\d+),(-?\\d+)"))!! }
 
 private fun safetyFactor(robots: List<List<Int>>, height: Int, width: Int, seconds: Int): Int {
     val quadrants = intArrayOf(0, 0, 0, 0)
