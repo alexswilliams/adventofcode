@@ -191,6 +191,7 @@ fun <R, C> cartesianProductOf(rows: Iterable<R>, cols: Iterable<C>): List<Pair<R
     rows.flatMap { row -> cols.map { col -> row to col } }
 
 fun Iterable<Int>.product() = this.reduce { acc, i -> acc * i }
+fun IntArray.product() = this.reduce { acc, i -> acc * i }
 fun Iterable<Long>.product() = this.reduce { acc, i -> acc * i }
 fun Iterable<Int>.runningTotal(start: Int): List<Int> = this.runningFold(start) { acc, i -> acc + i }
 
