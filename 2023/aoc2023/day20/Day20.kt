@@ -1,5 +1,6 @@
 package aoc2023.day20
 
+import aoc2023.day20.Module.*
 import aoc2023.day20.Module.FlipFlop.State.*
 import aoc2023.day20.PulseType.*
 import common.*
@@ -9,8 +10,8 @@ private val puzzle = loadFilesToLines("aoc2023/day20", "input.txt").single()
 
 internal fun main() {
     Day20.assertCorrect()
-    benchmark(100) { part1(puzzle) } // 4.5ms
-    benchmark(10) { part2(puzzle) } // 48.2ms
+    benchmark(100) { part1(puzzle) } // 1.3ms
+    benchmark(100) { part2(puzzle) } // 13.9ms
 }
 
 internal object Day20 : Challenge {
@@ -25,92 +26,98 @@ internal object Day20 : Challenge {
 
 
 private fun part1(input: List<String>): Int {
-    val modules: Map<String, Module> = parseModules(input)
     var hiSignals = 0
     var loSignals = 0
-    repeat(1000) {
-        pushButton(modules) { _, _, pulseType ->
-            when (pulseType) {
-                HI -> hiSignals++
-                LO -> loSignals++
-            }
-        }
-    }
+    val onPulse: (Module, PulseType) -> Unit = { _, pulseType -> if (pulseType == HI) hiSignals++ else loSignals++ }
+    val modules: Map<String, Module> = parseModules(input)
+    repeat(1000) { pushButton(modules, onPulse) }
     return hiSignals * loSignals
 }
 
 private fun part2(input: List<String>): Long {
-    val modules: Map<String, Module> = parseModules(input)
     // observation: rx is fed by only &dh, which is fed by only &tr, &xm, &dr and &nh
-    return listOf("dr", "nh", "tr", "xm").map { source ->
-        modules.forEach { it.value.reinitialise() }
-        pushesUntil(modules) { from, pulseType -> from == source && pulseType == HI }
-    }.let { lcm(it) }
+    val modules: Map<String, Module> = parseModules(input)
+    return listOf("dr", "nh", "tr", "xm")
+        .map { modules[it]!! }
+        .map { source ->
+            modules.forEach { it.value.reinitialise() }
+            pushesUntil(modules) { from, pulseType -> pulseType == HI && from == source }
+        }.let { lcm(it) }
 }
 
-private fun pushesUntil(modules: Map<String, Module>, predicate: (String, PulseType) -> Boolean): Long {
+
+private fun pushesUntil(modules: Map<String, Module>, predicate: (Module, PulseType) -> Boolean): Long {
     var pushes = 0L
     var found = false
     while (!found) {
         pushes++
-        pushButton(modules) { from, target, pulseType -> if (predicate(from, pulseType)) found = true }
+        pushButton(modules) { from: Module, pulseType: PulseType -> if (predicate(from, pulseType)) found = true }
     }
     return pushes
 }
 
+private data class Pulse(val source: Module, val target: Module, val type: PulseType)
 
-private data class Work(val from: String, val module: String, val type: PulseType)
+private val work = ArrayDeque<Pulse>()
+private fun pushButton(modules: Map<String, Module>, onPulse: (newSource: Module, PulseType) -> Unit) {
+    work.clear()
+    work.add(Pulse(modules["button"]!!, modules["button"]!!, LO))
+    val emitter: (Module, Module, PulseType) -> Unit = { newSource, newTarget, pulseType ->
+        onPulse(newSource, pulseType)
+        if (newTarget !is FlipFlop || pulseType != HI)
+            work.addLast(Pulse(newSource, newTarget, pulseType))
+    }
 
-private fun pushButton(modules: Map<String, Module>, onPulse: (String, String, PulseType) -> Unit) {
-    val work = ArrayDeque<Work>().apply { addFirst(Work("", "button", LO)) }
-    while (work.isNotEmpty()) {
-        val u = work.removeFirst()
-        val module = modules[u.module] ?: Module.Output(u.module)
-        module.receivePulse(u.from, u.type) { target, pulseType ->
-            onPulse(module.name, target, pulseType)
-            work.addLast(Work(module.name, target, pulseType))
-        }
+    while (work.isNotEmpty()) with(work.removeFirst()) {
+        target.receivePulse(source, type, emitter)
     }
 }
 
+
 private fun parseModules(input: List<String>): Map<String, Module> =
-    input.map { line ->
+    input.mapIndexed { lineNum, line ->
         val (lhs, rhs) = line.split(" -> ")
         val name = if (lhs[0] == '%' || lhs[0] == '&') lhs.substring(1) else lhs
         val destinations = rhs.split(", ")
         when {
-            lhs[0] == '%' -> Module.FlipFlop(name, destinations)
-            lhs[0] == '&' -> Module.Conjunction(name, destinations)
-            lhs == "broadcaster" -> Module.Broadcaster(destinations)
-            else -> error("unknown module type for $line")
+            lhs[0] == '%' -> FlipFlop(name, destinations, lineNum)
+            lhs[0] == '&' -> Conjunction(name, destinations, lineNum)
+            else -> Broadcaster(destinations, lineNum)
         }
-    }.associateBy { it.name }.plus(listOf<Pair<String, Module.Button>>("button" to Module.Button())).also { modules ->
-        modules.values.filterIsInstance<Module.Conjunction>()
-            .forEach { it.initInputs(modules.values.filter { source -> it.name in source.destinations }.map { it.name }) }
-    }
+    }.plus(listOf(Button(), Output("output", -2), Output("rx", -3)))
+        .associateBy { it.name }
+        .also { modules ->
+            modules.values.forEach { it.populateDestinations(modules) }
+            modules.values
+                .filterIsInstance<Conjunction>()
+                .forEach { it.initInputs(modules.values.filter { source -> it in source.destinations }) }
+        }
 
 
 private enum class PulseType { HI, LO }
 
 private sealed class Module(
     val name: String,
-    val destinations: List<String>,
+    val destinationNames: List<String>,
+    val lineNum: Int,
 ) {
-    abstract fun receivePulse(from: String, type: PulseType, emit: (target: String, type: PulseType) -> Unit)
+    lateinit var destinations: Array<Module>
+    abstract fun receivePulse(from: Module, type: PulseType, emit: (newSource: Module, newTarget: Module, type: PulseType) -> Unit)
     abstract fun reinitialise()
-    override fun toString(): String = "${this::class.simpleName}($name -> $destinations)"
+    fun populateDestinations(modules: Map<String, Module>) {
+        destinations = Array(destinationNames.size) { modules[destinationNames[it]]!! }
+    }
 
-    class FlipFlop(name: String, destinations: List<String>) : Module(name, destinations) {
+    class FlipFlop(name: String, destinations: List<String>, lineNum: Int) : Module(name, destinations, lineNum) {
         private enum class State { ON, OFF }
 
         private var state = OFF
-        override fun toString(): String = "${this::class.simpleName}($name ($state) -> $destinations)"
-        override fun receivePulse(from: String, type: PulseType, emit: (String, PulseType) -> Unit) {
+        override fun receivePulse(from: Module, type: PulseType, emit: (Module, Module, PulseType) -> Unit) {
             if (type == HI) return
             state = if (state == ON) OFF else ON
             when (state) {
-                OFF -> destinations.forEach { d -> emit(d, LO) }
-                ON -> destinations.forEach { d -> emit(d, HI) }
+                OFF -> destinations.forEach { d -> emit(this, d, LO) }
+                ON -> destinations.forEach { d -> emit(this, d, HI) }
             }
         }
 
@@ -119,36 +126,38 @@ private sealed class Module(
         }
     }
 
-    class Conjunction(name: String, destinations: List<String>) : Module(name, destinations) {
-        val inputPulses = mutableMapOf<String, PulseType>()
-        fun initInputs(names: List<String>) = names.forEach { inputPulses[it] = LO }
-        override fun toString(): String = "${this::class.simpleName}($name ($inputPulses) -> $destinations)"
-        override fun receivePulse(from: String, type: PulseType, emit: (String, PulseType) -> Unit) {
-            inputPulses[from] = type
-            if (inputPulses.all { it.value == HI })
-                destinations.forEach { d -> emit(d, LO) }
-            else destinations.forEach { d -> emit(d, HI) }
+    class Conjunction(name: String, destinations: List<String>, lineNum: Int) : Module(name, destinations, lineNum) {
+        private lateinit var inputPulsesLevels: BooleanArray
+        private val inputModuleLines = mutableListOf<Int>()
+        override fun reinitialise() = inputPulsesLevels.indices.forEach { inputPulsesLevels[it] = false }
+        fun initInputs(inputs: List<Module>) {
+            inputPulsesLevels = BooleanArray(inputs.size) { false } // LO
+            inputs.forEach { inputModuleLines.add(it.lineNum) }
         }
 
-        override fun reinitialise() {
-            inputPulses.keys.forEach { inputPulses[it] = LO }
+        override fun receivePulse(from: Module, type: PulseType, emit: (Module, Module, PulseType) -> Unit) {
+            val index = inputModuleLines.indexOf(from.lineNum)
+            inputPulsesLevels[index] = type == HI
+            if (inputPulsesLevels.all { it })
+                destinations.forEach { d -> emit(this, d, LO) }
+            else destinations.forEach { d -> emit(this, d, HI) }
         }
     }
 
-    class Button() : Module("button", listOf("broadcaster")) {
+    class Button() : Module("button", listOf("broadcaster"), -1) {
         override fun reinitialise() {}
-        override fun receivePulse(from: String, type: PulseType, emit: (String, PulseType) -> Unit) =
-            emit("broadcaster", LO)
+        override fun receivePulse(from: Module, type: PulseType, emit: (Module, Module, PulseType) -> Unit) =
+            emit(this, destinations.single(), LO)
     }
 
-    class Broadcaster(destinations: List<String>) : Module("broadcaster", destinations) {
+    class Broadcaster(destinations: List<String>, lineNum: Int) : Module("broadcaster", destinations, lineNum) {
         override fun reinitialise() {}
-        override fun receivePulse(from: String, type: PulseType, emit: (String, PulseType) -> Unit) =
-            destinations.forEach { d -> emit(d, type) }
+        override fun receivePulse(from: Module, type: PulseType, emit: (Module, Module, PulseType) -> Unit) =
+            destinations.forEach { d -> emit(this, d, type) }
     }
 
-    class Output(name: String) : Module(name, listOf()) {
-        override fun receivePulse(from: String, type: PulseType, emit: (String, PulseType) -> Unit) {}
+    class Output(name: String, lineNum: Int) : Module(name, listOf(), lineNum) {
         override fun reinitialise() {}
+        override fun receivePulse(from: Module, type: PulseType, emit: (Module, Module, PulseType) -> Unit) {}
     }
 }
