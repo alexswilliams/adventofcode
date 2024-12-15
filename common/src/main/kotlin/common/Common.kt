@@ -42,6 +42,9 @@ fun Grid.allLocationOf(ch: Char): List<Location1616> {
     return this.mapCartesianNotNull { row, col, char -> if (char == ch) row by16 col else null }
 }
 
+fun Grid.render(): String = this.joinToString("\n") { row -> row.joinToString("") }
+
+
 val DigitGrid.height get() = this.size
 val DigitGrid.width get() = this[0].size
 val DigitGrid.rowIndices get() = this.indices
@@ -83,6 +86,8 @@ fun loadFiles(root: String, vararg files: String): List<String> = files.map { "$
 fun loadFilesToLines(root: String, vararg files: String): List<List<String>> = files.map { "$root/$it".fromClasspathFileToLines() }
 fun loadFilesToGrids(root: String, vararg files: String): List<Grid> = files.map { "$root/$it".fromClasspathFile().linesAsCharArrays() }
 
+fun <A, B> List<String>.partitionOnLineBreak(transformFirst: (List<String>) -> A, transformSecond: (List<String>) -> B): Pair<A, B> =
+    this.indexOf("").let { transformFirst(this.subList(0, it)) to transformSecond(this.subList(it + 1, this.size)) }
 
 fun List<String>.splitOnSpaces() = map { it.split(' ') }
 fun List<CharArray>.splitArrayOnSpaces() = map { it.concatToString().split(' ') }
