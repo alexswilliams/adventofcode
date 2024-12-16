@@ -50,6 +50,9 @@ val DigitGrid.width get() = this[0].size
 val DigitGrid.rowIndices get() = this.indices
 val DigitGrid.colIndices get() = this[0].indices
 fun DigitGrid.at(pos: Location1616) = this[pos.row()][pos.col()]
+fun DigitGrid.set(pos: Location1616, value: Int) {
+    this[pos.row()][pos.col()] = value
+}
 
 fun BooleanGrid.at(pos: Location1616) = this[pos.row()][pos.col()]
 fun BooleanGrid.filterTrue(): List<Location1616> {
