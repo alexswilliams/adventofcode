@@ -20,6 +20,9 @@ val Grid.rowIndices get() = this.indices
 val Grid.colIndices get() = this[0].indices
 fun Grid.at(pos: Location1616) = this[pos.row()][pos.col()]
 infix fun Location1616.isWithin(grid: Grid) = row() in grid.rowIndices && col() in grid.colIndices
+fun Grid.set(pos: Location1616, value: Char) {
+    this[pos.row()][pos.col()] = value
+}
 
 fun DigitGrid.locationOf(i: Int): Location1616 {
     val startRowIndex = indexOfFirst { i in it }
