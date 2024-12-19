@@ -7,7 +7,7 @@ private val puzzle = loadFilesToLines("aoc2024/day19", "input.txt").single()
 
 internal fun main() {
     Day19.assertCorrect()
-    benchmark(100) { part1(puzzle) } // 4.2ms
+    benchmark(100) { part1(puzzle) } // 3.2ms
     benchmark(100) { part2(puzzle) } // 10.4ms
 }
 
@@ -32,18 +32,22 @@ private fun part2(input: List<String>): Long {
     return input.subList(2, input.size).sumOf { pattern -> solutionCount(pattern, towels) }
 }
 
-private fun isSolvable(pattern: String, sortedTowels: Array<String>, cache: MutableMap<String, Boolean> = mutableMapOf()): Boolean {
-    cache[pattern]?.let { return it }
-    val indexOfFirstMatch = sortedTowels.binarySearch(pattern)
-    if (indexOfFirstMatch >= 0) return true.also { cache[pattern] = true }
+private fun isSolvable(pattern: String, sortedTowels: Array<String>, startAt: Int = 0, cache: IntArray = IntArray(pattern.length) { -1 }): Boolean {
+    cache[startAt].let { if (it >= 0) return it == 1 }
+    val indexOfFirstMatch = sortedTowels.binarySearch(pattern.substring(startAt))
+    if (indexOfFirstMatch >= 0) {
+        cache[startAt] = 1
+        return true
+    }
     var nextMatch = -indexOfFirstMatch - 2
-    while (nextMatch >= 0 && pattern.startsWith(sortedTowels[nextMatch][0])) {
-        if (pattern.startsWith(sortedTowels[nextMatch]) &&
-            isSolvable(pattern.substring(sortedTowels[nextMatch].length), sortedTowels, cache)
-        ) return true
+    while (nextMatch >= 0 && pattern[startAt] == sortedTowels[nextMatch][0]) {
+        if (pattern.startsWith(sortedTowels[nextMatch], startAt)) {
+            if (isSolvable(pattern, sortedTowels, startAt + sortedTowels[nextMatch].length, cache))
+                return true
+        }
         nextMatch--
     }
-    return false.also { cache[pattern] = false }
+    return false.also { cache[startAt] = 0 }
 }
 
 private fun solutionCount(pattern: String, sortedTowels: Array<String>, cache: MutableMap<String, Long> = mutableMapOf()): Long {
@@ -52,7 +56,7 @@ private fun solutionCount(pattern: String, sortedTowels: Array<String>, cache: M
     val indexOfFirstMatch = sortedTowels.binarySearch(pattern)
     var nextMatch = if (indexOfFirstMatch < 0) -indexOfFirstMatch - 2 else indexOfFirstMatch
     var ways = 0L
-    while (nextMatch >= 0 && pattern.startsWith(sortedTowels[nextMatch][0])) {
+    while (nextMatch >= 0 && pattern[0] == sortedTowels[nextMatch][0]) {
         if (pattern.startsWith(sortedTowels[nextMatch])) {
             ways += solutionCount(pattern.substring(sortedTowels[nextMatch].length), sortedTowels, cache)
         }
