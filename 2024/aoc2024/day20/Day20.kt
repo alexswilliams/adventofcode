@@ -10,7 +10,7 @@ private val puzzle = loadFilesToGrids("aoc2024/day20", "input.txt").single()
 internal fun main() {
     Day20.assertCorrect()
     benchmark(100) { part1(puzzle, 100) } // 4.4ms
-    benchmark(10) { part2(puzzle, 100) } // 215.1ms
+    benchmark(10) { part2(puzzle, 100) } // 205.7ms
 }
 
 internal object Day20 : Challenge {
@@ -64,18 +64,18 @@ private fun allFloorTilesWithin(grid: Grid, pos: Location1616, radius: Int): Lis
 
 fun aStarTime(start: Location1616, end: Location1616, grid: Grid): Int {
     val work = TreeQueue(start to 0) { it.manhattanTo(end) }
-    val lowestDistanceTo = Array(grid.height) { IntArray(grid.width) { Int.MAX_VALUE } }.apply { set(start, 0) }
+    val earliestTimes = Array(grid.height) { IntArray(grid.width) { Int.MAX_VALUE } }.apply { set(start, 0) }
     val neighbours = IntArray(4)
     while (true) {
         val u = work.poll() ?: error("No path from start to end")
-        val uDistance = lowestDistanceTo.at(u)
-        if (u == end) return uDistance
+        val timeToU = earliestTimes.at(u)
+        if (u == end) return timeToU
         for (n in neighboursOf(u, grid, '#', neighbours)) {
             if (n == -1) continue
-            val oldNeighbourDistance = lowestDistanceTo.at(n)
-            if (uDistance + 1 < oldNeighbourDistance) {
-                lowestDistanceTo.set(n, uDistance + 1)
-                work.offerOrReposition(n, oldNeighbourDistance, uDistance + 1)
+            val oldTimeToN = earliestTimes.at(n)
+            if (timeToU + 1 < oldTimeToN) {
+                earliestTimes.set(n, timeToU + 1)
+                work.offerOrReposition(n, oldTimeToN, timeToU + 1)
             }
         }
     }
