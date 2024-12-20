@@ -14,3 +14,9 @@ while (a > 0) {
   b = c ^ b
   out(b % 8)
 }
+
+i.e
+while (a > 0) {
+  out((a shr (a%8 ^ 5)) ^ a%8 ^ 3)
+  a = a shr 3
+}

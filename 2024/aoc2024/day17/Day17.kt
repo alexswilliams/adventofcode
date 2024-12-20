@@ -1,24 +1,22 @@
 package aoc2024.day17
 
 import common.*
-import kotlin.test.*
 
-private val example = loadFilesToLines("aoc2024/day17", "example.txt").single()
+private val examples = loadFilesToLines("aoc2024/day17", "example1.txt", "example2.txt")
 private val puzzle = loadFilesToLines("aoc2024/day17", "input.txt").single()
 
 internal fun main() {
     Day17.assertCorrect()
-    benchmark { part1(puzzle) } // 6.7µs
+    benchmark { part1(puzzle) } // 6.5µs
     benchmark { part2(puzzle) } // 235.1µs
 }
 
 internal object Day17 : Challenge {
     override fun assertCorrect() {
-        check("4,6,3,5,6,3,5,2,1,0", "P1 Example") { part1(example) }
+        check("4,6,3,5,6,3,5,2,1,0", "P1 Example 1") { part1(examples[0]) }
         check("3,6,3,7,0,7,0,3,0", "P1 Puzzle") { part1(puzzle) }
-        assertEquals(part1(puzzle), part1Interpreted(puzzle))
 
-//        check(117440, "P2 Example") { part2(example) }
+        check(117440, "P2 Example 2") { part2(examples[1]) }
         check(136904920099226L, "P2 Puzzle") { part2(puzzle) }
     }
 }
@@ -33,36 +31,21 @@ private fun part1(input: List<String>): String {
     return runMachine(a, b, c, program).joinToString(",")
 }
 
-private fun part1Interpreted(input: List<String>): String {
-    var a = input[0].toIntFromIndex(12)
-    val output = mutableListOf<Int>()
-    while (a > 0) {
-        output.add(puzzleStep(a))
-        a = a shr 3
-    }
-    return output.joinToString(",")
-}
-
-private fun puzzleStep(a: Int) = (a shr ((a and 0b111) xor 0b101)) xor (a and 0b111) xor 0b011 and 0b111
-
 private fun part2(input: List<String>): Long {
     val program = input[4].substring(9).splitToInts(",")
+    val width = program.chunked(2).single { it[0] == 0 }[1] // look for the "a = a shl ?" operation to work out the step size - likely always 3 but :shrug:
 
-    fun test(previous: Long, depth: Int): List<Long> {
-        if (depth == program.size) {
-            return listOf(previous)
-        } else {
-            val mask = previous shl 3
-            val possibleNextStates = (0b000L..0b111L)
-                .map { it xor mask }
-                .filter { newA -> runMachine(newA, 0, 0, program) == program.takeLast(depth + 1) }
-            return possibleNextStates.flatMap { test(it, depth + 1) }
+    fun findQuines(previous: Long, depth: Int): List<Long> =
+        if (depth == program.size)
+            listOf(previous)
+        else {
+            (0b000L..<(1 shl width))
+                .map { it xor (previous shl width) }
+                .filter { newA -> program.takeLast(depth + 1) == runMachine(newA, 0, 0, program) }
+                .flatMap { findQuines(it, depth + 1) }
         }
-    }
 
-    val solutions = test(0, 0)
-//    assertEquals(program, runMachine(solutions.min(), 0, 0, program))
-    return solutions.min()
+    return findQuines(0, 0).min()
 }
 
 
