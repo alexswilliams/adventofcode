@@ -8,8 +8,8 @@ private val puzzle = loadFilesToGrids("aoc2024/day20", "input.txt").single()
 
 internal fun main() {
     Day20.assertCorrect()
-    benchmark(100) { part1(puzzle, 100) } // 703µs
-    benchmark(100) { part2(puzzle, 100) } // 30.6ms
+    benchmark(100) { part1(puzzle, 100) } // 585µs
+    benchmark(100) { part2(puzzle, 100) } // 28.2ms
 }
 
 internal object Day20 : Challenge {
@@ -36,54 +36,57 @@ private fun countShortcuts(grid: Grid, timeSavingWhereCheatingBecomesMorallyJust
     val baselineTime = basePath.size
 
     val cache = Array(grid.height) { IntArray(grid.width) { Int.MAX_VALUE } }
-        .apply { basePath.forEachIndexed { timeToPos, pos -> this.set(pos, baselineTime - timeToPos) } }
+        .apply { basePath.forEachIndexed { timeToPos, pos -> this.set(pos, timeToPos) } }
 
     val neighbours = IntArray(4 * tunnelRadius * (tunnelRadius + 1) / 2 + 1)
     return basePath.sumOfIndexed { timeToTunnelStart, tunnelStart ->
         var shortcutCount = 0
-        for (tunnelEnd in allFloorTilesWithin(grid, tunnelStart, tunnelRadius, neighbours)) {
+        for (tunnelEnd in allFloorTilesWithin3(tunnelStart, tunnelRadius, neighbours, cache, timeToTunnelStart)) {
             if (tunnelEnd == -1) break
-            if (baselineTime - (timeToTunnelStart + tunnelStart.manhattanTo(tunnelEnd) + cache.at(tunnelEnd)) >= timeSavingWhereCheatingBecomesMorallyJustifiable)
+            if (baselineTime - (timeToTunnelStart + tunnelStart.manhattanTo(tunnelEnd) + (baselineTime - cache.at(tunnelEnd))) >= timeSavingWhereCheatingBecomesMorallyJustifiable)
                 shortcutCount++
         }
         shortcutCount
     }
 }
 
-private fun allFloorTilesWithin(grid: Grid, pos: Location1616, radius: Int, neighbours: IntArray): IntArray {
+private fun allFloorTilesWithin3(pos: Location1616, radius: Int, neighbours: IntArray, timeCache: DigitGrid, timeToPos: Int): IntArray {
     var i = 0
     val minRow = (pos.row() - radius).coerceAtLeast(1)
-    val maxRow = (pos.row() + radius).coerceAtMost(grid.height - 2)
+    val maxRow = (pos.row() + radius).coerceAtMost(timeCache.height - 2)
     (minRow..maxRow).forEach { row ->
-        val maxCol = (pos.col() + radius - (pos.row() - row)).coerceAtMost(grid.width - 2)
+        val maxCol = (pos.col() + radius - (pos.row() - row)).coerceAtMost(timeCache.width - 2)
         val minCol = (pos.col() - radius + (pos.row() - row)).coerceAtLeast(1)
         (minCol..maxCol).forEach { col ->
             if ((pos.row() - row).absoluteValue + (pos.col() - col).absoluteValue in 2..radius) {
-                if (grid[row][col].isFloor()) neighbours[i++] = (row by16 col)
+                val positionFromStart = timeCache[row][col]
+                if (positionFromStart < Int.MAX_VALUE && positionFromStart > timeToPos + 2)
+                    neighbours[i++] = (row by16 col)
             }
         }
     }
     return neighbours.also { neighbours[i] = -1 }
 }
 
-private fun snakePath(start: Location1616, end: Location1616, grid: Grid): List<Location1616> {
-    return buildList(grid.height * grid.width / 2) {
-        var current = start
-        var previous = start
-        add(start)
-        do {
-            val tmp = current
-            current = when {
-                current.plusRow() != previous && grid.at(current.plusRow()).isFloor() -> current.plusRow()
-                current.minusRow() != previous && grid.at(current.minusRow()).isFloor() -> current.minusRow()
-                current.plusCol() != previous && grid.at(current.plusCol()).isFloor() -> current.plusCol()
-                current.minusCol() != previous && grid.at(current.minusCol()).isFloor() -> current.minusCol()
-                else -> error("Unexpected end of grid")
-            }
-            add(current)
-            previous = tmp
-        } while (current != end)
-    }
+private fun snakePath(start: Location1616, end: Location1616, grid: Grid): IntArray {
+    val path = IntArray(grid.height * grid.width / 2)
+    var i = 0
+    var current = start
+    var previous = start
+    path[i++] = start
+    do {
+        val tmp = current
+        current = when {
+            current.plusRow() != previous && grid.at(current.plusRow()).isFloor() -> current.plusRow()
+            current.minusRow() != previous && grid.at(current.minusRow()).isFloor() -> current.minusRow()
+            current.plusCol() != previous && grid.at(current.plusCol()).isFloor() -> current.plusCol()
+            current.minusCol() != previous && grid.at(current.minusCol()).isFloor() -> current.minusCol()
+            else -> error("Unexpected end of grid")
+        }
+        path[i++] = current
+        previous = tmp
+    } while (current != end)
+    return path.sliceArray(0..<i)
 }
 
 private fun Char.isFloor(): Boolean = this == '.' || this == 'E'
