@@ -3,3 +3,9 @@ Register B: 0
 Register C: 0
 
 Program: 0,1,5,4,3,0
+
+-- my own notes...
+while (a > 0) {
+  a = a shr 1
+  out(a & 0b111)
+}
