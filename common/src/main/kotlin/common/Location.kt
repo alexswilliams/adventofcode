@@ -2,6 +2,8 @@
 
 package common
 
+import kotlin.math.*
+
 typealias Location = Long
 
 infix fun Int.by(col: Int): Location = (this.toLong() shl 32) or col.toLong()
@@ -32,6 +34,8 @@ fun Location1616.minusRow(amt: Int) = this - 0x1_0000 * amt
 fun Location1616.plusCol(amt: Int) = this + amt
 fun Location1616.minusCol(amt: Int) = this - amt
 fun Location1616.flip() = this.col() by16 this.row()
+
+fun Location1616.manhattanTo(target: Location1616) = (row() - target.row()).absoluteValue + (col() - target.col()).absoluteValue
 
 fun renderLocation1616s(array: IntArray): String = array.joinToString(prefix = "[", postfix = "]") { renderLocation1616(it) }
 fun renderLocation1616Children(array: IntArray): Array<String> = array.map { renderLocation1616(it) }.toTypedArray()

@@ -57,6 +57,11 @@ fun DigitGrid.set(pos: Location1616, value: Int) {
     this[pos.row()][pos.col()] = value
 }
 
+fun <T> Array<Array<T>>.at(pos: Location1616) = this[pos.row()][pos.col()]
+fun <T> Array<Array<T>>.set(pos: Location1616, value: T) {
+    this[pos.row()][pos.col()] = value
+}
+
 fun BooleanGrid.at(pos: Location1616) = this[pos.row()][pos.col()]
 fun BooleanGrid.filterTrue(): List<Location1616> {
     val result = ArrayList<Location1616>(this.size * 10)
