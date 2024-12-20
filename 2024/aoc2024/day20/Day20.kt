@@ -8,8 +8,8 @@ private val puzzle = loadFilesToGrids("aoc2024/day20", "input.txt").single()
 
 internal fun main() {
     Day20.assertCorrect()
-    benchmark(100) { part1(puzzle, 100) } // 1.4ms
-    benchmark(10) { part2(puzzle, 100) } // 97.2ms
+    benchmark(100) { part1(puzzle, 100) } // 703µs
+    benchmark(100) { part2(puzzle, 100) } // 30.6ms
 }
 
 internal object Day20 : Challenge {
@@ -38,15 +38,20 @@ private fun countShortcuts(grid: Grid, timeSavingWhereCheatingBecomesMorallyJust
     val cache = Array(grid.height) { IntArray(grid.width) { Int.MAX_VALUE } }
         .apply { basePath.forEachIndexed { timeToPos, pos -> this.set(pos, baselineTime - timeToPos) } }
 
-    return basePath.asSequence()
-        .flatMapIndexed { timeToPos, pos ->
-            allFloorTilesWithin(grid, pos, tunnelRadius).map { it to (timeToPos + pos.manhattanTo(it)) }
+    val neighbours = IntArray(4 * tunnelRadius * (tunnelRadius + 1) / 2 + 1)
+    return basePath.sumOfIndexed { timeToTunnelStart, tunnelStart ->
+        var shortcutCount = 0
+        for (tunnelEnd in allFloorTilesWithin(grid, tunnelStart, tunnelRadius, neighbours)) {
+            if (tunnelEnd == -1) break
+            if (baselineTime - (timeToTunnelStart + tunnelStart.manhattanTo(tunnelEnd) + cache.at(tunnelEnd)) >= timeSavingWhereCheatingBecomesMorallyJustifiable)
+                shortcutCount++
         }
-        .map { (pos, timeToPos) -> baselineTime - timeToPos - cache.at(pos) }
-        .count { it >= timeSavingWhereCheatingBecomesMorallyJustifiable }
+        shortcutCount
+    }
 }
 
-private fun allFloorTilesWithin(grid: Grid, pos: Location1616, radius: Int): List<Location1616> = buildList(radius * 4) {
+private fun allFloorTilesWithin(grid: Grid, pos: Location1616, radius: Int, neighbours: IntArray): IntArray {
+    var i = 0
     val minRow = (pos.row() - radius).coerceAtLeast(1)
     val maxRow = (pos.row() + radius).coerceAtMost(grid.height - 2)
     (minRow..maxRow).forEach { row ->
@@ -54,13 +59,14 @@ private fun allFloorTilesWithin(grid: Grid, pos: Location1616, radius: Int): Lis
         val minCol = (pos.col() - radius + (pos.row() - row)).coerceAtLeast(1)
         (minCol..maxCol).forEach { col ->
             if ((pos.row() - row).absoluteValue + (pos.col() - col).absoluteValue in 2..radius) {
-                if (grid[row][col] != '#') add(row by16 col)
+                if (grid[row][col].isFloor()) neighbours[i++] = (row by16 col)
             }
         }
     }
+    return neighbours.also { neighbours[i] = -1 }
 }
 
-fun snakePath(start: Location1616, end: Location1616, grid: Grid): List<Location1616> {
+private fun snakePath(start: Location1616, end: Location1616, grid: Grid): List<Location1616> {
     return buildList(grid.height * grid.width / 2) {
         var current = start
         var previous = start
@@ -80,4 +86,4 @@ fun snakePath(start: Location1616, end: Location1616, grid: Grid): List<Location
     }
 }
 
-private fun Char.isFloor(): Boolean = this == '.' || this == 'E' || this == 'S'
+private fun Char.isFloor(): Boolean = this == '.' || this == 'E'
