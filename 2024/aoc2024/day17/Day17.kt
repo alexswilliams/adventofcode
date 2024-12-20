@@ -8,7 +8,7 @@ private val puzzle = loadFilesToLines("aoc2024/day17", "input.txt").single()
 internal fun main() {
     Day17.assertCorrect()
     benchmark { part1(puzzle) } // 6.5µs
-    benchmark { part2(puzzle) } // 235.1µs
+    benchmark { part2(puzzle) } // 231.2µs
 }
 
 internal object Day17 : Challenge {
@@ -33,6 +33,7 @@ private fun part1(input: List<String>): String {
 
 private fun part2(input: List<String>): Long {
     val program = input[4].substring(9).splitToInts(",")
+    val tails = program.indices.map { program.takeLast(it + 1) }
     val width = program.chunked(2).single { it[0] == 0 }[1] // look for the "a = a shl ?" operation to work out the step size - likely always 3 but :shrug:
 
     fun findQuines(previous: Long, depth: Int): List<Long> =
@@ -41,7 +42,7 @@ private fun part2(input: List<String>): Long {
         else {
             (0b000L..<(1 shl width))
                 .map { it xor (previous shl width) }
-                .filter { newA -> program.takeLast(depth + 1) == runMachine(newA, 0, 0, program) }
+                .filter { newA -> tails[depth] == runMachine(newA, 0, 0, program) }
                 .flatMap { findQuines(it, depth + 1) }
         }
 
