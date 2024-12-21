@@ -37,10 +37,12 @@ private fun fewestPushesNeeded(code: String, dirPadsRemaining: Int, cache: Mutab
     return pairs.reduce { acc, options -> options.flatMap { option -> acc.map { it + option } } }
         .minOf { candidate ->
             (listOf('A') + candidate).zipWithNext().sumOf { (start, end) ->
-                // The naive risk is that it might be shorter for one level to do vvvA as the levels above will all just do A
-                // repeatedly as a result of the vvv - that means you might only be able to consider full sequences for each level.
+                // The risk is that a longer sequence one level down might incur a shorter overall sequence; e.g. doing vvvA
+                // would cause all levels above to choose 'A' repeatedly, which might overall be shorter a shorter sequence at the
+                // level beneath - that means you might only be able to consider full sequences for each level.
                 // But this recursion is valid because at the end of every move, each level above will have reached the A button
                 // which means every move beneath here starts from the same state, and so they are all independent of each other.
+                // So... the problem can be divided and conquered.
                 fewestPushesNeeded("$start$end", dirPadsRemaining - 1, cache)
             }
         }.also { if (code.length == 2) cache[cacheKey(dirPadsRemaining, code)] = it }
