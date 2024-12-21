@@ -51,19 +51,6 @@ private fun cacheKey(dirPadsRemaining: Int, code: String): Int =
     dirPadsRemaining * 100 + code[0].code * 10 + code[1].code
 
 
-private fun Map<Char, List<Pair<Char, Char>>>.waysBetween(start: Char, target: Char): List<List<Char>> {
-    fun waysBetweenInner(start: Char, seenSoFar: List<Char>): List<List<Char>> {
-        if (start == target) return listOf(listOf('A'))
-        val seenForNext = seenSoFar + start
-        return this[start]!!
-            .filter { (_, next) -> next !in seenSoFar }
-            .flatMap { (move, symbolReached) -> waysBetweenInner(symbolReached, seenForNext).map { it + move } }
-    }
-    return waysBetweenInner(start, listOf())
-        .map { it.reversed() }
-        .sortedBy { it.size }.let { all -> all.filter { it.size == all.first().size } }
-}
-
 private val dirPad = mapOf(
     'A' to listOf('<' to '^', 'v' to '>'),
     '^' to listOf('v' to 'v', '>' to 'A'),
@@ -85,6 +72,19 @@ private val numPad = mapOf(
     '8' to listOf('<' to '7', 'v' to '5', '>' to '9'),
     '9' to listOf('<' to '8', 'v' to '6'),
 )
+
+private fun Map<Char, List<Pair<Char, Char>>>.waysBetween(start: Char, target: Char): List<List<Char>> {
+    fun waysBetweenInner(start: Char, seenSoFar: List<Char>): List<List<Char>> {
+        if (start == target) return listOf(listOf('A'))
+        val seenForNext = seenSoFar + start
+        return this[start]!!
+            .filter { (_, next) -> next !in seenSoFar }
+            .flatMap { (move, symbolReached) -> waysBetweenInner(symbolReached, seenForNext).map { it + move } }
+    }
+    return waysBetweenInner(start, listOf())
+        .map { it.reversed() }
+        .sortedBy { it.size }.let { all -> all.filter { it.size == all.first().size } }
+}
 
 // Caching this outside the benchmark is on the edge of cheating; but it's day 21 and starting to feel like a second job
 private val dirPadPaths = cartesianProductOf(dirPad.keys, dirPad.keys)
