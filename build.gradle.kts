@@ -1,9 +1,9 @@
 // https://gradle.org/releases/
-// ./gradlew wrapper --gradle-version=8.11 --distribution-type=BIN
+// ./gradlew wrapper --gradle-version=8.12 --distribution-type=BIN
 
 plugins {
     // https://mvnrepository.com/artifact/org.jetbrains.kotlin.jvm/org.jetbrains.kotlin.jvm.gradle.plugin
-    kotlin("jvm") version "2.0.21"
+    kotlin("jvm") version "2.1.0"
 }
 
 group = "io.github.alexswilliams"
@@ -21,7 +21,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.8")
 
     // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.1")
 
     // https://mvnrepository.com/artifact/com.github.ajalt.mordant/mordant
     implementation("com.github.ajalt.mordant:mordant:3.0.1")
