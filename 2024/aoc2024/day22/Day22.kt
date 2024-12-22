@@ -7,8 +7,8 @@ private val puzzle = loadFilesToLines("aoc2024/day22", "input.txt").single()
 
 internal fun main() {
     Day22.assertCorrect()
-    benchmark(10) { part1(puzzle) } // 27.9ms
-    benchmark(10) { part2(puzzle) } // 847ms
+    benchmark(100) { part1(puzzle) } // 9.2ms
+    benchmark(100) { part2(puzzle) } // 31.2ms
 }
 
 internal object Day22 : Challenge {
@@ -23,47 +23,60 @@ internal object Day22 : Challenge {
 
 
 private fun part1(input: List<String>): Long =
-    input.map { it.toLong() }.sumOf { seed ->
-        (1..2000).fold(seed) { acc, _ -> hash(acc) }
+    input.sumOf { seed ->
+        (1..2000).fold(seed.toLong()) { acc, _ -> evolve(acc) }
     }
 
 private fun part2(input: List<String>): Int {
-    val sequences = mutableMapOf<List<Int>, MutableList<Int>>()
-
-    input.map { it.toLong() }.forEach { seed ->
-        val sequencesForRun = mutableMapOf<List<Int>, Int>()
-        var last4Differences = first4Differences(seed)
-        var lastResult = hash(hash(hash(hash(seed))))
-        val lastPrice = (lastResult % 10).toInt()
-        sequencesForRun[last4Differences] = lastPrice
-
-        repeat(1996) {
-            val result = hash(lastResult)
-            val price = (result % 10).toInt()
-
-            val diff = price - (lastResult % 10).toInt()
-            last4Differences = last4Differences.drop(1).plus(diff)
-
-            sequencesForRun.computeIfAbsent(last4Differences) { _ -> price }
-
-            lastResult = result
-        }
-
-        sequencesForRun.forEach { (diffSequence, bestPrice) -> sequences.merge(diffSequence, mutableListOf(bestPrice)) { existing, _ -> existing.also { it.add(bestPrice) } } }
+    val bananasForSequence = IntArray(HASH_MOD)
+    var maxSeen = Int.MIN_VALUE
+    fun buyBananas(sequenceHash: Int, price: Int) {
+        bananasForSequence[sequenceHash] = (bananasForSequence[sequenceHash] + price).also { if (it > maxSeen) maxSeen = it }
     }
 
-    return sequences.maxOf { it.value.sum() }
+    input.forEach { seed ->
+        val seenThisRun = BooleanArray(HASH_MOD)
+        val differences = CyclicBuffer4(first4Differences(seed.toLong()))
+        var lastSecret = evolve(seed.toLong(), 4)
+
+        seenThisRun[differences.hash] = true
+        buyBananas(differences.hash, priceOf(lastSecret))
+        repeat(1996) {
+            lastSecret = evolve(lastSecret).also { secret ->
+                differences.push(priceOf(secret) - priceOf(lastSecret))
+                if (!seenThisRun[differences.hash]) {
+                    seenThisRun[differences.hash] = true
+                    buyBananas(differences.hash, priceOf(secret))
+                }
+            }
+        }
+    }
+    return maxSeen
 }
 
-private fun first4Differences(seed: Long): List<Int> {
-    return listOf(seed, hash(seed), hash(hash(seed)), hash(hash(hash(seed))), hash(hash(hash(hash(seed)))))
-        .map { (it % 10).toInt() }.zipWithNext().map { (a, b) -> b - a }
+private fun priceOf(lastSecret: Long) = (lastSecret % 10).toInt()
+
+private fun first4Differences(seed: Long): IntArray =
+    IntArray(4) { (evolve(seed, it + 1) % 10 - evolve(seed, it) % 10).toInt() }
+
+private fun evolve(i: Long): Long {
+    val a = i shl 6 xor i and 0x00ff_ffff
+    val b = a shr 5 xor a and 0x00ff_ffff
+    return b shl 11 xor b and 0x00ff_ffff
 }
 
+private tailrec fun evolve(i: Long, times: Int): Long =
+    if (times == 0) i
+    else evolve(evolve(i), times - 1)
 
-private fun hash(result: Long): Long {
-    val a = ((result * 64) xor result) % 16777216
-    val b = ((a / 32) xor a) % 16777216
-    val c = ((b * 2048) xor b) % 16777216
-    return c
+
+private const val HASH_MOD = 19 * 19 * 19 * 19
+
+private class CyclicBuffer4(initialValues: IntArray) {
+    var hash = initialValues.indices.fold(0) { acc, i -> acc * 19 + (initialValues[i] + 9) } // -9..9 has 19 values not 18, 0 is a real value too!
+        private set
+
+    fun push(i: Int) {
+        hash = (hash * 19 + i + 9) % HASH_MOD
+    }
 }
