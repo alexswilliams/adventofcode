@@ -2,13 +2,14 @@ package aoc2024.day23
 
 import common.*
 
+// cat example.txt | awk -F- 'BEGIN{print "graph {"; print "overlap=voronoi"} {print $1 "--" $2 ";"} END{print "}"}' | neato -Tsvg > example.svg
 private val examples = loadFilesToLines("aoc2024/day23", "example.txt", "example2.txt")
 private val puzzle = loadFilesToLines("aoc2024/day23", "input.txt").single()
 
 internal fun main() {
     Day23.assertCorrect()
     benchmark { part1(puzzle) } // 630µs
-    benchmark(10) { part2(puzzle) } // 206.6ms
+    benchmark(10) { part2(puzzle) } // 183.6ms :(
 }
 
 internal object Day23 : Challenge {
@@ -22,12 +23,11 @@ internal object Day23 : Challenge {
     }
 }
 
-// cat example.txt | awk -F- 'BEGIN{print "graph {"; print "overlap=voronoi"} {print $1 "--" $2 ";"} END{print "}"}' | neato -Tsvg > example.svg
 
 private fun part1(input: List<String>): Int {
     val edges = parseNet(input)
     return buildSet {
-        for (potentialChiefPc in edges.keys.filter { it[0] == 't' }) {
+        for (potentialChiefPc in edges.keys.filter { it / 26 == 't' - 'a' }) {
             val work = ArrayDeque(edges[potentialChiefPc]!!.map { it to listOf(potentialChiefPc) })
             while (work.isNotEmpty()) {
                 val (thisPc, seenSoFar) = work.removeLast()
@@ -45,39 +45,30 @@ private fun part1(input: List<String>): Int {
 
 private fun part2(input: List<String>): String {
     val edges = parseNet(input)
+    val edgeCache = Array<List<Int>?>(26 * 26) { null }
+    edges.entries.forEach { (k, v) -> edgeCache[k] = v }
+
     var groups = edges.keys.map { listOf(it) }
     while (groups.size > 1) {
         groups = groups.flatMap { nodeSet ->
-            nodeSet.map { node -> edges[node]!!.filter { it > node } }
+            nodeSet.map { node -> edgeCache[node]!!.filter { it > node } }
                 .intersectAll()
-                .map { nodeSet.plus(it).sorted() }
+                .map { nodeSet.plusUniqueSorted(it) }
         }.distinct()
     }
-    return groups.single().joinToString(",")
+    return groups.single().joinToString(",") { keyToStr(it) }
 }
 
-private fun parseNet(input: List<String>): Map<String, List<String>> {
-    return buildMap<String, MutableList<String>> {
+private fun parseNet(input: List<String>): Map<Int, List<Int>> =
+    buildMap<Int, MutableList<Int>> {
         input.forEach {
-            val a = it.substring(0, 2)
-            val b = it.substring(3, 5)
+            val a = strToKey(it.substring(0, 2))
+            val b = strToKey(it.substring(3, 5))
             getOrPut(a) { mutableListOf() }.add(b)
             getOrPut(b) { mutableListOf() }.add(a)
         }
-        forEach { (_, u) ->
-            u.sort()
-        }
+        forEach { (_, u) -> u.sort() }
     }
-}
 
 private fun strToKey(str: String): Int = (str[0] - 'a') * 26 + (str[1] - 'a')
 private fun keyToStr(key: Int): String = buildString { append('a' + (key / 26)); append('a' + key % 26) }
-
-private fun Iterable<List<String>>.intersectAll(): List<String> {
-    return minBy { it.size }
-        .filter { elem ->
-            this.all {
-                it.binarySearch(elem) >= 0
-            }
-        }
-}
