@@ -2,7 +2,7 @@ package aoc2024.day23
 
 import common.*
 
-// cat example.txt | awk -F- 'BEGIN{print "graph {"; print "overlap=voronoi"} {print $1 "--" $2 ";"} END{print "}"}' | neato -Tsvg > example.svg
+// cat input.txt | awk -F- 'BEGIN{print "graph {"; print "maxiter=10000"; print "splines=false"; print "K=0.8"; print "node [shape=point]"; print "edge [color=grey,penwidth=0.2]"} {print $1 "--" $2 ";"} END{print "}"}' | fdp -Tsvg > input.svg
 private val examples = loadFilesToLines("aoc2024/day23", "example.txt", "example2.txt")
 private val puzzle = loadFilesToLines("aoc2024/day23", "input.txt").single()
 
