@@ -1,0 +1,78 @@
+digraph {
+K=0.5
+x00 [pin=true,pos="1,10"]; x01 [pin=true,pos="1,16"]; x02 [pin=true,pos="1,22"]; x03 [pin=true,pos="1,28"]; x04 [pin=true,pos="1,34"]
+y00 [pin=true,pos="10,10"]; y01 [pin=true,pos="10,16"]; y02 [pin=true,pos="10,22"]; y03 [pin=true,pos="10,28"]; y04 [pin=true,pos="10,34"]
+z00 [pin=true,pos="40,10"]; z01 [pin=true,pos="40,13"]; z02 [pin=true,pos="40,16"]; z03 [pin=true,pos="40,19"]; z04 [pin=true,pos="40,22"]; z05 [pin=true,pos="40,25"]; z06 [pin=true,pos="40,28"]; z07 [pin=true,pos="40,31"]; z08 [pin=true,pos="40,34"]; z09 [pin=true,pos="40,37"]; z10 [pin=true,pos="40,40"]; z11 [pin=true,pos="40,43"]; z12 [pin=true,pos="40,46"]
+XOR0 [style=filled,fillcolor=lightblue]
+ntg -> XOR0; fgs -> XOR0; XOR0 -> mjb;
+OR1 [style=filled,fillcolor=lawngreen]
+y02 -> OR1; x01 -> OR1; OR1 -> tnw;
+OR2 [style=filled,fillcolor=lawngreen]
+kwq -> OR2; kpj -> OR2; OR2 -> z05;
+OR3 [style=filled,fillcolor=lawngreen]
+x00 -> OR3; x03 -> OR3; OR3 -> fst;
+XOR4 [style=filled,fillcolor=lightblue]
+tgd -> XOR4; rvg -> XOR4; XOR4 -> z01;
+OR5 [style=filled,fillcolor=lawngreen]
+vdt -> OR5; tnw -> OR5; OR5 -> bfw;
+AND6 [style=filled,fillcolor=deeppink]
+bfw -> AND6; frj -> AND6; AND6 -> z10;
+OR7 [style=filled,fillcolor=lawngreen]
+ffh -> OR7; nrd -> OR7; OR7 -> bqk;
+AND8 [style=filled,fillcolor=deeppink]
+y00 -> AND8; y03 -> AND8; AND8 -> djm;
+OR9 [style=filled,fillcolor=lawngreen]
+y03 -> OR9; y00 -> OR9; OR9 -> psh;
+OR10 [style=filled,fillcolor=lawngreen]
+bqk -> OR10; frj -> OR10; OR10 -> z08;
+OR11 [style=filled,fillcolor=lawngreen]
+tnw -> OR11; fst -> OR11; OR11 -> frj;
+AND12 [style=filled,fillcolor=deeppink]
+gnj -> AND12; tgd -> AND12; AND12 -> z11;
+XOR13 [style=filled,fillcolor=lightblue]
+bfw -> XOR13; mjb -> XOR13; XOR13 -> z00;
+OR14 [style=filled,fillcolor=lawngreen]
+x03 -> OR14; x00 -> OR14; OR14 -> vdt;
+AND15 [style=filled,fillcolor=deeppink]
+gnj -> AND15; wpb -> AND15; AND15 -> z02;
+AND16 [style=filled,fillcolor=deeppink]
+x04 -> AND16; y00 -> AND16; AND16 -> kjc;
+OR17 [style=filled,fillcolor=lawngreen]
+djm -> OR17; pbm -> OR17; OR17 -> qhw;
+AND18 [style=filled,fillcolor=deeppink]
+nrd -> AND18; vdt -> AND18; AND18 -> hwm;
+AND19 [style=filled,fillcolor=deeppink]
+kjc -> AND19; fst -> AND19; AND19 -> rvg;
+OR20 [style=filled,fillcolor=lawngreen]
+y04 -> OR20; y02 -> OR20; OR20 -> fgs;
+AND21 [style=filled,fillcolor=deeppink]
+y01 -> AND21; x02 -> AND21; AND21 -> pbm;
+OR22 [style=filled,fillcolor=lawngreen]
+ntg -> OR22; kjc -> OR22; OR22 -> kwq;
+XOR23 [style=filled,fillcolor=lightblue]
+psh -> XOR23; fgs -> XOR23; XOR23 -> tgd;
+XOR24 [style=filled,fillcolor=lightblue]
+qhw -> XOR24; tgd -> XOR24; XOR24 -> z09;
+OR25 [style=filled,fillcolor=lawngreen]
+pbm -> OR25; djm -> OR25; OR25 -> kpj;
+XOR26 [style=filled,fillcolor=lightblue]
+x03 -> XOR26; y03 -> XOR26; XOR26 -> ffh;
+XOR27 [style=filled,fillcolor=lightblue]
+x00 -> XOR27; y04 -> XOR27; XOR27 -> ntg;
+OR28 [style=filled,fillcolor=lawngreen]
+bfw -> OR28; bqk -> OR28; OR28 -> z06;
+XOR29 [style=filled,fillcolor=lightblue]
+nrd -> XOR29; fgs -> XOR29; XOR29 -> wpb;
+XOR30 [style=filled,fillcolor=lightblue]
+frj -> XOR30; qhw -> XOR30; XOR30 -> z04;
+OR31 [style=filled,fillcolor=lawngreen]
+bqk -> OR31; frj -> OR31; OR31 -> z07;
+OR32 [style=filled,fillcolor=lawngreen]
+y03 -> OR32; x01 -> OR32; OR32 -> nrd;
+AND33 [style=filled,fillcolor=deeppink]
+hwm -> AND33; bqk -> AND33; AND33 -> z03;
+XOR34 [style=filled,fillcolor=lightblue]
+tgd -> XOR34; rvg -> XOR34; XOR34 -> z12;
+OR35 [style=filled,fillcolor=lawngreen]
+tnw -> OR35; pbm -> OR35; OR35 -> gnj;
+}
