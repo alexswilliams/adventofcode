@@ -53,16 +53,22 @@ private fun part2(input: List<String>): String {
     println(
         """
         digraph {
-        K=0.2
-        maxiter=2000
+        K=0.5
     """.trimIndent()
     )
     println(fixedNodes['x']!!.sorted().joinToString("; ") { "$it [pin=true,pos=\"1,${it.toIntFromIndex(1) * 10 + 10}\"]" })
     println(fixedNodes['y']!!.sorted().joinToString("; ") { "$it [pin=true,pos=\"10,${it.toIntFromIndex(1) * 10 + 10}\"]" })
     println(fixedNodes['z']!!.sorted().joinToString("; ") { "$it [pin=true,pos=\"40,${it.toIntFromIndex(1) * 10 + 10}\"]" })
     mappings.forEachIndexed { index, gate ->
+        println("${gate.op}${index} [style=filled,fillcolor=${colourForNode(gate.op)}]")
         println("${gate.inA} -> ${gate.op}${index}; ${gate.inB} -> ${gate.op}${index}; ${gate.op}${index} -> ${gate.output};")
     }
     println("}")
     return "fbq,pbv,qff,qnw,qqp,z16,z23,z36"
+}
+
+fun colourForNode(op: String): String = when (op) {
+    "AND" -> "deeppink"
+    "OR" -> "lawngreen"
+    else -> "lightblue"
 }
