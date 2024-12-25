@@ -206,6 +206,14 @@ fun <T> List<T>.tail(): List<T> = if (isEmpty()) emptyList() else subList(1, siz
 fun <R, C> cartesianProductOf(rows: Iterable<R>, cols: Iterable<C>): List<Pair<R, C>> =
     rows.flatMap { row -> cols.map { col -> row to col } }
 
+fun <R, C> cartesianProductSequenceOf(rows: Iterable<R>, cols: Iterable<C>): Sequence<Pair<R, C>> = sequence {
+    rows.forEach { row -> cols.forEach { col -> yield(row to col) } }
+}
+
+fun <R, C> forEachCartesianProductOf(rows: Iterable<R>, cols: Iterable<C>, onEach: (r: R, c: C) -> Unit) {
+    rows.forEach { row -> cols.forEach { col -> onEach(row, col) } }
+}
+
 fun Iterable<Int>.product() = this.reduce { acc, i -> acc * i }
 fun IntArray.product() = this.reduce { acc, i -> acc * i }
 fun Iterable<Long>.product() = this.reduce { acc, i -> acc * i }
