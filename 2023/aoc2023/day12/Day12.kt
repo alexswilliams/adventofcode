@@ -31,7 +31,7 @@ private fun part1(input: List<String>): Long =
 private fun part2(input: List<String>): Long =
     sumOfPlacementsForAll(
         input.splitOnSpaces()
-            .map { simplify(listOf(it[0]).repeat(5).joinToString("?"), it[1].splitToInts(",").repeat(5)) })
+            .map { simplify(listOf(it[0]).times(5).joinToString("?"), it[1].splitToInts(",").times(5)) })
 
 
 private typealias SearchState = Int

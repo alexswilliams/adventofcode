@@ -178,6 +178,15 @@ fun List<String>.transposeToStrings(): List<String> =
         }.toString()
     }
 
+fun List<String>.transposedView(): List<List<Char>> =
+    this[0].indices.map { ListStringColumnView(it, this) }
+
+class ListStringColumnView(private val column: Int, private val delegate: List<String>) : AbstractList<Char>(), RandomAccess {
+    override val size: Int get() = delegate.size
+    override fun get(index: Int): Char = delegate[index][column]
+}
+
+
 @Suppress("UNCHECKED_CAST")
 fun <T : CharSequence> List<T?>.filterNotNullOrBlank() = this.filter { !it.isNullOrBlank() } as List<T>
 fun <T : CharSequence> List<T>.filterNotBlank() = this.filter { it.isNotBlank() }
@@ -210,8 +219,18 @@ fun <R, C> cartesianProductSequenceOf(rows: Iterable<R>, cols: Iterable<C>): Seq
     rows.forEach { row -> cols.forEach { col -> yield(row to col) } }
 }
 
-fun <R, C> forEachCartesianProductOf(rows: Iterable<R>, cols: Iterable<C>, onEach: (r: R, c: C) -> Unit) {
-    rows.forEach { row -> cols.forEach { col -> onEach(row, col) } }
+inline fun <R, C> forEachCartesianProductOf(rows: Iterable<R>, cols: Iterable<C>, crossinline onEach: (r: R, c: C) -> Unit) {
+    for (row in rows) {
+        for (col in cols) {
+            onEach(row, col)
+        }
+    }
+}
+
+inline fun <R, C> countCartesianProductOf(rows: Iterable<R>, cols: Iterable<C>, crossinline predicate: (r: R, c: C) -> Boolean): Int {
+    var count = 0
+    forEachCartesianProductOf(rows, cols) { r, c -> if (predicate(r, c)) count++ }
+    return count
 }
 
 fun Iterable<Int>.product() = this.reduce { acc, i -> acc * i }
@@ -605,12 +624,12 @@ fun fillDeadEnds(grid: Grid, floor: Char = '.', wall: Char = '#'): Grid {
     return grid
 }
 
-fun <T> List<T>.repeat(n: Int): List<T> = when (n) {
+fun <T> List<T>.times(n: Int): List<T> = when (n) {
     0 -> emptyList()
     1 -> this
     else -> when (size) {
         0 -> emptyList()
-        else -> buildList(n * size) { repeat(n) { this.addAll(this@repeat) } }
+        else -> buildList(n * size) { repeat(n) { this.addAll(this@times) } }
     }
 }
 
@@ -644,6 +663,24 @@ fun <T> List<T>.allIndexed(predicate: (index: Int, T) -> Boolean): Boolean {
     for (element in this) {
         if (!predicate(index, element)) return false
         index++
+    }
+    return true
+}
+
+fun <T, Q> List<T>.allZipped(other: List<Q>, predicate: (T, Q) -> Boolean): Boolean {
+    val tIterator = listIterator()
+    val qIterator = other.listIterator()
+    while (tIterator.hasNext() && qIterator.hasNext()) {
+        if (!predicate(tIterator.next(), qIterator.next())) return false
+    }
+    return true
+}
+
+fun IntArray.allZipped(other: IntArray, predicate: (Int, Int) -> Boolean): Boolean {
+    val tIterator = iterator()
+    val qIterator = other.iterator()
+    while (tIterator.hasNext() && qIterator.hasNext()) {
+        if (!predicate(tIterator.next(), qIterator.next())) return false
     }
     return true
 }

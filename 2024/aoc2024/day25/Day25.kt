@@ -7,7 +7,7 @@ private val puzzle = loadFilesToLines("aoc2024/day25", "input.txt").single()
 
 internal fun main() {
     Day25.assertCorrect()
-    benchmark { part1(puzzle) } // 719µs
+    benchmark { part1(puzzle) } // 563µs
 }
 
 internal object Day25 : Challenge {
@@ -19,13 +19,14 @@ internal object Day25 : Challenge {
 
 
 private fun part1(input: List<String>): Int {
-    val (locks, keys) = input.windowed(7, 8).map { it.transposeToStrings() }.partition { it[0][0] == '#' }
-    val lockNumbers = schematicToNumberList(locks)
-    val keyNumbers = schematicToNumberList(keys)
-    var count = 0
-    forEachCartesianProductOf(lockNumbers, keyNumbers) { lock, key -> if (lock.indices.all { lock[it] + key[it] <= 5 }) count++ }
-    return count
+    val (locks, keys) = input.windowed(7, 8).partition { it[0][0] == '#' }
+    val lockNumbers = locks.map { schematicToNumberList(it) }
+    val keyNumbers = keys.map { schematicToNumberList(it) }
+
+    return countCartesianProductOf(lockNumbers, keyNumbers) { lock, key ->
+        lock.allZipped(key) { lockPin, keyPin -> lockPin + keyPin <= 5 }
+    }
 }
 
-private fun schematicToNumberList(schematics: List<List<String>>) =
-    schematics.map { device -> device.map { pin -> pin.count { it == '#' } - 1 } }
+private fun schematicToNumberList(schematic: List<String>) =
+    schematic.transposedView().map { pin -> pin.count { it == '#' } - 1 }.toIntArray()
