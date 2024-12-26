@@ -27,7 +27,8 @@ internal object Day23 : Challenge {
 private fun part1(input: List<String>): Int {
     val edges = parseNet(input)
     return buildSet {
-        for (potentialChiefPc in edges.keys.filter { it / 26 == 't' - 'a' }) {
+        val startSet = edges.keys.filter { it / 26 == 't' - 'a' }
+        for (potentialChiefPc in startSet) {
             val work = ArrayDeque(edges[potentialChiefPc]!!.map { it to listOf(potentialChiefPc) })
             while (work.isNotEmpty()) {
                 val (thisPc, seenSoFar) = work.removeLast()
@@ -48,16 +49,19 @@ private fun part2(input: List<String>): String {
     val edgeCache = Array<List<Int>?>(26 * 26) { null }
     edges.entries.forEach { (k, v) -> edgeCache[k] = v }
 
-    var groups = edges.keys.map { listOf(it) }
-    while (groups.size > 1) {
-        groups = groups.flatMap { nodeSet ->
-            nodeSet.map { node -> edgeCache[node]!!.filter { it > node } }
-                .intersectAll()
-                .map { nodeSet.plusUniqueSorted(it) }
-        }.distinct()
+    var cliques = edges.keys.map { listOf(it) }
+    while (cliques.size > 1) {
+        cliques = expandCliquesByOneWhereGreater(cliques, edgeCache)
     }
-    return groups.single().joinToString(",") { keyToStr(it) }
+    return cliques.single().joinToString(",") { keyToStr(it) }
 }
+
+private fun expandCliquesByOneWhereGreater(cliques: List<List<Int>>, edgeCache: Array<List<Int>?>) =
+    cliques.flatMap { nodeSet ->
+        nodeSet.map { node -> edgeCache[node]!!.filter { it > node } }
+            .intersectAll()
+            .map { nodeSet.plusUniqueSorted(it) }
+    }.distinct()
 
 private fun parseNet(input: List<String>): Map<Int, List<Int>> =
     buildMap<Int, MutableList<Int>> {
@@ -72,3 +76,8 @@ private fun parseNet(input: List<String>): Map<Int, List<Int>> =
 
 private fun strToKey(str: String): Int = (str[0] - 'a') * 26 + (str[1] - 'a')
 private fun keyToStr(key: Int): String = buildString { append('a' + (key / 26)); append('a' + key % 26) }
+
+// only works when inner lists are sorted
+fun <T : Comparable<T>> Iterable<List<T>>.intersectAll(): List<T> =
+    minBy { it.size }.filter { elem -> this.all { it.binarySearch(elem) >= 0 } }
+

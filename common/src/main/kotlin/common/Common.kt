@@ -702,9 +702,6 @@ inline fun <T, K, V> Iterable<T>.groupByToSet(keySelector: (T) -> K, valueTransf
     return destination
 }
 
-fun <T : Comparable<T>> Iterable<List<T>>.intersectAll(): List<T> =
-    minBy { it.size }.filter { elem -> this.all { it.binarySearch(elem) >= 0 } }
-
 fun <T : Comparable<T>> List<T>.plusUniqueSorted(i: T): List<T> {
     val insertPosition = this.binarySearch(i)
     return if (insertPosition >= 0) this
