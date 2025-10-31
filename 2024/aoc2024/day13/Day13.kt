@@ -25,7 +25,7 @@ private fun part1(input: List<String>): Long = payToWin(input, 0, false)
 private fun part2(input: List<String>): Long = payToWin(input, TEN_BAJILLION, true)
 
 private val INPUT_MATCHER = Regex(".*X.(\\d+), Y.(\\d+)")
-private val TEN_BAJILLION = 10_000_000_000_000
+private const val TEN_BAJILLION = 10_000_000_000_000
 
 private fun payToWin(input: List<String>, movePrizeAwayBy: Long, armsNeverGetTired: Boolean) = input.windowed(3, 4).sumOf { claw ->
     val (ax, ay) = claw[0].matchingAsLongList(INPUT_MATCHER) ?: error("invalid input")

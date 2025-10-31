@@ -100,7 +100,7 @@ private fun placeRunInGroup(pattern: String, startAt: Int, runLengths: List<Int>
 
 private fun simplify(springs: String, groupings: List<Int>): Pair<String, List<Int>> {
     var str = springs.removeDuplicatesOf('.')
-    var lst = groupings.toMutableList()
+    val lst = groupings.toMutableList()
 
     var strBefore: String
     do {

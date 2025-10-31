@@ -33,7 +33,7 @@ private fun part1(input: List<String>): Int {
     while (true) {
         val endPosition = simulateGrain(grainStart, grid, bounds)
         grid[endPosition] = 'o'
-        if (endPosition.first < xMin || endPosition.first > xMax || endPosition.second > yMax) break
+        if (endPosition.first !in xMin..xMax || endPosition.second > yMax) break
 //        printGrid(grid, "part1", grains)
         grains++
     }
@@ -83,7 +83,7 @@ private fun simulateGrain(start: Pos, voxels: MutableMap<Pos, Char>, bounds: Tri
     val (xMin, xMax, yMax) = bounds
     while (true) {
         when {
-            x < xMin || x > xMax || y > yMax -> return (x to y) // out of bounds
+            x !in xMin..xMax || y > yMax -> return (x to y) // out of bounds
             (x to y) in voxels -> return x to y // position blocked
             (x to y + 1) !in voxels -> y++ // descend
             (x - 1 to y + 1) !in voxels -> x--.also { y++ } // descend left

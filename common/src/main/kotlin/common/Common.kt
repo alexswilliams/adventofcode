@@ -368,7 +368,7 @@ fun String.toLongFromIndex(startAt: Int): Long {
     var char = this[startAt]
     val isNegative = char == '-'
     if (isNegative) char = this[++currentOffset]
-    if (char < '0' || char > '9') throw Exception("Invalid digit")
+    if (char !in '0'..'9') throw Exception("Invalid digit")
     do {
         value = value * 10 + (char - '0')
         char = if (currentOffset < endAt) this[++currentOffset] else Char.MIN_VALUE

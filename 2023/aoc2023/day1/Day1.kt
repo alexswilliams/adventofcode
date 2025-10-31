@@ -33,16 +33,16 @@ private fun part2(input: List<String>) = input.sumOf { line ->
 
 private val digits = '1'..'9' // note 0 is missing, so .isDigit() may give wrong answer
 private fun getDigitFromWordOrNull(s: String, c: Char, index: Int): Int? =
-    when {
-        c in digits -> c.digitToInt()
-        c == 'o' && s.regionMatches(index, "one", 0, 3) -> 1
-        c == 't' && s.regionMatches(index, "two", 0, 3) -> 2
-        c == 't' && s.regionMatches(index, "three", 0, 5) -> 3
-        c == 'f' && s.regionMatches(index, "four", 0, 4) -> 4
-        c == 'f' && s.regionMatches(index, "five", 0, 4) -> 5
-        c == 's' && s.regionMatches(index, "six", 0, 3) -> 6
-        c == 's' && s.regionMatches(index, "seven", 0, 5) -> 7
-        c == 'e' && s.regionMatches(index, "eight", 0, 5) -> 8
-        c == 'n' && s.regionMatches(index, "nine", 0, 4) -> 9
+    when (c) {
+        in digits -> c.digitToInt()
+        'o' if s.regionMatches(index, "one", 0, 3) -> 1
+        't' if s.regionMatches(index, "two", 0, 3) -> 2
+        't' if s.regionMatches(index, "three", 0, 5) -> 3
+        'f' if s.regionMatches(index, "four", 0, 4) -> 4
+        'f' if s.regionMatches(index, "five", 0, 4) -> 5
+        's' if s.regionMatches(index, "six", 0, 3) -> 6
+        's' if s.regionMatches(index, "seven", 0, 5) -> 7
+        'e' if s.regionMatches(index, "eight", 0, 5) -> 8
+        'n' if s.regionMatches(index, "nine", 0, 4) -> 9
         else -> null
     }

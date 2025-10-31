@@ -82,7 +82,7 @@ private fun part2(input: List<String>): String {
 
 private fun parseInput(input: List<String>) =
     input.partitionOnLineBreak(
-        { it.map { it.substring(0, 3) to (it[5] == '1') } })
+        { line -> line.map { it.substring(0, 3) to (it[5] == '1') } })
     { it.mapMatching(Regex("(.+) (AND|OR|XOR) (.+) -> (.+)")).map { (a, op, b, dest) -> Gate(a, b, Op.valueOf(op), dest) } }
 
 

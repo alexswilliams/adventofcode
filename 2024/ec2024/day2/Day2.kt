@@ -57,9 +57,9 @@ private fun part3(input: List<String>): Int {
     val scalePositions = mutableSetOf<Long>()
 
     grid.forEachIndexed { row, line ->
-        val wrappedLine = line + line.substring(0, longestRuneLength)
+        val wrappedLine = line + line.take(longestRuneLength)
         val reversedLine = line.reversed()
-        val wrappedReversedLine = reversedLine + reversedLine.substring(0, longestRuneLength)
+        val wrappedReversedLine = reversedLine + reversedLine.take(longestRuneLength)
         runes.forEach { runeWord -> findPositions(wrappedLine, runeWord) { col -> scalePositions.add(row by col % line.length) } }
         runes.forEach { runeWord -> findPositions(wrappedReversedLine, runeWord) { col -> scalePositions.add(row by line.lastIndex - (col % line.length)) } }
     }

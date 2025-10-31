@@ -16,7 +16,7 @@ internal object Day21 : Challenge {
         check(126384, "P1 Example") { part1(example) }
         check(248108, "P1 Puzzle") { part1(puzzle) }
 
-        check(303836969158972, "P2 Puzzle") { part2(puzzle).toLong() }
+        check(303836969158972, "P2 Puzzle") { part2(puzzle) }
     }
 }
 

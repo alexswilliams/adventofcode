@@ -84,14 +84,14 @@ private fun classifyPokerHand(cards: String): Int {
             }
         }
     }
-    return when {
-        unique == 1 -> PokerType.FIVE_OF_A_KIND
-        unique == 4 -> PokerType.ONE_PAIR
-        unique == 5 -> PokerType.HIGH_CARD
-        unique == 2 && counts.any { it == 4 } -> PokerType.FOUR_OF_A_KIND
-        unique == 2 && counts.any { it == 3 } -> PokerType.FULL_HOUSE
-        unique == 3 && counts.any { it == 3 } -> PokerType.THREE_OF_A_KIND
-        unique == 3 && counts.any { it == 1 } && counts.any { it == 2 } -> PokerType.TWO_PAIR
+    return when (unique) {
+        1 -> PokerType.FIVE_OF_A_KIND
+        4 -> PokerType.ONE_PAIR
+        5 -> PokerType.HIGH_CARD
+        2 if counts.any { it == 4 } -> PokerType.FOUR_OF_A_KIND
+        2 if counts.any { it == 3 } -> PokerType.FULL_HOUSE
+        3 if counts.any { it == 3 } -> PokerType.THREE_OF_A_KIND
+        3 if counts.any { it == 1 } && counts.any { it == 2 } -> PokerType.TWO_PAIR
         else -> throw Exception("Unexpected card type for $cards -> $counts")
     }.strength
 }

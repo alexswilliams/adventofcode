@@ -45,7 +45,7 @@ private fun findMirrorColumns(grid: List<String>, ignore: Int? = null) =
         .filter { splitBefore ->
             grid.all { line ->
                 if (splitBefore * 2 < line.length) {
-                    val before = line.substring(0, splitBefore)
+                    val before = line.take(splitBefore)
                     val after = line.substring(splitBefore, splitBefore * 2)
                     before == after.reversed()
                 } else {
