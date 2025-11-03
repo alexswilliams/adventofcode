@@ -11,3 +11,4 @@ out
 build
 .attach_pid*
 *.yaml
+.kotlin
