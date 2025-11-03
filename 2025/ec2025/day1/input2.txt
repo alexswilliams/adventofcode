@@ -1,0 +1,3 @@
+Narpyros,Urardith,Xendgalor,Kalmirix,Darfroth,Qalwyris,Orylar,Elarulth,Fenmyr,Vornrovan,Palthendris,Xyrlyr,Elarroth,Drethlyr,Adalxel,Zyrzal,Lirulrix,Torpyr,Balkynar,Ralzris
+
+L12,R5,L13,R14,L13,R19,L8,R8,L17,R8,L5,R17,L5,R9,L5,R8,L5,R5,L5,R6,L13,R10,L19,R15,L14,R12,L13,R13,L13
