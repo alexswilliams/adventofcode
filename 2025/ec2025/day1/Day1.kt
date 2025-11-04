@@ -7,9 +7,9 @@ private val puzzles = loadFilesToLines("ec2025/day1", "input1.txt", "input2.txt"
 
 internal fun main() {
     DayX.assertCorrect()
-    benchmark { part1(puzzles[0]) }
-    benchmark { part2(puzzles[1]) }
-    benchmark(100) { part3(puzzles[2]) }
+    benchmark(100) { part1(puzzles[0]) } // 31.2µs
+    benchmark(100) { part2(puzzles[1]) } // 31.3µs
+    benchmark(100) { part3(puzzles[2]) } // 39.3µs
 }
 
 internal object DayX : Challenge {
@@ -27,33 +27,28 @@ internal object DayX : Challenge {
 
 
 private fun part1(input: List<String>): String {
-    val names = input.first().split(",")
-    val instructions = input.last().split(",").map { it.first() to it.drop(1).toInt() }
-    var pos = 0
-    for ((direction, distance) in instructions) {
-        pos = (if (direction == 'L') (pos - distance) else (pos + distance)).coerceIn(0, instructions.lastIndex)
-    }
+    val names = input[0].split(",")
+    val pos = parseMoves(input).fold(0) { acc, (dir, dist) -> rotate(dir, acc, dist).coerceIn(0, names.lastIndex) }
     return names[pos]
 }
 
 private fun part2(input: List<String>): String {
-    val names = input.first().split(",")
-    val instructions = input.last().split(",").map { it.first() to it.drop(1).toInt() }
-    var pos = 0
-    for ((direction, distance) in instructions) {
-        pos = ((if (direction == 'L') (pos - distance) else (pos + distance)) + names.size * 100) % names.size
-    }
+    val names = input[0].split(",")
+    val pos = parseMoves(input).fold(0) { acc, (dir, dist) -> ((rotate(dir, acc, dist)) + names.size * dist) % names.size }
     return names[pos]
 }
 
 private fun part3(input: List<String>): String {
-    val names = input.first().split(",").toMutableList()
-    val instructions = input.last().split(",").map { it.first() to it.drop(1).toInt() }
-    for ((direction, distance) in instructions) {
-        val top = names[0]
-        val position = ((if (direction == 'L') -distance else +distance) + names.size * 100) % names.size
-        names[0] = names[position]
-        names[position] = top
-    }
+    val names = input[0].split(",") as MutableList<String>
+    for ((dir, dist) in parseMoves(input))
+        names.swap(0, ((rotate(dir, 0, dist)) + names.size * dist) % names.size)
     return names[0]
 }
+
+
+private fun parseMoves(input: List<String>): List<Pair<Char, Int>> =
+    input.last().split(",").map { it[0] to it.toIntFromIndex(1) }
+
+private fun rotate(dir: Char, acc: Int, dist: Int): Int =
+    if (dir == 'L') (acc - dist) else (acc + dist)
+

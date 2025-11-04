@@ -707,3 +707,9 @@ fun <T : Comparable<T>> List<T>.plusUniqueSorted(i: T): List<T> {
     return if (insertPosition >= 0) this
     else ArrayList(this).also { it.add(-insertPosition - 1, i) }
 }
+
+fun <T> MutableList<T>.swap(i: Int, j: Int) {
+    val temp = this[i]
+    this[i] = this[j]
+    this[j] = temp
+}
