@@ -1,15 +1,16 @@
 package ec2025.day2
 
 import common.*
+import kotlinx.coroutines.*
 
 private val examples = loadFilesToLines("ec2025/day2", "example1.txt", "example2.txt", "example3.txt")
 private val puzzles = loadFilesToLines("ec2025/day2", "input1.txt", "input2.txt", "input3.txt")
 
 internal fun main() {
     Day2.assertCorrect()
-    benchmark { part1(puzzles[0]) } // 4.6µs
-    benchmark { part2(puzzles[1]) } // 1.9ms
-    benchmark(10) { part3(puzzles[2]) } // 183.7ms
+    benchmark { part1(puzzles[0]) } // 3.2µs
+    benchmark { part2(puzzles[1]) } // 395.4µs
+    benchmark(10) { part3(puzzles[2]) } // 17.5ms
 }
 
 internal object Day2 : Challenge {
@@ -48,20 +49,23 @@ private fun filterGrid(input: List<String>, step: Long): Int {
     val startX = input[0].toLongFromIndex(3)
     val startY = input[0].toLongFromIndex(input[0].indexOf(',', 4) + 1)
 
-    return countCartesianProductOf(
-        LongProgression.fromClosedRange(startX, startX + 1000, step),
-        LongProgression.fromClosedRange(startY, startY + 1000, step)
-    ) { x, y ->
-        var rX = 0L
-        var rY = 0L
-        repeat(100) {
-            val tmpX = rX
-            rX = (rX * rX - rY * rY) / 100_000L + x
-            rY = (tmpX * rY) / 50_000L + y
+    return runBlocking(Dispatchers.Default) {
+        LongProgression.fromClosedRange(startX, startX + 1000, step).map { x ->
+            async {
+                LongProgression.fromClosedRange(startY, startY + 1000, step).count { y ->
+                    var rX = 0L
+                    var rY = 0L
+                    repeat(100) {
+                        val tmpX = rX
+                        rX = (rX * rX - rY * rY) / 100_000L + x
+                        rY = (tmpX * rY) / 50_000L + y
 
-            if (rX < -1_000_000 || rX > 1_000_000 || rY < -1_000_000 || rY > 1_000_000)
-                return@countCartesianProductOf false
-        }
-        true
+                        if (rX < -1_000_000 || rX > 1_000_000 || rY < -1_000_000 || rY > 1_000_000)
+                            return@count false
+                    }
+                    true
+                }
+            }
+        }.awaitAll().sum()
     }
 }
