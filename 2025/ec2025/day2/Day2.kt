@@ -2,6 +2,7 @@ package ec2025.day2
 
 import common.*
 import kotlinx.coroutines.*
+import kotlin.math.*
 
 private val examples = loadFilesToLines("ec2025/day2", "example1.txt", "example2.txt", "example3.txt")
 private val puzzles = loadFilesToLines("ec2025/day2", "input1.txt", "input2.txt", "input3.txt")
@@ -52,19 +53,20 @@ private fun filterGrid(input: List<String>, step: Long): Int {
     return runBlocking(Dispatchers.Default) {
         LongProgression.fromClosedRange(startX, startX + 1000, step).map { x ->
             async {
-                LongProgression.fromClosedRange(startY, startY + 1000, step).count { y ->
-                    var rX = 0L
-                    var rY = 0L
-                    repeat(100) {
-                        val tmpX = rX
-                        rX = (rX * rX - rY * rY) / 100_000L + x
-                        rY = (tmpX * rY) / 50_000L + y
+                LongProgression.fromClosedRange(startY, startY + 1000, step)
+                    .count { y ->
+                        var rX = 0L
+                        var rY = 0L
+                        repeat(100) {
+                            val tmpX = rX
+                            rX = (rX * rX - rY * rY) / 100_000L + x
+                            rY = (tmpX * rY) / 50_000L + y
 
-                        if (rX < -1_000_000 || rX > 1_000_000 || rY < -1_000_000 || rY > 1_000_000)
-                            return@count false
+                            if (rX.absoluteValue > 1_000_000 || rY.absoluteValue > 1_000_000)
+                                return@count false
+                        }
+                        true
                     }
-                    true
-                }
             }
         }.awaitAll().sum()
     }
