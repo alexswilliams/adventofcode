@@ -2,6 +2,10 @@ package ec2025.day2
 
 import common.*
 import kotlinx.coroutines.*
+import java.awt.Color.*
+import java.awt.image.*
+import java.io.*
+import javax.imageio.*
 import kotlin.math.*
 
 private val examples = loadFilesToLines("ec2025/day2", "example1.txt", "example2.txt", "example3.txt")
@@ -10,8 +14,8 @@ private val puzzles = loadFilesToLines("ec2025/day2", "input1.txt", "input2.txt"
 internal fun main() {
     Day2.assertCorrect()
     benchmark { part1(puzzles[0]) } // 3.2µs
-    benchmark { part2(puzzles[1]) } // 395.4µs
-    benchmark(10) { part3(puzzles[2]) } // 17.5ms
+    benchmark { part2(puzzles[1], outputPng = false) } // 395.4µs
+    benchmark(10) { part3(puzzles[2], outputPng = false) } // 17.5ms
 }
 
 internal object Day2 : Challenge {
@@ -42,13 +46,15 @@ private fun part1(input: List<String>): String {
     return "[${rX},${rY}]"
 }
 
-private fun part2(input: List<String>): Int = filterGrid(input, 10)
-private fun part3(input: List<String>): Int = filterGrid(input, 1)
+private fun part2(input: List<String>, outputPng: Boolean = true): Int = filterGrid(input, 10, outputPng)
+private fun part3(input: List<String>, outputPng: Boolean = true): Int = filterGrid(input, 1, outputPng)
 
 
-private fun filterGrid(input: List<String>, step: Long): Int {
+private fun filterGrid(input: List<String>, step: Long, outputPng: Boolean): Int {
     val startX = input[0].toLongFromIndex(3)
     val startY = input[0].toLongFromIndex(input[0].indexOf(',', 4) + 1)
+
+    val grid = Array(1001 / step.toInt() + 1) { BooleanArray(1001 / step.toInt() + 1) }
 
     return runBlocking(Dispatchers.Default) {
         LongProgression.fromClosedRange(startX, startX + 1000, step).map { x ->
@@ -65,9 +71,17 @@ private fun filterGrid(input: List<String>, step: Long): Int {
                             if (rX.absoluteValue > 1_000_000 || rY.absoluteValue > 1_000_000)
                                 return@count false
                         }
+                        if (outputPng) grid[((x - startX) / step).toInt()][((y - startY) / step).toInt()] = true
                         true
                     }
             }
         }.awaitAll().sum()
-    }
+    }.also { if (outputPng) drawGrid(grid) }
+}
+
+private fun drawGrid(grid: Array<BooleanArray>) {
+    val img = BufferedImage(grid.size, grid[0].size, BufferedImage.TYPE_INT_RGB)
+    val pixelData = grid.flatMap { row -> row.flatMap { col -> (if (col) orange else black).let { listOf(it.red, it.green, it.blue) } } }
+    img.raster.setPixels(0, 0, img.width, img.height, pixelData.toIntArray())
+    ImageIO.write(img, "PNG", File("/tmp/ec/day2/${img.height}x${img.width}.png").also { it.mkdirs() })
 }
