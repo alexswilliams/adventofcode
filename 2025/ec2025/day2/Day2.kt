@@ -7,9 +7,9 @@ private val puzzles = loadFilesToLines("ec2025/day2", "input1.txt", "input2.txt"
 
 internal fun main() {
     Day2.assertCorrect()
-    benchmark { part1(puzzles[0]) } // 4.9µs
-    benchmark(100) { part2(puzzles[1]) } // 14.3ms
-    benchmark(1) { part3(puzzles[2]) } // 1.39s
+    benchmark { part1(puzzles[0]) } // 4.6µs
+    benchmark { part2(puzzles[1]) } // 1.9ms
+    benchmark(10) { part3(puzzles[2]) } // 183.7ms
 }
 
 internal object Day2 : Challenge {
@@ -27,14 +27,17 @@ internal object Day2 : Challenge {
 
 
 private fun part1(input: List<String>): String {
-    val a = parseInput(input)
-    var r = Pair(0L, 0L)
+    val x = input[0].toLongFromIndex(3)
+    val y = input[0].toLongFromIndex(input[0].indexOf(',', 4) + 1)
+
+    var rX = 0L
+    var rY = 0L
     repeat(3) {
-        r *= r
-        r /= Pair(10L, 10L)
-        r += a
+        val tmpX = rX
+        rX = (rX * rX - rY * rY) / 10L + x
+        rY = (tmpX * rY) / 5L + y
     }
-    return "[${r.first},${r.second}]"
+    return "[${rX},${rY}]"
 }
 
 private fun part2(input: List<String>): Int = filterGrid(input, 10)
@@ -42,34 +45,23 @@ private fun part3(input: List<String>): Int = filterGrid(input, 1)
 
 
 private fun filterGrid(input: List<String>, step: Long): Int {
-    val a = parseInput(input)
+    val startX = input[0].toLongFromIndex(3)
+    val startY = input[0].toLongFromIndex(input[0].indexOf(',', 4) + 1)
+
     return countCartesianProductOf(
-        LongProgression.fromClosedRange(a.first, a.first + 1000, step),
-        LongProgression.fromClosedRange(a.second, a.second + 1000, step)
-    ) { row, col ->
-        val point = Pair(row, col)
-        var r = Pair(0L, 0L)
+        LongProgression.fromClosedRange(startX, startX + 1000, step),
+        LongProgression.fromClosedRange(startY, startY + 1000, step)
+    ) { x, y ->
+        var rX = 0L
+        var rY = 0L
         repeat(100) {
-            r *= r
-            r /= Pair(100_000L, 100_000L)
-            r += point
-            if (r.first < -1_000_000 || r.first > 1_000_000 || r.second < -1_000_000 || r.second > 1_000_000)
+            val tmpX = rX
+            rX = (rX * rX - rY * rY) / 100_000L + x
+            rY = (tmpX * rY) / 50_000L + y
+
+            if (rX < -1_000_000 || rX > 1_000_000 || rY < -1_000_000 || rY > 1_000_000)
                 return@countCartesianProductOf false
         }
         true
     }
 }
-
-private operator fun Pair<Long, Long>.times(n: Pair<Long, Long>): Pair<Long, Long> =
-    Pair(this.first * n.first - this.second * n.second, this.first * n.second + this.second * n.first)
-
-private operator fun Pair<Long, Long>.div(n: Pair<Long, Long>): Pair<Long, Long> =
-    Pair(this.first / n.first, this.second / n.second)
-
-private operator fun Pair<Long, Long>.plus(n: Pair<Long, Long>): Pair<Long, Long> =
-    Pair(this.first + n.first, this.second + n.second)
-
-private fun parseInput(input: List<String>): Pair<Long, Long> = Pair(
-    input[0].toLongFromIndex(3),
-    input[0].toLongFromIndex(input[0].indexOf(',', 4) + 1)
-)
