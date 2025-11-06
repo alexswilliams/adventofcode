@@ -9,7 +9,7 @@ internal fun main() {
     Day4.assertCorrect()
     benchmark { part1(puzzles[0]) } // 2.3µs
     benchmark { part2(puzzles[1]) } // 1.2µs
-    benchmark(100) { part3(puzzles[2]) } // 95.0µs
+    benchmark { part3(puzzles[2]) } // 31.3µs
 }
 
 internal object Day4 : Challenge {
