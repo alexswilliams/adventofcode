@@ -1,16 +1,15 @@
 package ec2025.day4
 
 import common.*
-import kotlin.math.*
 
 private val examples = loadFilesToLines("ec2025/day4", "example1a.txt", "example1b.txt", "example2a.txt", "example2b.txt", "example3a.txt", "example3b.txt")
 private val puzzles = loadFilesToLines("ec2025/day4", "input1.txt", "input2.txt", "input3.txt")
 
 internal fun main() {
     Day4.assertCorrect()
-    benchmark { part1(puzzles[0]) } // 9.4µs
-    benchmark { part2(puzzles[1]) } // 8.7µs
-    benchmark(100) { part3(puzzles[2]) } // 105.7µs
+    benchmark { part1(puzzles[0]) } // 2.3µs
+    benchmark { part2(puzzles[1]) } // 1.2µs
+    benchmark(100) { part3(puzzles[2]) } // 95.0µs
 }
 
 internal object Day4 : Challenge {
@@ -30,19 +29,17 @@ internal object Day4 : Challenge {
 }
 
 
-private fun part1(input: List<String>): Int = input.map { it.toInt() }.let { (it.first().toFloat() / it.last().toFloat() * 2025.0f).toInt() }
+private fun part1(input: List<String>): Int =
+    2025 * input.first().toInt() / input.last().toInt()
 
-const val target = 10_000_000_000_000L
 private fun part2(input: List<String>): Long =
-    input.map { it.toLong() }.let { target.toDouble() / (it.first().toDouble() / it.last().toDouble()) }.let { ceil(it).toLong() }
+    Math.ceilDiv(
+        10_000_000_000_000L * input.last().toLong(),
+        input.first().toLong()
+    )
 
 private fun part3(input: List<String>): Long {
-    val head = 0 to input.first().toInt()
-    val tail = input.last().toInt() to 0
-    val middle = input.drop(1).dropLast(1).map { spindle -> spindle.splitToInts("|").let { it[0] to it[1] } }
-    val gears = listOf(head) + middle + listOf(tail)
-    return (gears.zipWithNext()
-        .map { (gearA, gearB) -> gearA.second.toDouble() / gearB.first.toDouble() }
-        .reduce(Double::times) * 100.00).toLong()
+    val gears = input.map { it.splitToInts("|") }
+    val ratios = gears.zipWithNext().map { (gearA, gearB) -> gearA.last().toDouble() / gearB.first().toDouble() }
+    return (100.0 * ratios.reduce(Double::times)).toLong()
 }
-
