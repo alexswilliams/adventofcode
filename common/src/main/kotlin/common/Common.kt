@@ -380,6 +380,12 @@ fun String.splitToInts(delimiter: String) = splitMappingRanges(delimiter) { s, s
 fun String.splitToLongs(delimiter: String) = splitMappingRanges(delimiter) { s, start, _ -> s.toLongFromIndex(start) }
 
 // If delim isn't found, the number at the start of the string is passed as both parameters to transform
+fun <T> String.mapIntPair(delimiter: Char, transform: (Int, Int) -> T): T {
+    val splitPoint = indexOf(delimiter)
+    val firstInt = toIntFromIndex(0)
+    return transform(firstInt, if (splitPoint == -1) firstInt else toIntFromIndex(splitPoint + 1))
+}
+
 fun <T> String.mapLongPair(delimiter: Char, transform: (Long, Long) -> T): T {
     val splitPoint = indexOf(delimiter)
     val firstLong = toLongFromIndex(0)

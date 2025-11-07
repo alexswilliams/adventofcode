@@ -35,7 +35,7 @@ private fun part2(input: List<String>, gridSize: Int, startBytesToFall: Int): St
 }
 
 private fun populateGrid(input: List<String>, gridSize: Int, startBytesToFall: Int): Pair<List<Location1616>, Array<CharArray>> {
-    val positions = input.map { line -> line.splitToInts(",").let { it[1] by16 it[0] } }
+    val positions = input.map { line -> line.mapIntPair(',') { first, second -> second by16 first } }
     val grid = Array(gridSize) { CharArray(gridSize) { '.' } }
     positions.subList(0, startBytesToFall).forEach { grid[it.row()][it.col()] = '#' }
     return Pair(positions, grid)

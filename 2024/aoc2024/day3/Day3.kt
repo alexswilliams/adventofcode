@@ -24,17 +24,17 @@ internal object Day3 : Challenge {
 
 private fun part1(input: String): Int =
     mulRegex.findAll(input)
-        .sumOf { asPairOfIntegers(it).product() }
+        .sumOf { productOfInts(it) }
 
 private fun part2(input: String): Int =
     mulRegex.findAll(input).sumOf {
         val lastDo = input.lastIndexOf("do()", startIndex = it.range.first)
         val lastDont = input.lastIndexOf("don't()", startIndex = it.range.first)
-        if (lastDo >= lastDont) asPairOfIntegers(it).product() else 0
+        if (lastDo >= lastDont) productOfInts(it) else 0
     }
 
 
 private val mulRegex = Regex("mul\\([0-9]{1,3},[0-9]{1,3}\\)")
 
-private fun asPairOfIntegers(match: MatchResult) =
-    match.value.substring(4, match.value.length - 1).splitToInts(",")
+private fun productOfInts(match: MatchResult) =
+    match.value.substring(4, match.value.length - 1).mapIntPair(',') { a, b -> a * b }
