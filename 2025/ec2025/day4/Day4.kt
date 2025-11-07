@@ -38,5 +38,7 @@ private fun part2(input: List<String>): Long =
         input.first().toLong()
     )
 
-private fun part3(input: List<String>): Long =
-    100L * input.map { line -> line.splitToLongs("|").let { it.last() / it.first() } }.product() * input.first().toLong() / input.last().toLong()
+private fun part3(input: List<String>): Long {
+    val spindleMultipliers = input.map { line -> line.splitToLongs("|").let { it.last() / it.first() } }.product()
+    return 100L * spindleMultipliers * input.first().toLong() / input.last().toLong()
+}
