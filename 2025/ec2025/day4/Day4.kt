@@ -9,7 +9,7 @@ internal fun main() {
     Day4.assertCorrect()
     benchmark { part1(puzzles[0]) } // 2.3µs
     benchmark { part2(puzzles[1]) } // 1.2µs
-    benchmark { part3(puzzles[2]) } // 31.3µs
+    benchmark { part3(puzzles[2]) } // 25.2µs
 }
 
 internal object Day4 : Challenge {
@@ -38,8 +38,5 @@ private fun part2(input: List<String>): Long =
         input.first().toLong()
     )
 
-private fun part3(input: List<String>): Long {
-    val gears = input.map { it.splitToInts("|") }
-    val ratios = gears.zipWithNext().map { (gearA, gearB) -> gearA.last().toDouble() / gearB.first().toDouble() }
-    return (100.0 * ratios.reduce(Double::times)).toLong()
-}
+private fun part3(input: List<String>): Long =
+    100L * input.map { it.splitToLongs("|") }.map { it.last() / it.first() }.product() * input.first().toLong() / input.last().toLong()
