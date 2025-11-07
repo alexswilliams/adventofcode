@@ -379,6 +379,13 @@ fun String.toLongFromIndex(startAt: Int): Long {
 fun String.splitToInts(delimiter: String) = splitMappingRanges(delimiter) { s, start, _ -> s.toIntFromIndex(start) }
 fun String.splitToLongs(delimiter: String) = splitMappingRanges(delimiter) { s, start, _ -> s.toLongFromIndex(start) }
 
+// If delim isn't found, the number at the start of the string is passed as both parameters to transform
+fun <T> String.mapLongPair(delimiter: Char, transform: (Long, Long) -> T): T {
+    val splitPoint = indexOf(delimiter)
+    val firstLong = toLongFromIndex(0)
+    return transform(firstLong, if (splitPoint == -1) firstLong else toLongFromIndex(splitPoint + 1))
+}
+
 
 fun CharSequence.frequency(): List<Pair<Char, Int>> {
     val result = arrayListOf<Pair<Char, Int>>()

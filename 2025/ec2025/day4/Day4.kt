@@ -9,7 +9,7 @@ internal fun main() {
     Day4.assertCorrect()
     benchmark { part1(puzzles[0]) } // 2.3µs
     benchmark { part2(puzzles[1]) } // 1.2µs
-    benchmark { part3(puzzles[2]) } // 24.3µs
+    benchmark(10000) { part3(puzzles[2]) } // 5.0µs
 }
 
 internal object Day4 : Challenge {
@@ -39,6 +39,8 @@ private fun part2(input: List<String>): Long =
     )
 
 private fun part3(input: List<String>): Long {
-    val spindleMultipliers = input.map { line -> line.splitToLongs("|").let { it.last() / it.first() } }.product()
+    val spindleMultipliers = input
+        .map { line -> line.mapLongPair('|') { first, second -> second / first } }
+        .product()
     return 100L * spindleMultipliers * input.first().toLong() / input.last().toLong()
 }
