@@ -9,7 +9,7 @@ internal fun main() {
     Day4.assertCorrect()
     benchmark { part1(puzzles[0]) } // 2.3µs
     benchmark { part2(puzzles[1]) } // 1.2µs
-    benchmark { part3(puzzles[2]) } // 25.2µs
+    benchmark { part3(puzzles[2]) } // 24.3µs
 }
 
 internal object Day4 : Challenge {
@@ -39,4 +39,4 @@ private fun part2(input: List<String>): Long =
     )
 
 private fun part3(input: List<String>): Long =
-    100L * input.map { it.splitToLongs("|") }.map { it.last() / it.first() }.product() * input.first().toLong() / input.last().toLong()
+    100L * input.map { line -> line.splitToLongs("|").let { it.last() / it.first() } }.product() * input.first().toLong() / input.last().toLong()
