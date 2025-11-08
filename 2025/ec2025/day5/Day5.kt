@@ -9,8 +9,8 @@ private val puzzles = loadFilesToLines("ec2025/day5", "input1.txt", "input2.txt"
 internal fun main() {
     Day5.assertCorrect()
     benchmark { part1(puzzles[0]) } // 4.7µs
-    benchmark { part2(puzzles[1]) } // 173.8µs
-    benchmark { part3(puzzles[2]) } // 907.5µs
+    benchmark { part2(puzzles[1]) } // 164.1µs
+    benchmark { part3(puzzles[2]) } // 858.6µs
 }
 
 internal object Day5 : Challenge {
@@ -29,16 +29,16 @@ internal object Day5 : Challenge {
 
 
 private fun part1(input: List<String>): Long =
-    buildSword(input[0].splitToInts(",", startAt = 3)).quality10()
+    buildFishbone(input[0]).quality10()
 
 private fun part2(input: List<String>): Long =
-    input.map { buildSword(it.splitToInts(",", startAt = it.indexOf(':') + 1)).quality() }
+    input.map { buildFishbone(it).quality() }
         .stream().collect(Collectors.summarizingLong { it })
         .let { it.max - it.min }
 
 private fun part3(input: List<String>): Int =
     input.map {
-        with(buildSword(it.splitToInts(",", startAt = it.indexOf(':') + 1))) {
+        with(buildFishbone(it)) {
             Sword(it.toIntFromIndex(0), quality(), map { segment -> segment.numericValue() })
         }
     }.sortedWith { a, b ->
@@ -56,22 +56,30 @@ private fun List<Segment>.quality(): Long = fold(0L) { acc, segment -> acc * 10 
 private fun Segment.numericValue(): Int = this.toIntFromIndex(0)
 private typealias Segment = CharArray
 
-private fun buildSword(numbers: List<Int>): List<Segment> {
-    val spine = ArrayList<Segment>(32).apply { add(charArrayOf('0', '0' + numbers.first(), ' ')) }
-    var startSegment = 0
+private fun buildFishbone(swordSpec: String): List<Segment> {
+    val numbers = parseNumbers(swordSpec)
+    val fishbone = ArrayList<Segment>(25).apply { add(charArrayOf('0', numbers.first(), ' ')) }
+
+    var startSegmentIndex = 0
     nextNumber@ for (n in 1..numbers.lastIndex) {
-        val number = numbers[n]
-        val char = if (number == 10) 'A' else '0' + number
-        for (i in startSegment..spine.lastIndex) {
-            val segment = spine[i]
-            if (i == startSegment && (segment[0] != '0' || segment[1] == '1') && (segment[2] != ' ' || segment[1] == '9')) startSegment++
-            if (placeCharInSegment(segment, char)) continue@nextNumber
+        val startSegment = fishbone[startSegmentIndex]
+        if ((startSegment[0] != '0' || startSegment[1] == '1') && (startSegment[2] != ' ' || startSegment[1] == '9'))
+            startSegmentIndex++
+
+        for (i in startSegmentIndex..fishbone.lastIndex) {
+            if (placeCharInSegment(fishbone[i], numbers[n])) continue@nextNumber
         }
         // The leading 0 means no branching is needed in the start value of toIntFromIndex
-        spine.add(charArrayOf('0', char, ' '))
+        fishbone.add(charArrayOf('0', numbers[n], ' '))
     }
-    return spine
+    return fishbone
 }
+
+private fun parseNumbers(input: String): List<Char> =
+    input.splitMappingRanges(",", input.indexOf(':') + 1) { _, start, end ->
+        if (end - start == 1) 'A'
+        else input[start]
+    }
 
 private fun placeCharInSegment(segment: Segment, char: Char) =
     if (segment[0] == '0' && char < segment[1]) {
