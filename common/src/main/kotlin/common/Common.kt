@@ -376,8 +376,8 @@ fun String.toLongFromIndex(startAt: Int): Long {
     return if (isNegative) -value else value
 }
 
-fun String.splitToInts(delimiter: String) = splitMappingRanges(delimiter) { s, start, _ -> s.toIntFromIndex(start) }
-fun String.splitToLongs(delimiter: String) = splitMappingRanges(delimiter) { s, start, _ -> s.toLongFromIndex(start) }
+fun String.splitToInts(delimiter: String, startAt: Int = 0) = splitMappingRanges(delimiter, startAt) { s, start, _ -> s.toIntFromIndex(start) }
+fun String.splitToLongs(delimiter: String, startAt: Int = 0) = splitMappingRanges(delimiter, startAt) { s, start, _ -> s.toLongFromIndex(start) }
 
 // If delim isn't found, the number at the start of the string is passed as both parameters to transform
 fun <T> String.mapIntPair(delimiter: Char, transform: (Int, Int) -> T): T {

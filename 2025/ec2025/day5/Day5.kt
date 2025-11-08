@@ -8,9 +8,9 @@ private val puzzles = loadFilesToLines("ec2025/day5", "input1.txt", "input2.txt"
 
 internal fun main() {
     Day5.assertCorrect()
-    benchmark { part1(puzzles[0]) } // 10.0µs
-    benchmark { part2(puzzles[1]) } // 349.1µs
-    benchmark(100) { part3(puzzles[2]) } // 3.2ms
+    benchmark { part1(puzzles[0]) } // 9.3µs
+    benchmark { part2(puzzles[1]) } // 296.8µs
+    benchmark(1000) { part3(puzzles[2]) } // 1.7ms
 }
 
 internal object Day5 : Challenge {
@@ -29,24 +29,24 @@ internal object Day5 : Challenge {
 
 
 private fun part1(input: List<String>): Long =
-    buildSpine(input[0].splitMappingRanges(",", 3) { s, start, _ -> s.toIntFromIndex(start) })
-        .quality()
+    buildSpine(input[0].splitToInts(",", startAt = 3)).quality()
 
 private fun part2(input: List<String>): Long =
-    input.map { it.splitMappingRanges(",", it.indexOf(':') + 1) { s, start, _ -> s.toIntFromIndex(start) } }
-        .map { buildSpine(it).joinToString("") { segment -> segment.centre.toString() }.toLong() }
+    input.map { buildSpine(it.splitToInts(",", startAt = it.indexOf(':') + 1)).quality() }
         .stream().collect(Collectors.summarizingLong { it })
         .let { it.max - it.min }
 
 private fun part3(input: List<String>): Int =
-    input.map { line ->
-        line.split(':')
-            .let { it[0].toInt() to buildSpine(it[1].splitToInts(",")) }
-            .let { (id, spine) -> Sword(id = id, quality = spine.quality(), segmentValues = spine.map { it.numericValue() }) }
-    }.sorted().mapIndexed { index, sword -> (index + 1) * sword.id }.sum()
+    input.map { Sword.fromSegments(it.toIntFromIndex(0), buildSpine(it.splitToInts(",", startAt = it.indexOf(':') + 1))) }
+        .sorted()
+        .mapIndexed { index, sword -> (index + 1) * sword.id }.sum()
 
 
 private data class Sword(val id: Int, val quality: Long, val segmentValues: List<Int>) : Comparable<Sword> {
+    companion object {
+        fun fromSegments(id: Int, segments: List<Segment>): Sword = Sword(id, segments.quality(), segments.map { it.numericValue() })
+    }
+
     override fun compareTo(other: Sword): Int {
         other.quality.compareTo(quality).also { if (it != 0) return it }
         other.segmentValues.forEachIndexed { index, v -> v.compareTo(segmentValues[index]).also { if (it != 0) return it } }
