@@ -376,6 +376,23 @@ fun String.toLongFromIndex(startAt: Int): Long {
     return if (isNegative) -value else value
 }
 
+fun CharArray.toShortFromIndex(startAt: Int) = this.toLongFromIndex(startAt).toShort()
+fun CharArray.toIntFromIndex(startAt: Int) = this.toLongFromIndex(startAt).toInt()
+fun CharArray.toLongFromIndex(startAt: Int): Long {
+    var currentOffset = startAt
+    val endAt = this.lastIndex
+    var value = 0L
+    var char = this[startAt]
+    val isNegative = char == '-'
+    if (isNegative) char = this[++currentOffset]
+    if (char !in '0'..'9') throw Exception("Invalid digit")
+    do {
+        value = value * 10 + (char - '0')
+        char = if (currentOffset < endAt) this[++currentOffset] else Char.MIN_VALUE
+    } while (char in '0'..'9')
+    return if (isNegative) -value else value
+}
+
 fun String.splitToInts(delimiter: String, startAt: Int = 0) = splitMappingRanges(delimiter, startAt) { s, start, _ -> s.toIntFromIndex(start) }
 fun String.splitToLongs(delimiter: String, startAt: Int = 0) = splitMappingRanges(delimiter, startAt) { s, start, _ -> s.toLongFromIndex(start) }
 
