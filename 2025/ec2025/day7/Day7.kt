@@ -8,8 +8,8 @@ private val puzzles = loadFilesToLines("ec2025/day7", "input1.txt", "input2.txt"
 internal fun main() {
     Day7.assertCorrect()
     benchmark { part1(puzzles[0]) } // 25.9µs
-    benchmark { part2(puzzles[1]) } // 52.7µs
-    benchmark(100) { part3(puzzles[2]) } // 50.6ms
+    benchmark { part2(puzzles[1]) } // 48.1µs
+    benchmark(100) { part3(puzzles[2]) } // 145.7µs
 }
 
 internal object Day7 : Challenge {
@@ -38,16 +38,20 @@ private fun part3(input: List<String>): Int {
     val validPrefixes = names.filter { name -> isValidName(name, rules) }
     val dedupedPrefixes = validPrefixes.filterNot { needle -> validPrefixes.any { prefix -> needle != prefix && needle.startsWith(prefix) } }
 
+    val cache: MutableMap<Pair<Char, Int>, Int> = mutableMapOf()
     fun namesBeneath(char: Char, length: Int): Int {
+        cache[char to length]?.let { return it }
         val matchesAtThisLength = if (length in 7..11) 1 else 0
-        return if (length < 11 && char in rules)
-            matchesAtThisLength + rules[char]!!.sumOf { namesBeneath(it, length + 1) }
-        else
-            matchesAtThisLength
+        return matchesAtThisLength +
+                if (length < 11 && char in rules)
+                    rules[char]!!.sumOf { nextChar ->
+                        namesBeneath(nextChar, length + 1)
+                            .also { cache[nextChar to length + 1] = it }
+                    }
+                else 0
     }
 
-    val states = dedupedPrefixes.map { it.last() to it.length }
-    return states.sumOf { (char, length) -> namesBeneath(char, length) }
+    return dedupedPrefixes.sumOf { namesBeneath(it.last(), it.length) }
 }
 
 
