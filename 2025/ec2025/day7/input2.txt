@@ -1,0 +1,26 @@
+Rythagrath,Rythluth,Rythgyth,Tyrmyr,Nylagrath,Rahagrath,Kyndrith,Tyrmirix,Rahluth,Rahdrith,Rahgyth,Nylmyr,Arkdrith,Tyrmyr,Arkaes,Tyrgyth,Rahaes,Rahmyr,Arkmyr,Arkluth,Rahmyr,Arkagrath,Rahzyth,Tyraes,Rahmirix,Arkzyth,Arkmirix,Nylmyr,Tyrzyth,Jorathzyth,Jorathmyr,Tyrluth,Kyngyth,Nyldrith,Kalaes,Tyrdrith,Zyrluth,Nylaes,Nylluth,Rythmirix,Zyrmirix,Kynmyr,Rythdrith,Kalluth,Rythzyth,Rythmyr,Zyragrath,Arkmyr,Tyrdrith,Nylzyth,Tyragrath,Kalmirix,Dalzyth,Jorathdrith,Nylgyth,Nyldrith,Nylmirix,Rythaes,Kalmyr,Zyrmyr,Daldrith,Rahdrith,Jorathagrath,Rythmyr,Arkgyth,Rythdrith,Jorathmirix,Zyrzyth,Kaldrith,Zyrgyth,Kaldrith,Kynluth,Zyrdrith,Kynaes,Zyraes,Kalmyr,Zyrmyr,Jorathaes,Zyrdrith,Kyndrith,Kalzyth,Dalmirix,Jorathgyth,Jorathluth,Kynmyr,Dalaes,Daldrith,Kalagrath,Dalmyr,Dalluth,Dalagrath,Dalmyr,Kynzyth,Jorathmyr,Jorathdrith,Kynmirix,Kalgyth,Dalgyth,Kynagrath,Arkdrith
+
+D > a
+g > r,y
+d > r
+y > n,v,r,t
+K > y,a
+e > s
+J > o
+z > y
+A > r
+R > a,y
+T > y
+m > y,i
+u > t
+N > y
+k > a,l,m,g,z,d
+Z > y
+h > a,l,m,g,z,d
+n > d,a,l,m,g,z
+t > h
+i > t,r,x
+l > a,l,u,m,g,z,d
+r > i,a,l,m,g,z,d,v
+a > g,t,e,v
+o > v

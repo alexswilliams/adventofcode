@@ -1,0 +1,16 @@
+Nyoris,Lazoris,Nycalyx,Lazcalyx,Beloris,Belcalyx,Nythyris,Lazthyris,Belthyris
+
+y > t,r,x,b
+h > y
+L > a
+e > b
+o > r
+i > s
+z > c,t,o
+B > e
+a > b,l
+N > y
+c > a
+l > y,c,t,o
+t > h
+r > i
