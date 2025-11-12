@@ -7,9 +7,9 @@ private val puzzles = loadFilesToLines("ec2025/day7", "input1.txt", "input2.txt"
 
 internal fun main() {
     Day7.assertCorrect()
-    benchmark(10000) { part1(puzzles[0]) } // 16.9µs
-    benchmark(10000) { part2(puzzles[1]) } // 37.3µs
-    benchmark(10000) { part3(puzzles[2]) } // 73.1µs
+    benchmark { part1(puzzles[0]) } // 16.9µs
+    benchmark { part2(puzzles[1]) } // 36.6µs
+    benchmark { part3(puzzles[2]) } // 30.1µs
 }
 
 internal object Day7 : Challenge {
@@ -38,9 +38,9 @@ private fun part3(input: List<String>): Int {
     val validPrefixes = names.filter { name -> isValidName(name, rules) }
     val dedupedPrefixes = validPrefixes.filterNot { longerName -> validPrefixes.any { prefix -> longerName != prefix && longerName.startsWith(prefix) } }
 
-    val cache: MutableMap<Int, Int> = mutableMapOf()
+    val cache = IntArray(1024)
     fun namesBeneath(char: Char, length: Int): Int {
-        cache[key(char, length)]?.let { return it }
+        cache[key(char, length)].let { if (it > 0) return it }
         val matchesAtThisLength = if (length in 7..11) 1 else 0
         return matchesAtThisLength +
                 if (length < 11 && char in rules)
@@ -67,4 +67,4 @@ private fun isValidName(name: String, rules: Map<Char, Collection<Char>>): Boole
     name.zipWithNext().all { (a, b) -> a in rules && b in rules[a]!! }
 
 private fun key(char: Char, length: Int): Int =
-    (char.code shl 16) or (length and 0xffff)
+    (char.code and 0x3f) or (length and 0x0f shl 6)
