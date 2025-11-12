@@ -7,9 +7,9 @@ private val puzzles = loadFilesToLines("ec2025/day7", "input1.txt", "input2.txt"
 
 internal fun main() {
     Day7.assertCorrect()
-    benchmark { part1(puzzles[0]) } // 16.9µs
-    benchmark { part2(puzzles[1]) } // 36.6µs
-    benchmark { part3(puzzles[2]) } // 30.1µs
+    benchmark { part1(puzzles[0]) } // 12.2µs
+    benchmark { part2(puzzles[1]) } // 20.9µs
+    benchmark { part3(puzzles[2]) } // 26.3µs
 }
 
 internal object Day7 : Challenge {
@@ -38,13 +38,13 @@ private fun part3(input: List<String>): Int {
     val validPrefixes = names.filter { name -> isValidName(name, rules) }
     val dedupedPrefixes = validPrefixes.filterNot { longerName -> validPrefixes.any { prefix -> longerName != prefix && longerName.startsWith(prefix) } }
 
-    val cache = IntArray(1024)
+    val cache = IntArray(1024) // 5 bits for letters + 1 bit for case of letter + 4 bits for numbers 1 to 11 = 10 bits = 1024 unique cache keys
     fun namesBeneath(char: Char, length: Int): Int {
         cache[key(char, length)].let { if (it > 0) return it }
         val matchesAtThisLength = if (length in 7..11) 1 else 0
         return matchesAtThisLength +
-                if (length < 11 && char in rules)
-                    rules[char]!!.sumOf { nextChar ->
+                if (length < 11 && rules[key(char)] != null)
+                    rules[key(char)]!!.sumOf { nextChar ->
                         namesBeneath(nextChar, length + 1)
                             .also { cache[key(nextChar, length + 1)] = it }
                     }
@@ -55,16 +55,22 @@ private fun part3(input: List<String>): Int {
 }
 
 
-private fun parseInput(input: List<String>): Pair<List<String>, Map<Char, Collection<Char>>> =
+private fun parseInput(input: List<String>): Pair<List<String>, Array<Collection<Char>?>> =
     Pair(
         input[0].split(','),
-        input.subList(2, input.size).associate { rule ->
-            rule[0] to rule.splitMappingRanges(",", 4) { string, start, _ -> string[start] }
+        // This could have been (in fact was) a map, but the hash needed for each lookup was so time-expensive; so instead use a sparse array
+        // 64 items is fine (over 128), all letters have bit 7 set, so only the upper 64 positions would be used
+        arrayOfNulls<Collection<Char>?>(64).apply {
+            input.subList(2, input.size).forEach {
+                this[key(it[0])] = it.splitMappingRanges(",", 4) { string, start, _ -> string[start] }
+            }
         }
     )
 
-private fun isValidName(name: String, rules: Map<Char, Collection<Char>>): Boolean =
-    name.zipWithNext().all { (a, b) -> a in rules && b in rules[a]!! }
+private fun isValidName(name: String, rules: Array<Collection<Char>?>): Boolean =
+    (0..<name.lastIndex).all { rules[key(name[it])] != null && name[it + 1] in rules[key(name[it])]!! }
 
 private fun key(char: Char, length: Int): Int =
     (char.code and 0x3f) or (length and 0x0f shl 6)
+
+private fun key(char: Char): Int = (char.code and 0x3f)
