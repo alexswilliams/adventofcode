@@ -7,9 +7,9 @@ private val puzzles = loadFilesToLines("ec2025/day7", "input1.txt", "input2.txt"
 
 internal fun main() {
     Day7.assertCorrect()
-    benchmark { part1(puzzles[0]) } // 25.6µs
-    benchmark { part2(puzzles[1]) } // 48.1µs
-    benchmark { part3(puzzles[2]) } // 80.2µs
+    benchmark(10000) { part1(puzzles[0]) } // 16.9µs
+    benchmark(10000) { part2(puzzles[1]) } // 37.3µs
+    benchmark(10000) { part3(puzzles[2]) } // 73.1µs
 }
 
 internal object Day7 : Challenge {
@@ -55,15 +55,16 @@ private fun part3(input: List<String>): Int {
 }
 
 
-private fun parseInput(input: List<String>): Pair<List<String>, Map<Char, List<Char>>> =
-    input.partitionOnLineBreak({ it[0].split(',') }) { rules ->
-        rules.associate { rule ->
-            rule.split(" > ")
-                .let { (a, bs) -> a[0] to bs.split(',').map { it[0] } }
+private fun parseInput(input: List<String>): Pair<List<String>, Map<Char, Collection<Char>>> =
+    Pair(
+        input[0].split(','),
+        input.subList(2, input.size).associate { rule ->
+            rule[0] to rule.splitMappingRanges(",", 4) { string, start, _ -> string[start] }
         }
-    }
+    )
 
-private fun isValidName(name: String, rules: Map<Char, List<Char>>): Boolean =
+private fun isValidName(name: String, rules: Map<Char, Collection<Char>>): Boolean =
     name.zipWithNext().all { (a, b) -> a in rules && b in rules[a]!! }
 
-private fun key(char: Char, length: Int): Int = (char.code shl 16) or (length and 0xffff)
+private fun key(char: Char, length: Int): Int =
+    (char.code shl 16) or (length and 0xffff)
