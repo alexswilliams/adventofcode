@@ -7,8 +7,8 @@ private val puzzles = loadFilesToLines("ec2025/day7", "input1.txt", "input2.txt"
 
 internal fun main() {
     Day7.assertCorrect()
-    benchmark { part1(puzzles[0]) } // 12.2µs
-    benchmark { part2(puzzles[1]) } // 20.9µs
+    benchmark { part1(puzzles[0]) } // 12.1µs
+    benchmark { part2(puzzles[1]) } // 20.6µs
     benchmark { part3(puzzles[2]) } // 26.3µs
 }
 
@@ -43,32 +43,31 @@ private fun part3(input: List<String>): Int {
         cache[key(char, length)].let { if (it > 0) return it }
         val matchesAtThisLength = if (length in 7..11) 1 else 0
         return matchesAtThisLength +
-                if (length < 11 && rules[key(char)] != null)
-                    rules[key(char)]!!.sumOf { nextChar ->
-                        namesBeneath(nextChar, length + 1)
-                            .also { cache[key(nextChar, length + 1)] = it }
-                    }
-                else 0
+                if (length >= 11) 0
+                else rules[key(char)].sumOf { nextChar ->
+                    namesBeneath(nextChar, length + 1)
+                        .also { cache[key(nextChar, length + 1)] = it }
+                }
     }
 
     return dedupedPrefixes.sumOf { namesBeneath(it.last(), it.length) }
 }
 
 
-private fun parseInput(input: List<String>): Pair<List<String>, Array<Collection<Char>?>> =
+private fun parseInput(input: List<String>): Pair<List<String>, Array<Collection<Char>>> =
     Pair(
         input[0].split(','),
         // This could have been (in fact was) a map, but the hash needed for each lookup was so time-expensive; so instead use a sparse array
         // 64 items is fine (over 128), all letters have bit 7 set, so only the upper 64 positions would be used
-        arrayOfNulls<Collection<Char>?>(64).apply {
+        Array<Collection<Char>>(64) { emptyList() }.apply {
             input.subList(2, input.size).forEach {
                 this[key(it[0])] = it.splitMappingRanges(",", 4) { string, start, _ -> string[start] }
             }
         }
     )
 
-private fun isValidName(name: String, rules: Array<Collection<Char>?>): Boolean =
-    (0..<name.lastIndex).all { i -> rules[key(name[i])].let { rule -> rule != null && name[i + 1] in rule } }
+private fun isValidName(name: String, rules: Array<Collection<Char>>): Boolean =
+    (0..<name.lastIndex).all { i -> name[i + 1] in rules[key(name[i])] }
 
 private fun key(char: Char, length: Int): Int =
     (char.code and 0x3f) or (length and 0x0f shl 6)
