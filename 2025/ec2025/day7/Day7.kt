@@ -7,9 +7,9 @@ private val puzzles = loadFilesToLines("ec2025/day7", "input1.txt", "input2.txt"
 
 internal fun main() {
     Day7.assertCorrect()
-    benchmark { part1(puzzles[0]) } // 25.9µs
+    benchmark { part1(puzzles[0]) } // 25.6µs
     benchmark { part2(puzzles[1]) } // 48.1µs
-    benchmark(100) { part3(puzzles[2]) } // 145.7µs
+    benchmark { part3(puzzles[2]) } // 80.2µs
 }
 
 internal object Day7 : Challenge {
@@ -36,17 +36,17 @@ private fun part2(input: List<String>): Int =
 private fun part3(input: List<String>): Int {
     val (names, rules) = parseInput(input)
     val validPrefixes = names.filter { name -> isValidName(name, rules) }
-    val dedupedPrefixes = validPrefixes.filterNot { needle -> validPrefixes.any { prefix -> needle != prefix && needle.startsWith(prefix) } }
+    val dedupedPrefixes = validPrefixes.filterNot { longerName -> validPrefixes.any { prefix -> longerName != prefix && longerName.startsWith(prefix) } }
 
-    val cache: MutableMap<Pair<Char, Int>, Int> = mutableMapOf()
+    val cache: MutableMap<Int, Int> = mutableMapOf()
     fun namesBeneath(char: Char, length: Int): Int {
-        cache[char to length]?.let { return it }
+        cache[key(char, length)]?.let { return it }
         val matchesAtThisLength = if (length in 7..11) 1 else 0
         return matchesAtThisLength +
                 if (length < 11 && char in rules)
                     rules[char]!!.sumOf { nextChar ->
                         namesBeneath(nextChar, length + 1)
-                            .also { cache[nextChar to length + 1] = it }
+                            .also { cache[key(nextChar, length + 1)] = it }
                     }
                 else 0
     }
@@ -65,3 +65,5 @@ private fun parseInput(input: List<String>): Pair<List<String>, Map<Char, List<C
 
 private fun isValidName(name: String, rules: Map<Char, List<Char>>): Boolean =
     name.zipWithNext().all { (a, b) -> a in rules && b in rules[a]!! }
+
+private fun key(char: Char, length: Int): Int = (char.code shl 16) or (length and 0xffff)
