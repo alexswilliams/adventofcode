@@ -68,7 +68,7 @@ private fun parseInput(input: List<String>): Pair<List<String>, Array<Collection
     )
 
 private fun isValidName(name: String, rules: Array<Collection<Char>?>): Boolean =
-    (0..<name.lastIndex).all { rules[key(name[it])] != null && name[it + 1] in rules[key(name[it])]!! }
+    (0..<name.lastIndex).all { i -> rules[key(name[i])].let { rule -> rule != null && name[i + 1] in rule } }
 
 private fun key(char: Char, length: Int): Int =
     (char.code and 0x3f) or (length and 0x0f shl 6)
