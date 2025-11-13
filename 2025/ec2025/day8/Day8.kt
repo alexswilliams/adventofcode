@@ -10,8 +10,8 @@ private val puzzles = loadFilesToLines("ec2025/day8", "input1.txt", "input2.txt"
 internal fun main() {
     Day8.assertCorrect()
     benchmark { part1(puzzles[0]) } // 19.6µs
-    benchmark(10) { part2(puzzles[1]) } // 62ms
-    benchmark(10) { part3(puzzles[2]) } // 1.2s
+    benchmark(100) { part2(puzzles[1]) } // 42.7ms
+    benchmark(1) { part3(puzzles[2]) } // 1.2s
 }
 
 internal object Day8 : Challenge {
@@ -28,48 +28,47 @@ internal object Day8 : Challenge {
 }
 
 
-private fun part1(input: List<String>, pegCount: Int = 32): Int {
-    val nodes = input[0].splitToInts(",")
-    val centreDistance = pegCount / 2
-    return nodes.zipWithNext { a, b -> (a - b).absoluteValue }.count { it == centreDistance }
-}
+private fun part1(input: List<String>, pegCount: Int = 32): Int =
+    input[0].splitToInts(",")
+        .zipWithNext { a, b -> (a - b).absoluteValue }
+        .count { it == pegCount / 2 }
 
 private fun part2(input: List<String>, pegCount: Int = 256): Int {
-    val nodes = input[0].splitToInts(",").map { it % pegCount }
-    val threads = nodes.zipWithNext()
-
-    var crosses = 0
-    threads.fold(listOf<Pair<Int, Int>>()) { addedSoFar, thread ->
-        val rotationToAdd = pegCount - thread.first
-        val rotatedSecond = (thread.second + rotationToAdd) % pegCount
-        val leftSide = rotatedSecond..<pegCount // plus 0
-        val rightSide = 0..rotatedSecond
-        crosses += addedSoFar.count { (a, b) ->
-            val aR = (a + rotationToAdd) % pegCount
-            val bR = (b + rotationToAdd) % pegCount
-            val doesntCross = ((aR == 0 || aR in leftSide) && (bR == 0 || bR in leftSide)) || (aR in rightSide && bR in rightSide)
-            !doesntCross
-        }
-        addedSoFar.plus(thread)
+    val threads = input[0].splitToInts(",").zipWithNext { a, b -> a % pegCount to b % pegCount }
+    return threads.sumOfIndexed { index, thread ->
+        countIntersections(pegCount, thread, threads.subList(0, index))
     }
-    return crosses
 }
 
 private fun part3(input: List<String>, pegCount: Int = 256): Int {
-    val nodes = input[0].splitToInts(",").map { it % pegCount }
-    val threads = nodes.zipWithNext()
+    val threads = input[0].splitToInts(",").map { it % pegCount }.zipWithNext()
+    return triangularExclusiveSequenceOf(0, pegCount - 1) { a, b -> b to a }
+        .maxOf { countIntersections(pegCount, it, threads) }
+}
 
-    return cartesianProductSequenceOf(0..<pegCount, 0..<pegCount).filter { (a, b) -> a < b }.maxOf { thread ->
-        val rotationToAdd = pegCount - thread.first
-        val rotatedSecond = (thread.second + rotationToAdd) % pegCount
-        val leftSide = rotatedSecond..<pegCount // plus 0
-        val rightSide = 0..rotatedSecond
-        threads.count { (a, b) ->
-            val aR = (a + rotationToAdd) % pegCount
-            val bR = (b + rotationToAdd) % pegCount
-            val isSameAsThread = ((aR == 0) && (bR == rotatedSecond)) || ((bR == 0) && (aR == rotatedSecond))
-            val doesntCross = ((aR == 0 || aR in leftSide) && (bR == 0 || bR in leftSide)) || (aR in rightSide && bR in rightSide)
-            isSameAsThread || !doesntCross
+
+fun <R> triangularExclusiveSequenceOf(min: Int, max: Int, transform: (Int, Int) -> R): Sequence<R> = sequence {
+    for (a in min..max) {
+        for (b in min..<a) {
+            yield(transform(a, b))
         }
+    }
+}
+
+private fun countIntersections(
+    pegCount: Int,
+    thread: Pair<Int, Int>,
+    threads: List<Pair<Int, Int>>,
+): Int {
+    // Rotate the board so that thread.first == 0 and thread.second is somewhere below
+    val rotation = pegCount - thread.first
+    val bottom = (thread.second + rotation) % pegCount
+    return threads.count { (a, b) ->
+        val aR = (a + rotation) % pegCount
+        val bR = (b + rotation) % pegCount
+        val fullyOnLeftSide = ((aR == 0 || aR >= bottom) && (bR == 0 || bR >= bottom))
+        val fullyOnRightSide = (aR <= bottom && bR <= bottom)
+        val downCentre = fullyOnLeftSide && fullyOnRightSide
+        downCentre || !(fullyOnLeftSide || fullyOnRightSide)
     }
 }
