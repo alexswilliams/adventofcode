@@ -219,7 +219,7 @@ fun <R, C> cartesianProductSequenceOf(rows: Iterable<R>, cols: Iterable<C>): Seq
     rows.forEach { row -> cols.forEach { col -> yield(row to col) } }
 }
 
-fun <R> triangularExclusiveSequenceOf(min: Int, max: Int, transform: (Int, Int) -> R): Sequence<R> = sequence {
+fun <R> triangularExclusiveSequenceOf(min: Int, max: Int, transform: (hi: Int, lo: Int) -> R): Sequence<R> = sequence {
     for (a in min..max) {
         for (b in min..<a) {
             yield(transform(a, b))
