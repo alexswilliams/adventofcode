@@ -219,6 +219,14 @@ fun <R, C> cartesianProductSequenceOf(rows: Iterable<R>, cols: Iterable<C>): Seq
     rows.forEach { row -> cols.forEach { col -> yield(row to col) } }
 }
 
+fun <R> triangularExclusiveSequenceOf(min: Int, max: Int, transform: (Int, Int) -> R): Sequence<R> = sequence {
+    for (a in min..max) {
+        for (b in min..<a) {
+            yield(transform(a, b))
+        }
+    }
+}
+
 inline fun <R, C> forEachCartesianProductOf(rows: Iterable<R>, cols: Iterable<C>, crossinline onEach: (r: R, c: C) -> Unit) {
     for (row in rows) {
         for (col in cols) {

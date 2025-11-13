@@ -10,8 +10,8 @@ private val puzzles = loadFilesToLines("ec2025/day8", "input1.txt", "input2.txt"
 internal fun main() {
     Day8.assertCorrect()
     benchmark { part1(puzzles[0]) } // 19.6µs
-    benchmark(100) { part2(puzzles[1]) } // 42.7ms
-    benchmark(1) { part3(puzzles[2]) } // 1.2s
+    benchmark(100) { part2(puzzles[1]) } // 30.3ms
+    benchmark(10) { part3(puzzles[2]) } // 696.9ms
 }
 
 internal object Day8 : Challenge {
@@ -19,7 +19,7 @@ internal object Day8 : Challenge {
         check(4, "P1 Example") { part1(examples[0], 8) }
         check(58, "P1 Puzzle") { part1(puzzles[0]) }
 
-        check(21, "P2 Example") { part2(examples[1], 8) }
+        check(21, "P2 Example") { part2(examples[1]) }
         check(2926290, "P2 Puzzle") { part2(puzzles[1]) }
 
         check(7, "P3 Example") { part3(examples[2], 8) }
@@ -29,46 +29,32 @@ internal object Day8 : Challenge {
 
 
 private fun part1(input: List<String>, pegCount: Int = 32): Int =
-    input[0].splitToInts(",")
-        .zipWithNext { a, b -> (a - b).absoluteValue }
-        .count { it == pegCount / 2 }
+    input[0].splitToInts(",").zipWithNext { a, b -> (a - b).absoluteValue }.count { it == pegCount / 2 }
 
-private fun part2(input: List<String>, pegCount: Int = 256): Int {
-    val threads = input[0].splitToInts(",").zipWithNext { a, b -> a % pegCount to b % pegCount }
+private fun part2(input: List<String>): Int {
+    val threads = input[0].splitToInts(",").zipWithNext { a, b -> min(a, b) to max(a, b) }.sortedBy { it.first }
     return threads.sumOfIndexed { index, thread ->
-        countIntersections(pegCount, thread, threads.subList(0, index))
+        countIntersections(thread, threads.subList(0, index))
     }
 }
 
 private fun part3(input: List<String>, pegCount: Int = 256): Int {
-    val threads = input[0].splitToInts(",").map { it % pegCount }.zipWithNext()
-    return triangularExclusiveSequenceOf(0, pegCount - 1) { a, b -> b to a }
-        .maxOf { countIntersections(pegCount, it, threads) }
+    val threads = input[0].splitToInts(",").zipWithNext { a, b -> min(a, b) to max(a, b) }.sortedBy { it.first }
+    return triangularExclusiveSequenceOf(1, pegCount) { hi, lo -> lo to hi }
+        .maxOf { countIntersections(it, threads) }
 }
 
 
-fun <R> triangularExclusiveSequenceOf(min: Int, max: Int, transform: (Int, Int) -> R): Sequence<R> = sequence {
-    for (a in min..max) {
-        for (b in min..<a) {
-            yield(transform(a, b))
-        }
+@Suppress("ConvertTwoComparisonsToRangeCheck")
+private fun countIntersections(cut: Pair<Int, Int>, sortedThreads: List<Pair<Int, Int>>): Int {
+    val (x, y) = cut
+    var count = 0
+    for ((a, b) in sortedThreads) {
+        if (a > y) break
+        val crossesLeft = x < a && a < y && y < b
+        val crossesRight = a < x && x < b && b < y
+        val crosses = crossesLeft || crossesRight || a == x && b == y || a == y && b == x
+        if (crosses) count++
     }
-}
-
-private fun countIntersections(
-    pegCount: Int,
-    thread: Pair<Int, Int>,
-    threads: List<Pair<Int, Int>>,
-): Int {
-    // Rotate the board so that thread.first == 0 and thread.second is somewhere below
-    val rotation = pegCount - thread.first
-    val bottom = (thread.second + rotation) % pegCount
-    return threads.count { (a, b) ->
-        val aR = (a + rotation) % pegCount
-        val bR = (b + rotation) % pegCount
-        val fullyOnLeftSide = ((aR == 0 || aR >= bottom) && (bR == 0 || bR >= bottom))
-        val fullyOnRightSide = (aR <= bottom && bR <= bottom)
-        val downCentre = fullyOnLeftSide && fullyOnRightSide
-        downCentre || !(fullyOnLeftSide || fullyOnRightSide)
-    }
+    return count
 }
