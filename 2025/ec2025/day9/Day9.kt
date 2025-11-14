@@ -3,7 +3,6 @@
 package ec2025.day9
 
 import common.*
-import java.lang.Integer.min
 import java.util.*
 
 private val examples = loadFilesToLines("ec2025/day9", "example1.txt", "example2.txt", "example3a.txt", "example3b.txt")
@@ -12,8 +11,8 @@ private val puzzles = loadFilesToLines("ec2025/day9", "input1.txt", "input2.txt"
 internal fun main() {
     Day9.assertCorrect()
     benchmark { part1(puzzles[0]) } // 16.6µs
-    benchmark(100) { part2(puzzles[1]) } // 10.3ms
-    benchmark(1) { part3(puzzles[2]) } // 1.2s
+    benchmark(100) { part2(puzzles[1]) } // 8.5ms
+    benchmark(1) { part3(puzzles[2]) } // 1.0s
 }
 
 internal object Day9 : Challenge {
@@ -35,24 +34,20 @@ private fun part1(input: List<String>): Int =
     degreeOf(input.map { it.substringAfter(':') }, 0, 1, 2)
 
 private fun part2(input: List<String>): Int {
-    val duckDna = input.map { it.substringAfter(':') }
-    val asLongs = duckDna.map { it.toDna() }
+    val duckDnaStrings = input.map { it.substringAfter(':') }
+    val duckDna = duckDnaStrings.map { it.toDna() }
     return duckDna.indices.sumOf { index ->
-        findParents(asLongs, index)?.let { (a, b) ->
-            degreeOf(duckDna, a, b, index)
-        } ?: 0
+        val parents = findParents(duckDna, index) ?: return@sumOf 0
+        degreeOf(duckDnaStrings, parents.first, parents.second, index)
     }
 }
 
 private fun part3(input: List<String>): Int {
-    val duckDna = input.map { it.substringAfter(':') }
-    val asLongs = duckDna.map { it.toDna() }
-
+    val duckDna = input.map { it.substringAfter(':').toDna() }
     val relationships = mutableMapOf<Int, MutableList<Int>>()
     for (index in duckDna.indices) {
-        val parents = findParents(asLongs, index) ?: continue
-        relationships.getOrPut(min(index, parents.first) + 1) { mutableListOf() }.add(max(index, parents.first) + 1)
-        relationships.getOrPut(min(index, parents.second) + 1) { mutableListOf() }.add(max(index, parents.second) + 1)
+        val parents = findParents(duckDna, index) ?: continue
+        relationships.getOrPut(index + 1) { mutableListOf() }.apply { add(parents.first + 1); add(parents.second + 1) }
     }
 
     val subsets = relationships.entries.mapTo(LinkedList()) { (key, value) -> value.toMutableSet().apply { add(key) } }
