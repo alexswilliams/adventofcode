@@ -36,8 +36,12 @@ private fun part1(input: List<String>): Int =
 private fun part2(input: List<String>): Int {
     val duckDnaStrings = input.map { it.substringAfter(':') }
     val duckDna = duckDnaStrings.map { it.toDna() }
+    val likelyMatchCache = emptyMap<Int, List<Int>>()
+//    val likelyMatchCache = triangularExclusiveSequenceOf(0, duckDna.lastIndex) { hi, lo -> lo to hi }
+//        .filter { (lo, hi) -> isWorthChecking(duckDna[lo], duckDna[hi]) }
+//        .groupBy({ it.first }) { it.second }
     return duckDna.indices.sumOf { index ->
-        val parents = findParents(duckDna, index) ?: return@sumOf 0
+        val parents = findParents(duckDna, index, likelyMatchCache) ?: return@sumOf 0
         degreeOf(duckDnaStrings, parents.first, parents.second, index)
     }
 }
@@ -45,8 +49,12 @@ private fun part2(input: List<String>): Int {
 private fun part3(input: List<String>): Int {
     val duckDna = input.map { it.substringAfter(':').toDna() }
     val relationships = mutableMapOf<Int, MutableList<Int>>()
+    val likelyMatchCache = emptyMap<Int, List<Int>>()
+//    val likelyMatchCache = triangularExclusiveSequenceOf(0, duckDna.lastIndex) { hi, lo -> lo to hi }
+//        .filter { (lo, hi) -> isWorthChecking(duckDna[lo], duckDna[hi]) }
+//        .groupBy({ it.first }) { it.second }
     for (index in duckDna.indices) {
-        val parents = findParents(duckDna, index) ?: continue
+        val parents = findParents(duckDna, index, likelyMatchCache) ?: continue
         relationships.getOrPut(index + 1) { mutableListOf() }.apply { add(parents.first + 1); add(parents.second + 1) }
     }
 
@@ -66,11 +74,15 @@ private fun degreeOf(duckDna: List<String>, parentA: Int, parentB: Int, child: I
     duckDna[child].zip(duckDna[parentA]).count { it.second == it.first } *
             duckDna[child].zip(duckDna[parentB]).count { it.second == it.first }
 
-private fun findParents(duckDna: List<ULongArray>, childIndex: Int): Pair<Int, Int>? =
+private fun findParents(duckDna: List<ULongArray>, childIndex: Int, likelyMatchCache: Map<Int, List<Int>>): Pair<Int, Int>? =
     triangularExclusiveSequenceOf(0, duckDna.lastIndex) { hi, lo -> lo to hi }
         .filter { it.first != childIndex && it.second != childIndex }
+//        .filter { it.second in likelyMatchCache[it.first].orEmpty() }
         .firstOrNull { (a, b) -> related(duckDna[childIndex], duckDna[a], duckDna[b]) }
 
+fun isWorthChecking(a: ULongArray, b: ULongArray): Boolean {
+    return a.indices.sumOf { index -> (a[index] xor b[index]).countOneBits() } < a.size * 28
+}
 
 private fun related(c: ULongArray, a: ULongArray, b: ULongArray): Boolean =
     c.indices.all { i ->
