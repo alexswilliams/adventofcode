@@ -47,6 +47,14 @@ fun Grid.allLocationOf(ch: Char): List<Location1616> {
 
 fun Grid.render(): String = this.joinToString("\n") { row -> row.joinToString("") }
 
+fun Grid.transpose(): Grid =
+    Array(this.width) { col ->
+        CharArray(this.height) { row ->
+            this[row][col]
+        }
+    }
+
+
 
 val DigitGrid.height get() = this.size
 val DigitGrid.width get() = this[0].size
