@@ -6,12 +6,12 @@ private val example = loadFilesToLines("aoc2025/dayX", "example.txt").single()
 private val puzzle = loadFilesToLines("aoc2025/dayX", "input.txt").single()
 
 internal fun main() {
-    Day1.assertCorrect()
+    DayX.assertCorrect()
     benchmark { part1(puzzle) }
     benchmark { part2(puzzle) }
 }
 
-internal object Day1 : Challenge {
+internal object DayX : Challenge {
     override fun assertCorrect() {
         check(0, "P1 Example") { part1(example) }
         check(0, "P1 Puzzle") { part1(puzzle) }
