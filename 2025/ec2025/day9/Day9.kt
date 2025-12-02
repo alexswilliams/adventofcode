@@ -80,10 +80,10 @@ private fun findParents(duckDna: List<ULongArray>, childIndex: Int, likelyMatchC
 //        .filter { it.second in likelyMatchCache[it.first].orEmpty() }
         .firstOrNull { (a, b) -> related(duckDna[childIndex], duckDna[a], duckDna[b]) }
 
-fun isWorthChecking(a: ULongArray, b: ULongArray): Boolean {
-    return a.indices.sumOf { index -> (a[index] xor b[index]).countOneBits() } < a.size * 28
-}
-
+//private fun isWorthChecking(a: ULongArray, b: ULongArray): Boolean {
+//    return a.indices.sumOf { index -> (a[index] xor b[index]).countOneBits() } < a.size * 28
+//}
+//
 private fun related(c: ULongArray, a: ULongArray, b: ULongArray): Boolean =
     c.indices.all { i ->
         val ai = a[i]
