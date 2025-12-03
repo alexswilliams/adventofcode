@@ -112,6 +112,13 @@ fun List<String>.splitOnSpaces() = map { it.split(' ') }
 fun List<CharArray>.splitArrayOnSpaces() = map { it.concatToString().split(' ') }
 fun List<String>.asArrayOfCharArrays(): Grid = Array(size) { r -> this[r].toCharArray() }
 
+fun Long.pow(n: Int): Long =
+    when (n) {
+        0 -> 1L
+        1 -> this
+        else -> this * this.pow(n - 1)
+    }
+
 fun LongRange.intersecting(other: LongRange) = LongRange(max(first, other.first), min(last, other.last))
 fun LongRange.shiftedUpBy(other: Long) = LongRange(first + other, last + other)
 fun LongRange.keepingAbove(lowerBoundExcl: Long) = first.coerceAtLeast(lowerBoundExcl + 1)..last
