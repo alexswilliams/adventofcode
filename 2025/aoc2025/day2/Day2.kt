@@ -9,7 +9,7 @@ private val puzzle = loadFiles("aoc2025/day2", "input.txt").single()
 internal fun main() {
     Day2.assertCorrect()
     benchmark(10) { part1(puzzle) } // 258.6ms
-    benchmark { part1fast(puzzle) } // 34.4µs
+    benchmark { part1fast(puzzle) } // 20.3µs
     benchmark(10) { part2(puzzle) } // 366.2ms
 }
 
@@ -38,10 +38,12 @@ private fun part1fast(input: String): Long =
                     val end = if (prefixLen * 2 == hi.length) hi.substring(0, prefixLen).toLong() else 10L.pow(prefixLen) - 1
                     val startOutOfRange = (prefixLen * 2 == lo.length && lo.toLongFromIndex(prefixLen) > start)
                     val endOutOfRange = (prefixLen * 2 == hi.length && hi.toLongFromIndex(prefixLen) < end)
-                    LongRange(
-                        start + if (startOutOfRange) 1 else 0,
-                        end - if (endOutOfRange) 1 else 0
-                    ).sumOf { it * 10L.pow(prefixLen) + it }
+                    val min = start + if (startOutOfRange) 1 else 0
+                    val max = end - if (endOutOfRange) 1 else 0
+                    // 1+2+3+4+...+n = n(n+1)/2
+                    // 11+12+13+14+...+(10+n) = (x+1)+(x+2)+...+(x+n) = nx + n(n+1)/2 = n(2x+n+1)/2 = (max-min+1)(min+max)/2 when n=max-min+1, x=min-1
+                    val sum = (max - min + 1) * (min + max) / 2
+                    sum * 10L.pow(prefixLen) + sum
                 }
         }
 
