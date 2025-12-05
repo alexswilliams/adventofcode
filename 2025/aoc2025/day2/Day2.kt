@@ -10,9 +10,9 @@ internal fun main() {
     Day2.assertCorrect()
     Day2.assertSlowSameAsFast()
     benchmark(10) { part1regex(puzzle) } // 258.6ms
-    benchmark { part1(puzzle) } // 20.3µs
+    benchmark { part1(puzzle) } // 18.3µs
     benchmark(10) { part2regex(puzzle) } // 366.2ms
-    benchmark { part2(puzzle) } // 51.2µs
+    benchmark { part2(puzzle) } // 45.7µs
 }
 
 internal object Day2 : Challenge {
@@ -92,10 +92,8 @@ private fun part2(input: String): Long =
                         val end = if (targetLength == hi.length) hi.substring(0, prefixLen).toLong() else multiplier - 1
                         // It's possible for the first or last value to be in-range for the first $prefixLen digits, but out-of-range when extended to the full length;
                         // if these are found then contract the range by 1 as needed.
-                        val startTail = (2..repeats).fold(0L) { acc, _ -> acc * multiplier + start }
-                        val endTail = (2..repeats).fold(0L) { acc, _ -> acc * multiplier + end }
-                        val startOutOfRange = (targetLength == lo.length && lo.toLongFromIndex(prefixLen) > startTail)
-                        val endOutOfRange = (targetLength == hi.length && hi.toLongFromIndex(prefixLen) < endTail)
+                        val startOutOfRange = (targetLength == lo.length && lo.toLongFromIndex(prefixLen) > (2..repeats).fold(0L) { acc, _ -> acc * multiplier + start })
+                        val endOutOfRange = (targetLength == hi.length && hi.toLongFromIndex(prefixLen) < (2..repeats).fold(0L) { acc, _ -> acc * multiplier + end })
                         val min = start + if (startOutOfRange) 1 else 0
                         val max = end - if (endOutOfRange) 1 else 0
                         // Instead of building every number using shifting and then summing, you can do the summing and THEN do the shifting - this means
