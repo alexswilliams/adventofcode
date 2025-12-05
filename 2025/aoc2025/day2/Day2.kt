@@ -8,9 +8,10 @@ private val puzzle = loadFiles("aoc2025/day2", "input.txt").single()
 
 internal fun main() {
     Day2.assertCorrect()
-    benchmark(10) { part1(puzzle) } // 258.6ms
+//    benchmark(10) { part1(puzzle) } // 258.6ms
     benchmark { part1fast(puzzle) } // 20.3µs
-    benchmark(10) { part2(puzzle) } // 366.2ms
+//    benchmark(10) { part2(puzzle) } // 366.2ms
+    benchmark(10) { part2fast(puzzle) } // 249.1µs
 }
 
 internal object Day2 : Challenge {
@@ -21,7 +22,9 @@ internal object Day2 : Challenge {
         check(30608905813, "P1 Puzzle") { part1fast(puzzle) }
 
         check(4174379265, "P2 Example") { part2(example) }
+        check(4174379265, "P2 Example") { part2fast(example) }
         check(31898925685, "P2 Puzzle") { part2(puzzle) }
+        check(31898925685, "P2 Puzzle") { part2fast(puzzle) }
     }
 }
 
@@ -56,6 +59,39 @@ private fun part1(input: String): Long =
                     .filter { Pattern.matches("(.+)\\1", it.toString()) }
             }
         }.sum()
+
+private fun part2fast(input: String): Long =
+    input.split(',').map { it.split('-') }
+        .sumOf { (lo, hi) ->
+            (lo.length..hi.length)
+                .sumOf { targetLength ->
+                    val factorLengths = factorsOfExcl(targetLength)
+                    val sumsByPrefixLength = factorLengths.associateWith { prefixLen ->
+                        val repeats = targetLength / prefixLen
+                        val multiplier = 10L.pow(prefixLen)
+
+                        val start = if (targetLength == lo.length) lo.substring(0, prefixLen).toLong() else 10L.pow(prefixLen - 1)
+                        val end = if (targetLength == hi.length) hi.substring(0, prefixLen).toLong() else multiplier - 1
+                        val startTail = (2..repeats).fold(0L) { acc, _ -> acc * multiplier + start }
+                        val endTail = (2..repeats).fold(0L) { acc, _ -> acc * multiplier + end }
+                        val startOutOfRange = (targetLength == lo.length && lo.toLongFromIndex(prefixLen) > startTail)
+                        val endOutOfRange = (targetLength == hi.length && hi.toLongFromIndex(prefixLen) < endTail)
+                        val min = start + if (startOutOfRange) 1 else 0
+                        val max = end - if (endOutOfRange) 1 else 0
+
+                        val sum = if (min > max) 0 else (max - min + 1) * (min + max) / 2
+                        (1..repeats).fold(0L) { acc, _ -> acc * multiplier + sum }
+                    }
+                    factorLengths.sumOf { prefixLen ->
+                        val sumOfThisPrefix = sumsByPrefixLength[prefixLen]!!
+                        sumOfThisPrefix - factorLengths.takeWhile { it < prefixLen }
+                            .filter { it == 1 || gcd(prefixLen, it) != 1 }
+                            .sumOf { sumsByPrefixLength[it]!! }
+                    }
+                }
+        }
+
+private fun factorsOfExcl(i: Int): List<Int> = (1..(i / 2)).filter { i % it == 0 }
 
 private fun part2(input: String): Long =
     input.split(',')
