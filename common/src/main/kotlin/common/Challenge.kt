@@ -16,9 +16,9 @@ interface Challenge {
 
         if (skipTests) print(TextColors.brightRed(" - Test Skipped:"))
         if (description.contains("Example")) {
-            println(TextColors.gray(" - $description:\t${result.value}") + TextColors.gray(TextStyles.italic("\t\t(${result.duration})")))
+            println(TextColors.gray(" - $description:\t${result.value}") + TextColors.gray(TextStyles.italic("\t\t(1 rep = ${result.duration.toRoundedString()})")))
         } else {
-            println(" - $description:\t${TextColors.brightBlue(result.value.toString())}" + TextColors.gray(TextStyles.italic("\t\t(${result.duration})")))
+            println(" - $description:\t${TextColors.brightBlue(result.value.toString())}" + TextColors.gray(TextStyles.italic("\t\t(1 rep = ${result.duration.toRoundedString()})")))
         }
         if (!skipTests)
             assertEquals(expected, result.value)
