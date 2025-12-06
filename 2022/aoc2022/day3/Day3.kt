@@ -1,19 +1,24 @@
 package aoc2022.day3
 
 import common.*
-import kotlin.test.*
 
-private val exampleInput = "aoc2022/day3/example.txt".fromClasspathFileToLines()
-private val puzzleInput = "aoc2022/day3/input.txt".fromClasspathFileToLines()
-private const val PART_1_EXPECTED_ANSWER = 157
-private const val PART_2_EXPECTED_ANSWER = 70
+private val example = loadFilesToLines("aoc2022/day3", "example.txt").single()
+private val puzzle = loadFilesToLines("aoc2022/day3", "input.txt").single()
 
-fun main() {
-    assertEquals(PART_1_EXPECTED_ANSWER, part1(exampleInput))
-    println("Part 1: " + part1(puzzleInput)) // 7716
+internal fun main() {
+    Day3.assertCorrect()
+    benchmark { part1(puzzle) } // 52.2µs
+    benchmark { part2(puzzle) } // 37.9µs
+}
 
-    assertEquals(PART_2_EXPECTED_ANSWER, part2(exampleInput))
-    println("Part 2: " + part2(puzzleInput)) // 2973
+internal object Day3 : Challenge {
+    override fun assertCorrect() {
+        check(157, "P1 Example") { part1(example) }
+        check(7716, "P1 Puzzle") { part1(puzzle) }
+
+        check(70, "P2 Example") { part2(example) }
+        check(2973, "P2 Puzzle") { part2(puzzle) }
+    }
 }
 
 private fun part1(input: List<String>) = input

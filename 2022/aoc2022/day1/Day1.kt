@@ -1,20 +1,24 @@
 package aoc2022.day1
 
 import common.*
-import kotlin.test.*
 
-private val exampleInput = "aoc2022/day1/example.txt".fromClasspathFileToLines()
-private const val PART_1_EXPECTED_ANSWER = 24000
-private const val PART_2_EXPECTED_ANSWER = 45000
+private val example = loadFilesToLines("aoc2022/day1", "example.txt").single()
+private val puzzle = loadFilesToLines("aoc2022/day1", "input.txt").single()
 
-private val puzzleInput = "aoc2022/day1/input.txt".fromClasspathFileToLines()
+internal fun main() {
+    Day1.assertCorrect()
+    benchmark { part1(puzzle) } // 109.7µs
+    benchmark { part2(puzzle) } // 75.9µs
+}
 
-fun main() {
-    assertEquals(PART_1_EXPECTED_ANSWER, part1(exampleInput))
-    println("Part 1: " + part1(puzzleInput)) // 69289
+internal object Day1 : Challenge {
+    override fun assertCorrect() {
+        check(24000, "P1 Example") { part1(example) }
+        check(69289, "P1 Puzzle") { part1(puzzle) }
 
-    assertEquals(PART_2_EXPECTED_ANSWER, part2(exampleInput))
-    println("Part 2: " + part2(puzzleInput)) // 205615
+        check(45000, "P2 Example") { part2(example) }
+        check(205615, "P2 Puzzle") { part2(puzzle) }
+    }
 }
 
 private fun part1(input: List<String>) = snacksPerElf(input).max()

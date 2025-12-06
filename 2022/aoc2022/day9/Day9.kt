@@ -4,22 +4,25 @@ import aoc2022.day9.Coordinate.Companion.listOfOrigins
 import common.*
 import kotlinx.collections.immutable.*
 import kotlin.math.*
-import kotlin.test.*
 
-private val exampleInput = "aoc2022/day9/example.txt".fromClasspathFileToLines()
-private val example2Input = "aoc2022/day9/example2.txt".fromClasspathFileToLines()
-private val puzzleInput = "aoc2022/day9/input.txt".fromClasspathFileToLines()
-private const val PART_1_EXPECTED_ANSWER = 13
-private const val PART_2_EXPECTED_ANSWER_1 = 1
-private const val PART_2_EXPECTED_ANSWER_2 = 36
+private val example = loadFilesToLines("aoc2022/day9", "example1.txt", "example2.txt")
+private val puzzle = loadFilesToLines("aoc2022/day9", "input.txt").single()
 
-fun main() {
-    assertEquals(PART_1_EXPECTED_ANSWER, part1(exampleInput))
-    println("Part 1: " + part1(puzzleInput)) // 5883
+internal fun main() {
+    Day9.assertCorrect()
+    benchmark { part1(puzzle) } // 1.0ms
+    benchmark { part2(puzzle) } // 1.4ms
+}
 
-    assertEquals(PART_2_EXPECTED_ANSWER_1, part2(exampleInput))
-    assertEquals(PART_2_EXPECTED_ANSWER_2, part2(example2Input))
-    println("Part 2: " + part2(puzzleInput)) // 2367
+internal object Day9 : Challenge {
+    override fun assertCorrect() {
+        check(13, "P1 Example") { part1(example[0]) }
+        check(5883, "P1 Puzzle") { part1(puzzle) }
+
+        check(1, "P2 Example") { part2(example[0]) }
+        check(36, "P2 Example") { part2(example[1]) }
+        check(2367, "P2 Puzzle") { part2(puzzle) }
+    }
 }
 
 private fun part1(input: List<String>) = tailPositionCount(input, 2)

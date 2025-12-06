@@ -5,19 +5,25 @@ import java.awt.Color.*
 import java.awt.image.*
 import java.io.*
 import javax.imageio.*
-import kotlin.test.*
 
-private val exampleInput = "aoc2022/day14/example.txt".fromClasspathFileToLines()
-private val puzzleInput = "aoc2022/day14/input.txt".fromClasspathFileToLines()
-private const val PART_1_EXPECTED_EXAMPLE_ANSWER = 24
-private const val PART_2_EXPECTED_EXAMPLE_ANSWER = 93
 
-fun main() {
-    assertEquals(PART_1_EXPECTED_EXAMPLE_ANSWER, part1(exampleInput))
-    part1(puzzleInput).also { println("Part 1: $it") } // 757
+private val example = loadFilesToLines("aoc2022/day14", "example.txt").single()
+private val puzzle = loadFilesToLines("aoc2022/day14", "input.txt").single()
 
-    assertEquals(PART_2_EXPECTED_EXAMPLE_ANSWER, part2(exampleInput))
-    part2(puzzleInput).also { println("Part 2: $it") } // 24943
+internal fun main() {
+    Day14.assertCorrect()
+    benchmark { part1(puzzle) } // 1.8ms
+    benchmark(10) { part2(puzzle) } // 161.3ms
+}
+
+internal object Day14 : Challenge {
+    override fun assertCorrect() {
+        check(24, "P1 Example") { part1(example) }
+        check(757, "P1 Puzzle") { part1(puzzle) }
+
+        check(93, "P2 Example") { part2(example) }
+        check(24943, "P2 Puzzle") { part2(puzzle) }
+    }
 }
 
 private fun part1(input: List<String>): Int {

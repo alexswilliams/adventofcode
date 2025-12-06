@@ -1,19 +1,24 @@
 package aoc2022.day22
 
 import common.*
-import kotlin.test.*
 
-private val exampleInput = loadFilesToGrids("aoc2022/day22", "example.txt").single()
-private val puzzleInput = loadFilesToGrids("aoc2022/day22", "input.txt").single()
-private const val PART_1_EXPECTED_EXAMPLE_ANSWER = 6032
-private const val PART_2_EXPECTED_EXAMPLE_ANSWER = 5031
+private val example = loadFilesToGrids("aoc2022/day22", "example.txt").single()
+private val puzzle = loadFilesToGrids("aoc2022/day22", "input.txt").single()
 
-fun main() {
-    assertEquals(PART_1_EXPECTED_EXAMPLE_ANSWER, part1(exampleInput))
-    part1(puzzleInput).also { println("Part 1: $it") } // 27436, took 870µs
+internal fun main() {
+    Day22.assertCorrect()
+    benchmark { part1(puzzle) } // 225.2µs
+    benchmark { part2(puzzle, 50, puzzleBoundaryTransitions) } // 421.9µs
+}
 
-    assertEquals(PART_2_EXPECTED_EXAMPLE_ANSWER, part2(exampleInput, 4, exampleBoundaryTransitions))
-    part2(puzzleInput, 50, puzzleBoundaryTransitions).also { println("Part 2: $it") }  // 15426, took 830µs
+internal object Day22 : Challenge {
+    override fun assertCorrect() {
+        check(6032, "P1 Example") { part1(example) }
+        check(27436, "P1 Puzzle") { part1(puzzle) }
+
+        check(5031, "P2 Example") { part2(example, faceSize = 4, boundaryTransitions = exampleBoundaryTransitions) }
+        check(15426, "P2 Puzzle") { part2(puzzle, faceSize = 50, boundaryTransitions = puzzleBoundaryTransitions) }
+    }
 }
 
 // Example cube plan:

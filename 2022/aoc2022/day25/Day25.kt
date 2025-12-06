@@ -1,15 +1,20 @@
 package aoc2022.day25
 
 import common.*
-import kotlin.test.*
 
-private val exampleInput = "aoc2022/day25/example.txt".fromClasspathFileToLines()
-private val puzzleInput = "aoc2022/day25/input.txt".fromClasspathFileToLines()
-private const val PART_1_EXPECTED_EXAMPLE_ANSWER = "2=-1=0"
+private val example = loadFilesToLines("aoc2022/day25", "example.txt").single()
+private val puzzle = loadFilesToLines("aoc2022/day25", "input.txt").single()
 
-fun main() {
-    assertEquals(PART_1_EXPECTED_EXAMPLE_ANSWER, part1(exampleInput))
-    part1(puzzleInput).also { println("Part 1: $it") } // 2-212-2---=00-1--102, took 39.66µs
+internal fun main() {
+    Day25.assertCorrect()
+    benchmark { part1(puzzle) } // 17.3µs
+}
+
+internal object Day25 : Challenge {
+    override fun assertCorrect() {
+        check("2=-1=0", "P1 Example") { part1(example) }
+        check("2-212-2---=00-1--102", "P1 Puzzle") { part1(puzzle) }
+    }
 }
 
 private fun part1(input: List<String>) = input.sumOf { balancedQuinaryToLong(it) }.toBalancedQuinary()

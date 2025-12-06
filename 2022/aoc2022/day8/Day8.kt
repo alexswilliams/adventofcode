@@ -1,20 +1,25 @@
 package aoc2022.day8
 
 import common.*
-import kotlin.test.*
 
 
-private val exampleInput = "aoc2022/day8/example.txt".fromClasspathFileToLines()
-private val puzzleInput = "aoc2022/day8/input.txt".fromClasspathFileToLines()
-private const val PART_1_EXPECTED_ANSWER = 21
-private const val PART_2_EXPECTED_ANSWER = 8
+private val example = loadFilesToLines("aoc2022/day8", "example.txt").single()
+private val puzzle = loadFilesToLines("aoc2022/day8", "input.txt").single()
 
-fun main() {
-    assertEquals(PART_1_EXPECTED_ANSWER, part1(exampleInput))
-    println("Part 1: " + part1(puzzleInput)) // 1676
+internal fun main() {
+    Day8.assertCorrect()
+    benchmark { part1(puzzle) } // 12.0ms
+    benchmark { part2(puzzle) } // 7.6ms
+}
 
-    assertEquals(PART_2_EXPECTED_ANSWER, part2(exampleInput))
-    println("Part 2: " + part2(puzzleInput)) // 313200
+internal object Day8 : Challenge {
+    override fun assertCorrect() {
+        check(21, "P1 Example") { part1(example) }
+        check(1676, "P1 Puzzle") { part1(puzzle) }
+
+        check(8, "P2 Example") { part2(example) }
+        check(313200, "P2 Puzzle") { part2(puzzle) }
+    }
 }
 
 private fun part1(input: List<String>) = numberOfTreesAroundTheEdge(input.asGrid()) + visibleInnerSquares(input.asGrid())

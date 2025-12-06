@@ -2,25 +2,40 @@ package aoc2022.day10
 
 import common.*
 import kotlin.math.*
-import kotlin.test.*
 
-private val exampleInput = "aoc2022/day10/example.txt".fromClasspathFileToLines()
-private val puzzleInput = "aoc2022/day10/input.txt".fromClasspathFileToLines()
-private const val PART_1_EXPECTED_ANSWER = 13140
-private val part2ExpectedAnswer = """
+private val example = loadFilesToLines("aoc2022/day10", "example.txt").single()
+private val puzzle = loadFilesToLines("aoc2022/day10", "input.txt").single()
+
+private val part2ExpectedExampleAnswer = """
     ██  ██  ██  ██  ██  ██  ██  ██  ██  ██  
     ███   ███   ███   ███   ███   ███   ███ 
     ████    ████    ████    ████    ████    
     █████     █████     █████     █████     
     ██████      ██████      ██████      ████
     ███████       ███████       ███████     """.trimIndent()
+private val part2ExpectedPuzzleAnswer = """
+    ███  ████ █  █ ████  ██  ███  ████ ████ 
+    █  █ █    █ █     █ █  █ █  █ █    █    
+    █  █ ███  ██     █  █    █  █ ███  ███  
+    ███  █    █ █   █   █    ███  █    █    
+    █ █  █    █ █  █    █  █ █    █    █    
+    █  █ █    █  █ ████  ██  █    ████ █    """.trimIndent()
 
-fun main() {
-    assertEquals(PART_1_EXPECTED_ANSWER, part1(exampleInput))
-    println("Part 1: " + part1(puzzleInput)) // 13140
 
-    assertEquals(part2ExpectedAnswer, part2(exampleInput))
-    println("Part 2: \n" + part2(puzzleInput)) // RFKZCPEF
+internal fun main() {
+    Day10.assertCorrect()
+    benchmark { part1(puzzle) } // 47.5µs
+    benchmark { part2(puzzle) } // 58.2µs
+}
+
+internal object Day10 : Challenge {
+    override fun assertCorrect() {
+        check(13140, "P1 Example") { part1(example) }
+        check(13760, "P1 Puzzle") { part1(puzzle) }
+
+        check(part2ExpectedExampleAnswer, "P2 Example") { part2(example) }
+        check(part2ExpectedPuzzleAnswer, "P2 Puzzle") { part2(puzzle) }
+    }
 }
 
 private fun part1(input: List<String>): Int =

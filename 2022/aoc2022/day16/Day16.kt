@@ -3,21 +3,27 @@ package aoc2022.day16
 import common.*
 import common.BitSet
 import java.util.*
-import kotlin.test.*
 
-private val exampleInput = "aoc2022/day16/example.txt".fromClasspathFileToLines()
-private val puzzleInput = "aoc2022/day16/input.txt".fromClasspathFileToLines()
-private const val PART_1_EXPECTED_EXAMPLE_ANSWER = 1651
-private const val PART_2_EXPECTED_EXAMPLE_ANSWER = 1707
+private val example = loadFilesToLines("aoc2022/day16", "example.txt").single()
+private val puzzle = loadFilesToLines("aoc2022/day16", "input.txt").single()
 
-fun main() {
-    assertEquals(PART_1_EXPECTED_EXAMPLE_ANSWER, part1(exampleInput))
-    part1(puzzleInput).also { println("Part 1: $it") } // 1940, took 16ms
-
-    assertEquals(PART_2_EXPECTED_EXAMPLE_ANSWER, part2(exampleInput))
-    part2(puzzleInput).also { println("Part 2: $it") } // 2469, took 2.6s
+internal fun main() {
+    Day16.assertCorrect()
+    benchmark(10) { part1(puzzle) } // 11.7ms
+    benchmark(1) { part2(puzzle) } // 1.6s
 }
 
+internal object Day16 : Challenge {
+    override fun assertCorrect() {
+        check(1651, "P1 Example") { part1(example) }
+        check(1940, "P1 Puzzle") { part1(puzzle) }
+
+        check(1707, "P2 Example") { part2(example) }
+        check(2469, "P2 Puzzle") { part2(puzzle) }
+    }
+}
+
+@Suppress("DuplicatedCode")
 private fun part1(input: List<String>): Int {
     val valves = parseInput(input)
     val targetValves = valves.filter { it.rate > 0 }.map { it.ref }.toSet().asBitSet()
@@ -27,6 +33,7 @@ private fun part1(input: List<String>): Int {
     return maxFlowPossibleForValveSet(valves, timeLimit = 30, targetValves, timeToReachCache, startAt = aa.idx)
 }
 
+@Suppress("DuplicatedCode")
 private fun part2(input: List<String>): Int {
     val valves = parseInput(input)
     val targetValves = valves.filter { it.rate > 0 }.map { it.ref }.toSet().asBitSet()

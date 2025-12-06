@@ -4,19 +4,26 @@ import aoc2022.day19.RobotType.*
 import common.*
 import kotlinx.coroutines.*
 import kotlin.math.*
-import kotlin.test.*
 
-private val exampleInput = "aoc2022/day19/example.txt".fromClasspathFileToLines()
-private val puzzleInput = "aoc2022/day19/input.txt".fromClasspathFileToLines()
-private const val PART_1_EXPECTED_EXAMPLE_ANSWER = 33
-private const val PART_2_EXPECTED_EXAMPLE_ANSWER = 62 * 56
+private val example = loadFilesToLines("aoc2022/day19", "example.txt").single()
+private val puzzle = loadFilesToLines("aoc2022/day19", "input.txt").single()
 
-fun main() {
-    assertEquals(PART_1_EXPECTED_EXAMPLE_ANSWER, part1(exampleInput))
-    part1(puzzleInput).also { println("Part 1: $it") } // 960, took 33.8s
+internal fun main() {
+    Day19.assertCorrect()
+    benchmark(0) { part1(puzzle) } // 17.7s :(
+    benchmark(0) { part2(puzzle) } // 2m 31s :(
+}
 
-    assertEquals(PART_2_EXPECTED_EXAMPLE_ANSWER, part2(exampleInput))
-    part2(puzzleInput).also { println("Part 2: $it") } // 2040, took 4m 43.4s ... good enough.
+internal object Day19 : Challenge {
+    override fun assertCorrect() {
+        check(33, "P1 Example") { part1(example) }
+        check(960, "P1 Puzzle") { part1(puzzle) }
+
+        check(62 * 56, "P2 Example") { part2(example) }
+        check(2040, "P2 Puzzle") { part2(puzzle) }
+    }
+
+    override val skipTests get() = true
 }
 
 private fun part1(input: List<String>): Int {
@@ -82,6 +89,7 @@ private fun simulate(bestSoFar: IntArray, robotCreationOrder: List<RobotType>, d
                 (bp.obsidianOreCost - ore) divideRoundingUp oreRobots,
                 (bp.obsidianClayCost - clay) divideRoundingUp clayRobots
             )
+
             GEODE -> max(
                 0,
                 (bp.geodeOreCost - ore) divideRoundingUp oreRobots,

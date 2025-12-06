@@ -1,19 +1,24 @@
 package aoc2022.day5
 
 import common.*
-import kotlin.test.*
 
-private val exampleInput = "aoc2022/day5/example.txt".fromClasspathFileToLines()
-private val puzzleInput = "aoc2022/day5/input.txt".fromClasspathFileToLines()
-private const val PART_1_EXPECTED_ANSWER = "CMZ"
-private const val PART_2_EXPECTED_ANSWER = "MCD"
+private val example = loadFilesToLines("aoc2022/day5", "example.txt").single()
+private val puzzle = loadFilesToLines("aoc2022/day5", "input.txt").single()
 
-fun main() {
-    assertEquals(PART_1_EXPECTED_ANSWER, part1(exampleInput))
-    println("Part 1: " + part1(puzzleInput)) // SHQWSRBDL
+internal fun main() {
+    Day5.assertCorrect()
+    benchmark { part1(puzzle) } // 769.1µs
+    benchmark { part2(puzzle) } // 168.7µs
+}
 
-    assertEquals(PART_2_EXPECTED_ANSWER, part2(exampleInput))
-    println("Part 2: " + part2(puzzleInput)) // CDTQZHBRS
+internal object Day5 : Challenge {
+    override fun assertCorrect() {
+        check("CMZ", "P1 Example") { part1(example) }
+        check("SHQWSRBDL", "P1 Puzzle") { part1(puzzle) }
+
+        check("MCD", "P2 Example") { part2(example) }
+        check("CDTQZHBRS", "P2 Puzzle") { part2(puzzle) }
+    }
 }
 
 private fun part1(input: List<String>) = solveForBlocksPickedUpAtOnce(input, picksUpSingleBlocks = true)

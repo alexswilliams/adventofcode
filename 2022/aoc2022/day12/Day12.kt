@@ -2,20 +2,25 @@ package aoc2022.day12
 
 import common.*
 import java.util.*
-import kotlin.test.*
 
 
-private val exampleInput = "aoc2022/day12/example.txt".fromClasspathFile()
-private val puzzleInput = "aoc2022/day12/input.txt".fromClasspathFile()
-private const val PART_1_EXPECTED_EXAMPLE_ANSWER = 31
-private const val PART_2_EXPECTED_EXAMPLE_ANSWER = 29
+private val example = loadFiles("aoc2022/day12", "example.txt").single()
+private val puzzle = loadFiles("aoc2022/day12", "input.txt").single()
 
-fun main() {
-    assertEquals(PART_1_EXPECTED_EXAMPLE_ANSWER, part1(exampleInput))
-    part1(puzzleInput).also { println("Part 1: $it") } // 391
+internal fun main() {
+    Day12.assertCorrect()
+    benchmark { part1(puzzle) } // 2.0ms
+    benchmark { part2(puzzle) } // 1.6ms
+}
 
-    assertEquals(PART_2_EXPECTED_EXAMPLE_ANSWER, part2(exampleInput))
-    part2(puzzleInput).also { println("Part 2: $it") } // 386
+internal object Day12 : Challenge {
+    override fun assertCorrect() {
+        check(31, "P1 Example") { part1(example) }
+        check(391, "P1 Puzzle") { part1(puzzle) }
+
+        check(29, "P2 Example") { part2(example) }
+        check(386, "P2 Puzzle") { part2(puzzle) }
+    }
 }
 
 private fun part1(input: String) = distanceByDijkstra(input, startAtAny = 'S', endAtAny = 'E') { next, now -> next - now <= 1 }

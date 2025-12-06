@@ -4,31 +4,35 @@ import aoc2022.day7.InputParsing.ListingItem.Companion.toFileSet
 import common.*
 import kotlin.test.*
 
-private val exampleInput = "aoc2022/day7/example.txt".fromClasspathFileToLines()
-private val puzzleInput = "aoc2022/day7/input.txt".fromClasspathFileToLines()
-private val part1ExpectedTree = "aoc2022/day7/expectedExampleFileTree.txt".fromClasspathFile()
-private const val PART_1_EXPECTED_ANSWER = 95437
-private const val PART_2_EXPECTED_ANSWER = 24933642
+private val example = loadFilesToLines("aoc2022/day7", "example.txt").single()
+private val puzzle = loadFilesToLines("aoc2022/day7", "input.txt").single()
+private val part1ExpectedTree = loadFiles("aoc2022/day7", "expectedExampleFileTree.txt").single()
 
-fun main() {
-    val exampleFileTree = toFileSet(exampleInput)
-    val puzzleFileTree = toFileSet(puzzleInput)
-
-    assertEquals(part1ExpectedTree, renderFileTree(exampleFileTree))
-    assertEquals(PART_1_EXPECTED_ANSWER, part1(exampleFileTree))
-    println("Part 1: " + part1(puzzleFileTree)) // 1297159
-
-    assertEquals(PART_2_EXPECTED_ANSWER, part2(exampleFileTree))
-    println("Part 2: " + part2(puzzleFileTree)) // 3866390
+internal fun main() {
+    Day7.assertCorrect()
+    benchmark { part1(puzzle) } // 4.0ms
+    benchmark { part2(puzzle) } // 3.9ms
 }
 
-private fun part1(fileSet: FileSet) =
-    sizeOfAllDirectories(fileSet).values
+internal object Day7 : Challenge {
+    override fun assertCorrect() {
+        assertEquals(part1ExpectedTree, renderFileTree(toFileSet(example)))
+        check(95437, "P1 Example") { part1(example) }
+        check(1297159, "P1 Puzzle") { part1(puzzle) }
+
+        check(24933642, "P2 Example") { part2(example) }
+        check(3866390, "P2 Puzzle") { part2(puzzle) }
+    }
+}
+
+
+private fun part1(input: List<String>) =
+    sizeOfAllDirectories(toFileSet(input)).values
         .filter { it <= 100_000 }
         .sum()
 
-private fun part2(fileSet: FileSet): Int {
-    val allDirsWithSize = sizeOfAllDirectories(fileSet)
+private fun part2(input: List<String>): Int {
+    val allDirsWithSize = sizeOfAllDirectories(toFileSet(input))
     val spaceRequired = 30_000_000 - (70_000_000 - allDirsWithSize.getValue(listOf("/")))
     return allDirsWithSize.values
         .filter { it >= spaceRequired }

@@ -3,23 +3,24 @@ package aoc2022.day24
 import common.*
 import java.util.*
 import kotlin.math.*
-import kotlin.test.*
-import kotlin.time.*
 
-private val exampleInput = "aoc2022/day24/example.txt".fromClasspathFileToLines()
-private val puzzleInput = "aoc2022/day24/input.txt".fromClasspathFileToLines()
-private const val PART_1_EXPECTED_EXAMPLE_ANSWER = 18
-private const val PART_2_EXPECTED_EXAMPLE_ANSWER = 54
+private val example = loadFilesToLines("aoc2022/day24", "example.txt").single()
+private val puzzle = loadFilesToLines("aoc2022/day24", "input.txt").single()
 
-fun main() {
-    assertEquals(PART_1_EXPECTED_EXAMPLE_ANSWER, part1(exampleInput))
-    part1(puzzleInput).also { println("Part 1: $it") } // 301, took 133.54ms
+internal fun main() {
+    Day24.assertCorrect()
+    benchmark(10) { part1(puzzle) } // 58.0ms
+    benchmark(10) { part2(puzzle) } // 133.3ms
+}
 
-    assertEquals(PART_2_EXPECTED_EXAMPLE_ANSWER, part2(exampleInput))
-    part2(puzzleInput).also { println("Part 2: $it") } // 859, took 267.42ms
+internal object Day24 : Challenge {
+    override fun assertCorrect() {
+        check(18, "P1 Example") { part1(example) }
+        check(301, "P1 Puzzle") { part1(puzzle) }
 
-    println(measureTime { repeat(10) { part1(puzzleInput) } }.div(10))
-    println(measureTime { repeat(10) { part2(puzzleInput) } }.div(10))
+        check(54, "P2 Example") { part2(example) }
+        check(859, "P2 Puzzle") { part2(puzzle) }
+    }
 }
 
 private fun part1(input: List<String>): Int {

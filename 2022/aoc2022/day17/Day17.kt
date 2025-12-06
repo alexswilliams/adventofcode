@@ -3,19 +3,24 @@ package aoc2022.day17
 import common.*
 import kotlin.experimental.*
 import kotlin.math.*
-import kotlin.test.*
 
-private val exampleInput = "aoc2022/day17/example.txt".fromClasspathFile()
-private val puzzleInput = "aoc2022/day17/input.txt".fromClasspathFile()
-private const val PART_1_EXPECTED_EXAMPLE_ANSWER = 3068
-private const val PART_2_EXPECTED_EXAMPLE_ANSWER = 1514285714288L
+private val example = loadFiles("aoc2022/day17", "example.txt").single()
+private val puzzle = loadFiles("aoc2022/day17", "input.txt").single()
 
-fun main() {
-    assertEquals(PART_1_EXPECTED_EXAMPLE_ANSWER, part1(exampleInput))
-    part1(puzzleInput).also { println("Part 1: $it") } // 3133, took 680µs
+internal fun main() {
+    Day17.assertCorrect()
+    benchmark { part1(puzzle) } // 212.2µs
+    benchmark { part2(puzzle) } // 818.9µs
+}
 
-    assertEquals(PART_2_EXPECTED_EXAMPLE_ANSWER, part2(exampleInput))
-    part2(puzzleInput).also { println("Part 2: $it") } // 1547953216393, took 2.2ms
+internal object Day17 : Challenge {
+    override fun assertCorrect() {
+        check(3068, "P1 Example") { part1(example) }
+        check(3133, "P1 Puzzle") { part1(puzzle) }
+
+        check(1514285714288, "P2 Example") { part2(example) }
+        check(1547953216393, "P2 Puzzle") { part2(puzzle) }
+    }
 }
 
 

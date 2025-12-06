@@ -3,19 +3,24 @@ package aoc2022.day15
 import common.*
 import kotlinx.coroutines.*
 import kotlin.math.*
-import kotlin.test.*
 
-private val exampleInput = "aoc2022/day15/example.txt".fromClasspathFileToLines()
-private val puzzleInput = "aoc2022/day15/input.txt".fromClasspathFileToLines()
-private const val PART_1_EXPECTED_EXAMPLE_ANSWER = 26
-private const val PART_2_EXPECTED_EXAMPLE_ANSWER = 56000011L
+private val example = loadFilesToLines("aoc2022/day15", "example.txt").single()
+private val puzzle = loadFilesToLines("aoc2022/day15", "input.txt").single()
 
-fun main() {
-    assertEquals(PART_1_EXPECTED_EXAMPLE_ANSWER, part1(exampleInput, rowOfInterest = 10))
-    part1(puzzleInput, rowOfInterest = 2_000_000).also { println("Part 1: $it") } // 4665948
+internal fun main() {
+    Day15.assertCorrect()
+    benchmark { part1(puzzle, 2_000_000) } // 33.2µs
+    benchmark(10) { part2(puzzle, 4_000_000) } // 155.8ms
+}
 
-    assertEquals(PART_2_EXPECTED_EXAMPLE_ANSWER, part2(exampleInput, maxSize = 20))
-    part2(puzzleInput, maxSize = 4_000_000).also { println("Part 2: $it") } // 13543690671045
+internal object Day15 : Challenge {
+    override fun assertCorrect() {
+        check(26, "P1 Example") { part1(example, rowOfInterest = 10) }
+        check(4665948, "P1 Puzzle") { part1(puzzle, rowOfInterest = 2_000_000) }
+
+        check(56000011, "P2 Example") { part2(example, maxSize = 20) }
+        check(13543690671045, "P2 Puzzle") { part2(puzzle, maxSize = 4_000_000) }
+    }
 }
 
 private fun part1(input: List<String>, rowOfInterest: Int): Int {

@@ -1,20 +1,26 @@
 package aoc2022.day13
 
 import common.*
-import kotlin.test.*
 
-private val exampleInput = "aoc2022/day13/example.txt".fromClasspathFile().linesAsCharArrayList()
-private val puzzleInput = "aoc2022/day13/input.txt".fromClasspathFile().linesAsCharArrayList()
-private const val PART_1_EXPECTED_EXAMPLE_ANSWER = 13
-private const val PART_2_EXPECTED_EXAMPLE_ANSWER = 140
+private val example = loadFilesToLines("aoc2022/day13", "example.txt").single().map { it.toCharArray() }
+private val puzzle = loadFilesToLines("aoc2022/day13", "input.txt").single().map { it.toCharArray() }
 
-fun main() {
-    assertEquals(PART_1_EXPECTED_EXAMPLE_ANSWER, part1(exampleInput))
-    part1(puzzleInput).also { println("Part 1: $it") } // 5503
-
-    assertEquals(PART_2_EXPECTED_EXAMPLE_ANSWER, part2(exampleInput))
-    part2(puzzleInput).also { println("Part 2: $it") } // 20952
+internal fun main() {
+    Day13.assertCorrect()
+    benchmark { part1(puzzle) } // 22.4µs
+    benchmark { part2(puzzle) } // 85.2µs
 }
+
+internal object Day13 : Challenge {
+    override fun assertCorrect() {
+        check(13, "P1 Example") { part1(example) }
+        check(5503, "P1 Puzzle") { part1(puzzle) }
+
+        check(140, "P2 Example") { part2(example) }
+        check(20952, "P2 Puzzle") { part2(puzzle) }
+    }
+}
+
 
 private fun part1(input: List<CharArray>) = input
     .chunked(3)

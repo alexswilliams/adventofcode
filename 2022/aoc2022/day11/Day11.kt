@@ -4,20 +4,23 @@ import common.*
 import kotlin.test.*
 import kotlin.text.RegexOption.*
 
-private val exampleInput = "aoc2022/day11/example.txt".fromClasspathFile()
-private val puzzleInput = "aoc2022/day11/input.txt".fromClasspathFile()
-private const val PART_1_EXPECTED_ANSWER = 10605L
-private const val PART_2_EXPECTED_ANSWER = 2713310158L
+private val example = loadFiles("aoc2022/day11", "example.txt").single()
+private val puzzle = loadFiles("aoc2022/day11", "input.txt").single()
 
+internal fun main() {
+    Day11.assertCorrect()
+    benchmark { part1(puzzle) } // 89.7µs
+    benchmark { part2(puzzle) } // 1.1ms
+}
 
-fun main() {
-    assertEquals(PART_1_EXPECTED_ANSWER, part1(exampleInput))
-    assertEquals(62491, part1(puzzleInput))
-    println("Part 1: 62491")
+internal object Day11 : Challenge {
+    override fun assertCorrect() {
+        check(10605, "P1 Example") { part1(example) }
+        check(62491, "P1 Puzzle") { part1(puzzle) }
 
-    assertEquals(PART_2_EXPECTED_ANSWER, part2(exampleInput))
-    assertEquals(17408399184, part2(puzzleInput))
-    println("Part 2: 17408399184")
+        check(2713310158, "P2 Example") { part2(example) }
+        check(17408399184, "P2 Puzzle") { part2(puzzle) }
+    }
 }
 
 private fun part1(input: String) = runPuzzle(parseInput(input), iterations = 20, 3, lookForCyclesUntilPercent = 55)

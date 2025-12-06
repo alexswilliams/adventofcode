@@ -2,19 +2,24 @@ package aoc2022.day23
 
 import aoc2022.day23.Direction.*
 import common.*
-import kotlin.test.*
 
-private val exampleInput = "aoc2022/day23/example.txt".fromClasspathFileToLines()
-private val puzzleInput = "aoc2022/day23/input.txt".fromClasspathFileToLines()
-private const val PART_1_EXPECTED_EXAMPLE_ANSWER = 110
-private const val PART_2_EXPECTED_EXAMPLE_ANSWER = 20
+private val example = loadFilesToLines("aoc2022/day23", "example.txt").single()
+private val puzzle = loadFilesToLines("aoc2022/day23", "input.txt").single()
 
-fun main() {
-    assertEquals(PART_1_EXPECTED_EXAMPLE_ANSWER, part1(exampleInput))
-    part1(puzzleInput).also { println("Part 1: $it") } // 3849, took 5.63ms
+internal fun main() {
+    Day23.assertCorrect()
+    benchmark { part1(puzzle) } // 3.1ms
+    benchmark(10) { part2(puzzle) } // 276.9ms
+}
 
-    assertEquals(PART_2_EXPECTED_EXAMPLE_ANSWER, part2(exampleInput))
-    part2(puzzleInput).also { println("Part 2: $it") } // 995, took 426.31ms
+internal object Day23 : Challenge {
+    override fun assertCorrect() {
+        check(110, "P1 Example") { part1(example) }
+        check(3849, "P1 Puzzle") { part1(puzzle) }
+
+        check(20, "P2 Example") { part2(example) }
+        check(995, "P2 Puzzle") { part2(puzzle) }
+    }
 }
 
 private fun part1(input: List<String>): Int {
