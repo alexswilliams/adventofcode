@@ -41,4 +41,4 @@ private fun part1(grid: Grid, steps: Int = 64): Int {
     }.size
 }
 
-private fun part2(grid: Grid, steps: Int = 26501365): Long = 0
+private fun part2(grid: Grid, steps: Int = 26501365): Long = TODO()
