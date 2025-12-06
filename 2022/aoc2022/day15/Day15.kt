@@ -72,7 +72,7 @@ private fun sensorRangesForRow(sensors: List<SensorData>, row: Int): List<IntRan
                 this.add(xMin..xMax)
             }
         }
-    }.mergeAdjacent()
+    }.mergeAdjacentIntRanges()
 
 private fun sensorAffectsRow(s: SensorData, row: Int) = (s.yS == row
         || s.yS < row && s.yS + s.distanceToBeacon >= row

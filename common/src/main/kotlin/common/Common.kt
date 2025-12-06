@@ -140,17 +140,19 @@ infix fun LongRange.overlaps(other: LongRange) = other.first in this || this.fir
 infix fun LongRange.overlapsOrIsAdjacentTo(other: LongRange) =
     (this.last == other.first - 1) || (other.last == this.first - 1) || this.overlaps(other)
 
-fun List<IntRange>.mergeAdjacent(): List<IntRange> {
+fun List<IntRange>.mergeAdjacentIntRanges(): List<IntRange> = this.sortedBy { it.first }.mergeAdjacentSortedIntRanges()
+fun List<IntRange>.mergeAdjacentSortedIntRanges(): List<IntRange> {
     var nulls = 0
     val ranges = Array(this.size) { if (this[it].isEmpty()) null.also { nulls++ } else this[it] }
     while (true) {
         var aIdx = -1
         var bIdx = -1
         var a = -1
-        found@ while (++a <= ranges.lastIndex) {
+        found@ while (++a < ranges.lastIndex) {
+            if (ranges[a] == null) continue@found
             var b = -1
             while (++b <= ranges.lastIndex) {
-                if ((a != b) && ranges[a] != null && ranges[b] != null && ranges[a]!! overlapsOrIsAdjacentTo ranges[b]!!) {
+                if ((a != b) && ranges[b] != null && ranges[a]!! overlapsOrIsAdjacentTo ranges[b]!!) {
                     aIdx = a
                     bIdx = b
                     break@found
@@ -169,17 +171,19 @@ fun List<IntRange>.mergeAdjacent(): List<IntRange> {
     }
 }
 
-fun List<LongRange>.mergeAdjacentLongRanges(): List<LongRange> {
+fun List<LongRange>.mergeAdjacentLongRanges(): List<LongRange> = this.sortedBy { it.first }.mergeAdjacentSortedLongRanges()
+fun List<LongRange>.mergeAdjacentSortedLongRanges(): List<LongRange> {
     var nulls = 0
     val ranges = Array(this.size) { if (this[it].isEmpty()) null.also { nulls++ } else this[it] }
     while (true) {
         var aIdx = -1
         var bIdx = -1
         var a = -1
-        found@ while (++a <= ranges.lastIndex) {
-            var b = -1
+        found@ while (++a < ranges.lastIndex) {
+            if (ranges[a] == null) continue@found
+            var b = a
             while (++b <= ranges.lastIndex) {
-                if ((a != b) && ranges[a] != null && ranges[b] != null && ranges[a]!! overlapsOrIsAdjacentTo ranges[b]!!) {
+                if (ranges[b] != null && ranges[a]!! overlapsOrIsAdjacentTo ranges[b]!!) {
                     aIdx = a
                     bIdx = b
                     break@found
