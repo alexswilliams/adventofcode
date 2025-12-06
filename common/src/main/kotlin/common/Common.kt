@@ -112,6 +112,12 @@ fun List<String>.splitOnSpaces() = map { it.split(' ') }
 fun List<CharArray>.splitArrayOnSpaces() = map { it.concatToString().split(' ') }
 fun List<String>.asArrayOfCharArrays(): Grid = Array(size) { r -> this[r].toCharArray() }
 
+fun Int.pow(n: Int): Int =
+    when (n) {
+        0 -> 1
+        1 -> this
+        else -> this * this.pow(n - 1)
+    }
 fun Long.pow(n: Int): Long =
     when (n) {
         0 -> 1L
