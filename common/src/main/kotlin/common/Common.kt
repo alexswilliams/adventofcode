@@ -55,7 +55,6 @@ fun Grid.transpose(): Grid =
     }
 
 
-
 val DigitGrid.height get() = this.size
 val DigitGrid.width get() = this[0].size
 val DigitGrid.rowIndices get() = this.indices
@@ -118,6 +117,7 @@ fun Int.pow(n: Int): Int =
         1 -> this
         else -> this * this.pow(n - 1)
     }
+
 fun Long.pow(n: Int): Long =
     when (n) {
         0 -> 1L
@@ -133,6 +133,11 @@ fun LongRange.keepingBelow(upperBoundExcl: Long) = first..<last.coerceAtMost(upp
 infix fun IntRange.fullyContains(other: IntRange) = other.first in this && other.last in this
 infix fun IntRange.overlaps(other: IntRange) = other.first in this || this.first in other
 infix fun IntRange.overlapsOrIsAdjacentTo(other: IntRange) =
+    (this.last == other.first - 1) || (other.last == this.first - 1) || this.overlaps(other)
+
+infix fun LongRange.fullyContains(other: LongRange) = other.first in this && other.last in this
+infix fun LongRange.overlaps(other: LongRange) = other.first in this || this.first in other
+infix fun LongRange.overlapsOrIsAdjacentTo(other: LongRange) =
     (this.last == other.first - 1) || (other.last == this.first - 1) || this.overlaps(other)
 
 fun List<IntRange>.mergeAdjacent(): List<IntRange> {
@@ -164,6 +169,35 @@ fun List<IntRange>.mergeAdjacent(): List<IntRange> {
     }
 }
 
+fun List<LongRange>.mergeAdjacentLongRanges(): List<LongRange> {
+    var nulls = 0
+    val ranges = Array(this.size) { if (this[it].isEmpty()) null.also { nulls++ } else this[it] }
+    while (true) {
+        var aIdx = -1
+        var bIdx = -1
+        var a = -1
+        found@ while (++a <= ranges.lastIndex) {
+            var b = -1
+            while (++b <= ranges.lastIndex) {
+                if ((a != b) && ranges[a] != null && ranges[b] != null && ranges[a]!! overlapsOrIsAdjacentTo ranges[b]!!) {
+                    aIdx = a
+                    bIdx = b
+                    break@found
+                }
+            }
+        }
+        if (aIdx == -1) return ranges.filterNotNullTo(ArrayList(ranges.size + 1 - nulls))
+        val aVal = ranges[aIdx]!!
+        val bVal = ranges[bIdx]!!
+        ranges[aIdx] = when {
+            aVal fullyContains bVal -> aVal
+            bVal fullyContains aVal -> bVal
+            else -> LongRange(min(aVal.first, bVal.first), max(aVal.last, bVal.last))
+        }
+        ranges[bIdx] = null.also { nulls++ }
+    }
+}
+
 fun List<IntRange>.clampTo(minInclusive: Int, maxInclusive: Int) = this
     .mapNotNull {
         when {
@@ -175,6 +209,7 @@ fun List<IntRange>.clampTo(minInclusive: Int, maxInclusive: Int) = this
     }
 
 val IntRange.size: Int get() = this.last - this.first + 1
+val LongRange.size: Long get() = this.last - this.first + 1
 
 fun <T> List<List<T>>.transpose(): List<List<T>> =
     List(first().size) { col ->
