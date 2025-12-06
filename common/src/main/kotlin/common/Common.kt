@@ -305,6 +305,11 @@ fun Iterable<Int>.product() = this.reduce { acc, i -> acc * i }
 fun IntArray.product() = this.reduce { acc, i -> acc * i }
 fun Iterable<Long>.product() = this.reduce { acc, i -> acc * i }
 fun Iterable<Int>.runningTotal(start: Int): List<Int> = this.runningFold(start) { acc, i -> acc + i }
+inline fun <T> Iterable<T>.productOf(selector: (T) -> Long): Long {
+    var product: Long = 1
+    for (element in this) product *= selector(element)
+    return product
+}
 
 tailrec fun gcd(a: Long, b: Long): Long = if (b == 0L) a else gcd(b, a % b)
 tailrec fun gcd(a: Int, b: Int): Int = if (b == 0) a else gcd(b, a % b)
