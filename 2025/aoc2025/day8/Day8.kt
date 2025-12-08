@@ -1,6 +1,7 @@
 package aoc2025.day8
 
 import common.*
+import java.util.*
 import java.util.Comparator.*
 
 private val example = loadFilesToLines("aoc2025/day8", "example.txt").single()
@@ -8,8 +9,8 @@ private val puzzle = loadFilesToLines("aoc2025/day8", "input.txt").single()
 
 internal fun main() {
     Day8.assertCorrect()
-    benchmark(10) { part1(puzzle) } // 98.4ms
-    benchmark(10) { part2(puzzle) } // 102.0ms
+    benchmark(100) { part1(puzzle) } // 20.1ms
+    benchmark(100) { part2(puzzle) } // 23.2ms
 }
 
 internal object Day8 : Challenge {
@@ -44,15 +45,13 @@ private fun part2(input: List<String>): Long {
 
 private fun parseInput(input: List<String>): Triple<List<JunctionBox>, MutableList<Circuit>, Iterable<PairwiseDistance>> {
     val boxes = input.map { it.splitToInts(",").let { (x, y, z) -> JunctionBox(x, y, z) } }
-    val circuits = boxes.indices.mapTo(ArrayList()) { mutableListOf(it) }
-    val sortedDistances = distancesBetween(boxes)
-        // This sorting is extremely slow, and profiles at about 95% of the overall runtime; however, directly mapping to a treeset is slower
-        .sortedWith(comparingLong(PairwiseDistance::distance))
+    val circuits = boxes.indices.mapTo(ArrayList()) { arrayListOf(it) }
+    val sortedDistances = sortedDistancesBetween(boxes)
     return Triple(boxes, circuits, sortedDistances)
 }
 
 
-private typealias Circuit = MutableList<Int>
+private typealias Circuit = ArrayList<Int>
 
 private fun MutableList<Circuit>.merge(a: Int, b: Int) {
     val circuitA = indexOfFirst { it.contains(a) }
@@ -73,9 +72,13 @@ private data class JunctionBox(val x: Int, val y: Int, val z: Int) {
 
 private data class PairwiseDistance(val a: Int, val b: Int, val distance: Long)
 
-private fun distancesBetween(boxes: List<JunctionBox>): Iterable<PairwiseDistance> =
-    (0..<boxes.lastIndex).flatMap { a ->
-        (a + 1..boxes.lastIndex).map { b ->
-            PairwiseDistance(a, b, boxes[a] distanceTo boxes[b])
+private fun sortedDistancesBetween(boxes: List<JunctionBox>): Iterable<PairwiseDistance> =
+    ArrayList<PairwiseDistance>((boxes.lastIndex * boxes.size) / 2).apply {
+        (0..<boxes.lastIndex).forEach { a ->
+            (a + 1..boxes.lastIndex).forEach { b ->
+                this.add(PairwiseDistance(a, b, boxes[a] distanceTo boxes[b]))
+            }
         }
-    }
+    }.toTypedArray().apply {
+        Arrays.parallelSort(this, comparingLong(PairwiseDistance::distance))
+    }.asIterable()
