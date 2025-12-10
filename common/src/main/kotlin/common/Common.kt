@@ -24,6 +24,10 @@ fun Grid.set(pos: Location1616, value: Char) {
     this[pos.row()][pos.col()] = value
 }
 
+fun Grid.set(pos: Location, value: Char) {
+    this[pos.rowInt()][pos.colInt()] = value
+}
+
 fun DigitGrid.locationOf(i: Int): Location1616 {
     val startRowIndex = indexOfFirst { i in it }
     return startRowIndex by16 this[startRowIndex].indexOf(i)
@@ -815,4 +819,22 @@ fun <T> MutableList<T>.swap(i: Int, j: Int) {
     val temp = this[i]
     this[i] = this[j]
     this[j] = temp
+}
+
+fun <T, R> List<T>.mapPairwise(offset: Int = 1, transform: (el1: T, el2: T) -> R): List<R> {
+    return (0..this.lastIndex).flatMap { index1 ->
+        val elem1 = this[index1]
+        (index1 + offset..this.lastIndex).map { index2 ->
+            transform(elem1, this[index2])
+        }
+    }
+}
+
+fun <T, R> List<T>.mapPairwiseIndexed(offset: Int = 1, transform: (idx1: Int, idx2: Int, el1: T, el2: T) -> R): List<R> {
+    return (0..this.lastIndex).flatMap { index1 ->
+        val elem1 = this[index1]
+        (index1 + offset..this.lastIndex).map { index2 ->
+            transform(index1, index2, elem1, this[index2])
+        }
+    }
 }
