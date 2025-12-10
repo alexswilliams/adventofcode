@@ -6,11 +6,12 @@ import kotlin.math.*
 
 private val example = loadFilesToLines("aoc2025/day9", "example.txt").single()
 private val puzzle = loadFilesToLines("aoc2025/day9", "input.txt").single()
+private val tim = loadFilesToLines("aoc2025/day9", "tim.txt").single()
 
 internal fun main() {
     Day9.assertCorrect()
-    benchmark { part1(puzzle) } // 883.3µs
-    benchmark(100) { part2(puzzle) } // 56.3ms
+//    benchmark { part1(puzzle) } // 852.6µs
+//    benchmark(100) { part2(puzzle) } // 56.3ms
 }
 
 internal object Day9 : Challenge {
@@ -20,6 +21,8 @@ internal object Day9 : Challenge {
 
         check(24, "P2 Example") { part2(example) }
         check(1652344888, "P2 Puzzle") { part2(puzzle) }
+
+        check(1470616992, "Tim's P2 Puzzle") { part2(tim) }
     }
 }
 
@@ -109,21 +112,21 @@ private fun boundingOutsideShapeClockwise(compressedCoordinates: List<Location16
             outOfBoundsTiles.add(outsideLineTransform(c2))
         }
     outOfBoundsTiles.removeAll(edgeTiles)
-    // render(edgeTiles = edgeTiles, outOfBoundsTiles = outOfBoundsTiles, compressedCoordinates = compressedCoordinates)
+//    render(edgeTiles = edgeTiles, outOfBoundsTiles = outOfBoundsTiles, compressedCoordinates = compressedCoordinates)
     return outOfBoundsTiles
 }
 
 @Suppress("unused")
 private fun render(
-    edgeTiles: Collection<Long>,
-    outOfBoundsTiles: Collection<Long>,
-    compressedCoordinates: List<Location>
+    edgeTiles: Collection<Location1616>,
+    outOfBoundsTiles: Collection<Location1616>,
+    compressedCoordinates: List<Location1616>
 ) {
     val height = compressedCoordinates.maxOf { it.row() }
     val width = compressedCoordinates.maxOf { it.col() }
-    Array(height.toInt() + 2) { CharArray(width.toInt() + 2) { ' ' } }
+    Array(height + 2) { CharArray(width + 2) { ' ' } }
         .apply { edgeTiles.forEach { lng -> this.set(lng, 'X') } }
-        .apply { outOfBoundsTiles.forEach { lng -> this.set(lng, '*') } }
+//        .apply { outOfBoundsTiles.forEach { lng -> this.set(lng, '*') } }
         .apply { compressedCoordinates.forEachIndexed { index, lng -> this.set(lng, (index % 10).digitToChar()) } }
         .also { println(it.render()) }
 }

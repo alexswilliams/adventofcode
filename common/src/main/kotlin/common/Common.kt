@@ -822,7 +822,7 @@ fun <T> MutableList<T>.swap(i: Int, j: Int) {
 }
 
 fun <T, R> List<T>.mapPairwise(offset: Int = 1, transform: (el1: T, el2: T) -> R): List<R> {
-    return (0..this.lastIndex).flatMap { index1 ->
+    return (0..this.lastIndex).flatMapTo(ArrayList(lastIndex * (lastIndex + 1) / 2)) { index1 ->
         val elem1 = this[index1]
         (index1 + offset..this.lastIndex).map { index2 ->
             transform(elem1, this[index2])
@@ -831,7 +831,7 @@ fun <T, R> List<T>.mapPairwise(offset: Int = 1, transform: (el1: T, el2: T) -> R
 }
 
 fun <T, R> List<T>.mapPairwiseIndexed(offset: Int = 1, transform: (idx1: Int, idx2: Int, el1: T, el2: T) -> R): List<R> {
-    return (0..this.lastIndex).flatMap { index1 ->
+    return (0..this.lastIndex).flatMapTo(ArrayList(lastIndex * (lastIndex + 1) / 2)) { index1 ->
         val elem1 = this[index1]
         (index1 + offset..this.lastIndex).map { index2 ->
             transform(index1, index2, elem1, this[index2])
