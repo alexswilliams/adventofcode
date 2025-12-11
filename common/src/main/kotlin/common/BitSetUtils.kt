@@ -1,6 +1,6 @@
 package common
 
-const val EMPTY_BITSET : BitSet = 0L
+const val EMPTY_BITSET: BitSet = 0L
 typealias BitSet = Long
 
 operator fun BitSet.contains(other: Long): Boolean = (this and other) == other
@@ -14,6 +14,18 @@ fun Long.toIndex(): Int = this.countTrailingZeroBits() - 1
 inline fun BitSet.forEach(body: (Long) -> Unit) {
     var x = this
     while (x != 0L) x = x.takeHighestOneBit().also { body(it) }.let { x xor it }
+}
+
+inline fun <R> BitSet.fold(initial: R, body: (R, Long) -> R): R {
+    var acc = initial
+    var x = this
+    while (x != 0L) x = x.takeHighestOneBit().also { acc = body(acc, it) }.let { x xor it }
+    return acc
+}
+
+fun BitSet.biterator(): Iterator<Long> = iterator {
+    var x = this@biterator
+    while (x != 0L) x = x.takeHighestOneBit().also { yield(it) }.let { x xor it }
 }
 
 inline fun <R : Comparable<R>> BitSet.maxOf(selector: (Long) -> R): R {

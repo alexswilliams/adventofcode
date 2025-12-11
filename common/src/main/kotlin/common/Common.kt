@@ -122,6 +122,13 @@ fun Int.pow(n: Int): Int =
         else -> this * this.pow(n - 1)
     }
 
+val LONG_POW_2 = longArrayOf(1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768)
+fun pow2L(n: Int): Long =
+    when (n) {
+        in 0..15 -> LONG_POW_2[n]
+        else -> 2L * pow2L(n - 1)
+    }
+
 fun Long.pow(n: Int): Long =
     when (n) {
         0 -> 1L
@@ -427,7 +434,7 @@ fun <R> String.splitMappingRanges(
     var currentOffset = startAt
     var nextIndex = indexOf(delimiter, currentOffset)
     val result = ArrayList<R>(15)
-    while (nextIndex != -1) {
+    while (nextIndex != -1 && nextIndex <= lastIndex) {
         result.add(transform(this@splitMappingRanges, currentOffset, nextIndex - 1))
         currentOffset = nextIndex + delimiterLength
         nextIndex = indexOf(delimiter, currentOffset)
@@ -470,8 +477,8 @@ fun CharArray.toLongFromIndex(startAt: Int): Long {
     return if (isNegative) -value else value
 }
 
-fun String.splitToInts(delimiter: String, startAt: Int = 0) = splitMappingRanges(delimiter, startAt) { s, start, _ -> s.toIntFromIndex(start) }
-fun String.splitToLongs(delimiter: String, startAt: Int = 0) = splitMappingRanges(delimiter, startAt) { s, start, _ -> s.toLongFromIndex(start) }
+fun String.splitToInts(delimiter: String, startAt: Int = 0, endAt: Int = lastIndex) = splitMappingRanges(delimiter, startAt, endAt) { s, start, _ -> s.toIntFromIndex(start) }
+fun String.splitToLongs(delimiter: String, startAt: Int = 0, endAt: Int = lastIndex) = splitMappingRanges(delimiter, startAt, endAt) { s, start, _ -> s.toLongFromIndex(start) }
 
 // If delim isn't found, the number at the start of the string is passed as both parameters to transform
 fun <T> String.mapIntPair(delimiter: Char, transform: (Int, Int) -> T): T {
@@ -522,6 +529,15 @@ inline fun IntArray.sumOfIndexed(selector: (index: Int, e: Int) -> Int): Int {
 
 inline fun <T> Iterable<T>.sumOfIndexed(selector: (index: Int, T) -> Int): Int {
     var sum = 0
+    var index = 0
+    for (element in this) {
+        sum += selector(index++, element)
+    }
+    return sum
+}
+
+inline fun CharSequence.sumOfIndexedLong(selector: (index: Int, Char) -> Long): Long {
+    var sum = 0L
     var index = 0
     for (element in this) {
         sum += selector(index++, element)
