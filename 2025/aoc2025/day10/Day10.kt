@@ -31,6 +31,8 @@ private fun part1(input: List<String>): Int =
     input.sumOf { line ->
         val firstSpace = line.indexOf(' ', 3)
         val lastSpace = line.lastIndexOf(' ', line.lastIndex - 3)
+        // There seem to always be fewer than 64 lights and 64 buttons, so they can be represented as 64-bit bitmasks
+        // This means "toggling" lights using a button is just `lights xor button`, which is super fast.
         val lights = line.substring(1, firstSpace - 1).sumOfIndexedLong { index, light -> if (light == '#') pow2L(index) else 0L }
         val buttonMasks = line.splitMappingRanges(" ", firstSpace + 1, lastSpace - 1) { _, start, end ->
             line.splitToInts(",", start + 1, end).sumOf { lights -> pow2L(lights) }
@@ -38,6 +40,9 @@ private fun part1(input: List<String>): Int =
         searchButtonPresses(lights, buttonMasks.toLongArray())
     }
 
+// A button is either used once, or not at all.  (Any multiple of 2 pushes of the same button will cancel out, so all even numbers
+// of pushes cause no net change, and odd numbers over 1 reduce to the net change of a single button push, i.e. 1+2n => 1.
+// Given this, you can represent all combinations of N buttons as the binary representatin of the numbers up to 2^N.
 private fun searchButtonPresses(targetStates: BitSet, actions: LongArray): Int =
     (0L..<pow2L(actions.size)).minOf { combination ->
         var states = targetStates
