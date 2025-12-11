@@ -74,7 +74,6 @@ private fun part2(input: List<String>): Long {
                 changed = true
             }
         }
-        println("Round $round: ${columns.contentToString()}")
     } while (changed)
     round--
 
