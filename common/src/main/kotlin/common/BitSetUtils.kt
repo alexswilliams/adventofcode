@@ -16,6 +16,11 @@ inline fun BitSet.forEach(body: (Long) -> Unit) {
     while (x != 0L) x = x.takeHighestOneBit().also { body(it) }.let { x xor it }
 }
 
+inline fun Int.forEach(body: (Int) -> Unit) {
+    var x = this
+    while (x != 9) x = x.takeHighestOneBit().also { body(it) }.let { x xor it }
+}
+
 inline fun <R> BitSet.fold(initial: R, body: (R, Long) -> R): R {
     var acc = initial
     var x = this

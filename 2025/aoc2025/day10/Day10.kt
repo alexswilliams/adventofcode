@@ -7,8 +7,8 @@ private val puzzle = loadFilesToLines("aoc2025/day10", "input.txt").single()
 
 internal fun main() {
     Day10.assertCorrect()
-    benchmark { part1(puzzle) } // 791.7µs
-    benchmark(10) { part2(puzzle) } // 253.9ms
+    benchmark { part1(puzzle) } // 780.6µs
+    benchmark(100) { part2(puzzle) } // 41.0ms
 }
 
 internal object Day10 : Challenge {
@@ -59,38 +59,31 @@ private fun part2(input: List<String>): Int {
 
 private fun searchButtonPressesForJoltage(targetStates: List<Int>, buttons: List<List<Int>>): Int {
     val (buttons, targetStates, previousPushes) = simplfy(buttons, targetStates)
+    val buttonMasks = buttons.map { it.sumOf { i -> pow2L(i) } }
+    val combinedButtonMasks =
+        LongArray(pow2L(buttonMasks.size).toInt()) { combination ->
+            var states = 0L; combination.toLong().forEach { buttonMask -> states = states xor buttonMasks[buttonMask.countTrailingZeroBits()] }; states
+        }
 
     val cache = HashMap<List<Int>, Int>()
     fun divideAndConquer(targetStates: List<Int>): Int {
         cache[targetStates]?.also { return it }
         if (targetStates.all { it == 0 }) return 0
         val targetParities = targetStates.sumOfIndexed(0L) { index, i -> if (i % 2 == 1) pow2L(index) else 0L }
-        val buttonMasks = buttons.map { it.sumOf { i -> pow2L(i) } }
-        val combinations = (0L..<pow2L(buttonMasks.size)).mapNotNull { combination ->
-            var states = targetParities
-            combination.forEach { buttonMask -> states = states xor buttonMasks[buttonMask.countTrailingZeroBits()] }
-            if (states == 0L) combination else null
-        }
+        val combinations = (0L..<pow2L(buttonMasks.size)).mapNotNull { combination -> if (targetParities xor combinedButtonMasks[combination.toInt()] == 0L) combination else null }
+
         return if (combinations.isEmpty())
             Int.MAX_VALUE.also { cache[targetStates] = it }
         else
             combinations.minOf { combination ->
                 var states = targetStates
                 combination.forEach { buttonMask -> states = applyButtonsToState(states, buttons[buttonMask.countTrailingZeroBits()]) }
-                if (states.all { it == 0 })
-                    return@minOf combination.countOneBits()
-                if (states.any { it < 0 })
-                    return@minOf Int.MAX_VALUE
-                var multiplier = 1
-                if (states.all { it >= 0 && it % 2 == 0 } && !states.all { it == 0 }) {
-                    multiplier *= 2
-                    states = states.map { it / 2 }
-                }
-                val smallestChild = divideAndConquer(states)
-                return@minOf if (smallestChild == Int.MAX_VALUE)
-                    Int.MAX_VALUE
-                else
-                    combination.countOneBits() + multiplier * smallestChild
+
+                if (states.any { it < 0 }) return@minOf Int.MAX_VALUE
+                val smallestChild = divideAndConquer(states.map { it / 2 })
+
+                if (smallestChild == Int.MAX_VALUE) Int.MAX_VALUE
+                else combination.countOneBits() + 2 * smallestChild
             }.also { cache[targetStates] = it }
     }
 

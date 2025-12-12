@@ -129,6 +129,13 @@ fun pow2L(n: Int): Long =
         else -> 2L * pow2L(n - 1)
     }
 
+val INT_POW_2 = intArrayOf(1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768)
+fun pow2(n: Int): Int =
+    when (n) {
+        in 0..15 -> INT_POW_2[n]
+        else -> 2 * pow2(n - 1)
+    }
+
 fun Long.pow(n: Int): Long =
     when (n) {
         0 -> 1L
