@@ -1,6 +1,7 @@
 package aoc2025.day10
 
 import common.*
+import kotlinx.coroutines.*
 
 private val example = loadFilesToLines("aoc2025/day10", "example.txt").single()
 private val puzzle = loadFilesToLines("aoc2025/day10", "input.txt").single()
@@ -8,7 +9,7 @@ private val puzzle = loadFilesToLines("aoc2025/day10", "input.txt").single()
 internal fun main() {
     Day10.assertCorrect()
     benchmark { part1(puzzle) } // 780.6µs
-    benchmark(100) { part2(puzzle) } // 41.0ms
+    benchmark(100) { part2(puzzle) } // 41.0ms serial, 11.0ms parallel
 }
 
 internal object Day10 : Challenge {
@@ -52,8 +53,12 @@ private fun searchButtonPresses(targetStates: BitSet, actions: LongArray): Int =
 private fun part2(input: List<String>): Int {
     val switchActions = input.map { line -> line.substringAfter(' ').substringBeforeLast(' ').split(' ').map { it.trim('(', ')').splitToInts(",") }.distinct() }
     val targetJoltages = input.map { line -> line.substringAfterLast(' ').trim('{', '}').splitToInts(",") }
-    return targetJoltages.zip(switchActions).sumOf { (targetJoltages, actions) ->
-        searchButtonPressesForJoltage(targetJoltages, actions)
+    return runBlocking(Dispatchers.Default) {
+        targetJoltages.zip(switchActions).map { (targetJoltages, actions) ->
+            async {
+                searchButtonPressesForJoltage(targetJoltages, actions)
+            }
+        }.awaitAll().sum()
     }
 }
 
