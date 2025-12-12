@@ -1,9 +1,6 @@
 package aoc2025.day10
 
 import common.*
-import common.BitSet
-import java.util.*
-import java.util.Comparator.*
 
 private val example = loadFilesToLines("aoc2025/day10", "example.txt").single()
 private val puzzle = loadFilesToLines("aoc2025/day10", "input.txt").single()
@@ -11,7 +8,7 @@ private val puzzle = loadFilesToLines("aoc2025/day10", "input.txt").single()
 internal fun main() {
     Day10.assertCorrect()
     benchmark { part1(puzzle) } // 791.7µs
-    benchmark(0) { part2(puzzle) } // basically infinite?
+    benchmark(10) { part2(puzzle) } // 253.9ms
 }
 
 internal object Day10 : Challenge {
@@ -20,10 +17,10 @@ internal object Day10 : Challenge {
         check(502, "P1 Puzzle") { part1(puzzle) }
 
         check(33, "P2 Example") { part2(example) }
-        check(0, "P2 Puzzle") { part2(puzzle) }
+        check(196, "P2 Regression: start by dividing by 2") { part2(listOf("[###.##] (1,5) (0,1,2,5) (0,3,4,5) (0,1,3) (2,3,4,5) {172,166,34,166,30,60}")) }
+        check(47, "P2 Regression: repeated division by 2 tends to nothing") { part2(listOf("[#...] (1,2,3) (2) (0,2) (0,1,3) (0) {34,22,38,22}")) }
+        check(21467, "P2 Puzzle") { part2(puzzle) }
     }
-
-    override val skipTests: Boolean get() = true
 }
 
 
@@ -56,33 +53,85 @@ private fun part2(input: List<String>): Int {
     val switchActions = input.map { line -> line.substringAfter(' ').substringBeforeLast(' ').split(' ').map { it.trim('(', ')').splitToInts(",") }.distinct() }
     val targetJoltages = input.map { line -> line.substringAfterLast(' ').trim('{', '}').splitToInts(",") }
     return targetJoltages.zip(switchActions).sumOf { (targetJoltages, actions) ->
-        searchButtonPressesForJoltage(targetJoltages, actions).also { println("Depth $it for $targetJoltages from $actions") }
+        searchButtonPressesForJoltage(targetJoltages, actions)
     }
 }
 
-fun searchButtonPressesForJoltage(targetStates: List<Int>, actions: List<List<Int>>): Int {
-    data class State(val targetJoltages: List<Int>, val depth: Int)
+private fun searchButtonPressesForJoltage(targetStates: List<Int>, buttons: List<List<Int>>): Int {
+    val (buttons, targetStates, previousPushes) = simplfy(buttons, targetStates)
 
-    val maxDepth = targetStates.sum()
-    val queue = PriorityQueue(comparingInt(State::depth))
-        .apply { offer(State(targetStates, 0)) }
-    val cache = HashSet<List<Int>>().apply { add(targetStates) }
-    while (true) {
-        val (joltages, depth) = queue.poll() ?: throw Exception("Search space exhausted")
-        actions.forEach { button ->
-            val newJoltages = applyButtonsToJoltage(joltages, button)
-            if (newJoltages.all { it == 0 }) return depth + 1
-            if (depth + 1 <= maxDepth && newJoltages.all { it >= 0 }) {
-                val added = cache.add(newJoltages)
-                if (added)
-                    queue.offer(State(newJoltages, depth + 1))
-            }
+    val cache = HashMap<List<Int>, Int>()
+    fun divideAndConquer(targetStates: List<Int>): Int {
+        cache[targetStates]?.also { return it }
+        if (targetStates.all { it == 0 }) return 0
+        val targetParities = targetStates.sumOfIndexed(0L) { index, i -> if (i % 2 == 1) pow2L(index) else 0L }
+        val buttonMasks = buttons.map { it.sumOf { i -> pow2L(i) } }
+        val combinations = (0L..<pow2L(buttonMasks.size)).mapNotNull { combination ->
+            var states = targetParities
+            combination.forEach { buttonMask -> states = states xor buttonMasks[buttonMask.countTrailingZeroBits()] }
+            if (states == 0L) combination else null
         }
+        return if (combinations.isEmpty())
+            Int.MAX_VALUE.also { cache[targetStates] = it }
+        else
+            combinations.minOf { combination ->
+                var states = targetStates
+                combination.forEach { buttonMask -> states = applyButtonsToState(states, buttons[buttonMask.countTrailingZeroBits()]) }
+                if (states.all { it == 0 })
+                    return@minOf combination.countOneBits()
+                if (states.any { it < 0 })
+                    return@minOf Int.MAX_VALUE
+                var multiplier = 1
+                if (states.all { it >= 0 && it % 2 == 0 } && !states.all { it == 0 }) {
+                    multiplier *= 2
+                    states = states.map { it / 2 }
+                }
+                val smallestChild = divideAndConquer(states)
+                return@minOf if (smallestChild == Int.MAX_VALUE)
+                    Int.MAX_VALUE
+                else
+                    combination.countOneBits() + multiplier * smallestChild
+            }.also { cache[targetStates] = it }
     }
+
+    return previousPushes + divideAndConquer(targetStates)
 }
 
-fun applyButtonsToJoltage(joltages: List<Int>, action: List<Int>): List<Int> {
-    return joltages.mapIndexed { index, i -> if (index in action) i - 1 else i }
+private fun applyButtonsToState(targetState: List<Int>, action: List<Int>): List<Int> =
+    targetState.mapIndexed { index, i -> if (index in action) i - 1 else i }
+
+private fun simplfy(
+    buttons: List<List<Int>>,
+    targetStates: List<Int>,
+    previousDepth: Int = 0
+): Triple<List<List<Int>>, List<Int>, Int> {
+    var simplifiedStartState = Triple(buttons, targetStates, previousDepth)
+    while (true) {
+        val (buttons, targetJoltages, pushesSoFar) = simplifiedStartState
+        val solvedIndex = (0..targetJoltages.lastIndex).find { buttons.count { button -> it in button } == 1 } ?: break
+
+        val pushesNeeded = targetJoltages[solvedIndex]
+        val solvedButtonIndex = buttons.indexOfFirst { solvedIndex in it }
+        val solvedButton = buttons[solvedButtonIndex]
+        simplifiedStartState = Triple(
+            buttons.mapIndexedNotNull { index, button ->
+                if (index == solvedButtonIndex) null else button.mapNotNull {
+                    when {
+                        it < solvedIndex -> it
+                        it == solvedIndex -> null
+                        else -> it - 1
+                    }
+                }
+            },
+            targetJoltages.mapIndexedNotNull { index, i ->
+                when (index) {
+                    solvedIndex -> null
+                    in solvedButton -> i - pushesNeeded
+                    else -> i
+                }
+            },
+            pushesSoFar + pushesNeeded
+        )
+    }
+    return simplifiedStartState
 }
-
-
