@@ -26,14 +26,14 @@ private fun part1(input: List<String>): Long = input.sumOf { bank -> bank.findHi
 private fun part2(input: List<String>): Long = input.sumOf { bank -> bank.findHighestJoltage(12) }
 
 // This has n*m complexity - the worst case is that it scans the whole string only to find the highest number is at
-// the start, then scans 2..n of the string to find the highest number is at position 2, etc, which ends up scanning
+// the start, then scans 2...n of the string to find the highest number is at position 2, etc, which ends up scanning
 // the string in a triangular pattern.
 // There is an n log m solution, which is possible because the number of digits needed is always fixed in advance and
-// the possible range of values is limited (which are the same constraints that give the dutch national flag algorithm
+// the possible range of values is limited (which are the same constraints that give the Dutch national flag algorithm
 // its linear-time solution,) e.g. you might use 12 windows to track possible ranges for each digit - as you consume
 // characters from the stream, you advance some ranges forward based on ranges in the past updating, and you could store
 // these in a data structure that gives you log m access times; but honestly it's likely to be slower than the few
-// hundred micro-seconds that the recursive n*m solution.
+// hundred micro-seconds that the recursive n*m solution takes.
 private fun String.findHighestJoltage(digitNumber: Int, rangeStart: Int = 0, rangeEnd: Int = length - digitNumber): Long =
     substring(rangeStart, rangeEnd + 1).withIndex().maxBy { it.value }
         .let { highestDigit ->

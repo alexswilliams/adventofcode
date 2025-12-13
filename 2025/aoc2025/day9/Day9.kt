@@ -10,8 +10,8 @@ private val tim = loadFilesToLines("aoc2025/day9", "tim.txt").single()
 
 internal fun main() {
     Day9.assertCorrect()
-//    benchmark { part1(puzzle) } // 852.6µs
-//    benchmark(100) { part2(puzzle) } // 56.3ms
+    benchmark { part1(puzzle) } // 852.6µs
+    benchmark(100) { part2(puzzle) } // 56.3ms
 }
 
 internal object Day9 : Challenge {
@@ -41,7 +41,8 @@ private fun part2(input: List<String>): Long {
     //  - Every consecutive pair forms its own valid rectangle that can never go out of bounds as it's a straight line on the edge, so
     //    they don't need checking in the main pairwise comparison (which is why the inner loop starts at offset 2 rather than offset 1).
     //  - These 1-height rectangles are almost certainly not the largest viable area, so they can be excluded (see commented-out line below)
-    val outOfBoundsTiles = boundingOutsideShapeClockwise(compressedCoordinates)
+    // Strategy: Draw a border around the outside of the shape, and detect whether any out-of-bounds tiles appear inside each rectangle.
+    val outOfBoundsTiles: NavigableSet<Location1616> = boundingOutsideShapeClockwise(compressedCoordinates)
     val pairsOfIndicesToTest =
         // compressedCoordinates.indices.zipWithNext() +
         compressedCoordinates.mapPairwiseIndexed(offset = 2) { idx1, idx2, loc1, loc2 ->
@@ -126,7 +127,7 @@ private fun render(
     val width = compressedCoordinates.maxOf { it.col() }
     Array(height + 2) { CharArray(width + 2) { ' ' } }
         .apply { edgeTiles.forEach { lng -> this.set(lng, 'X') } }
-//        .apply { outOfBoundsTiles.forEach { lng -> this.set(lng, '*') } }
+        .apply { outOfBoundsTiles.forEach { lng -> this.set(lng, '*') } }
         .apply { compressedCoordinates.forEachIndexed { index, lng -> this.set(lng, (index % 10).digitToChar()) } }
         .also { println(it.render()) }
 }

@@ -25,8 +25,8 @@ internal object Day8 : Challenge {
 
 
 private fun part1(input: List<String>, rounds: Int = 1000): Int {
-    val (_, circuits, distances) = parseInput(input)
-    distances.take(rounds).forEach { (a, b) -> circuits.merge(a, b) }
+    val (_, circuits, sortedDistances) = parseInput(input)
+    sortedDistances.take(rounds).forEach { (a, b) -> circuits.merge(a, b) }
     return circuits.map { it.size }
         .sortedDescending()
         .take(3)
@@ -34,8 +34,8 @@ private fun part1(input: List<String>, rounds: Int = 1000): Int {
 }
 
 private fun part2(input: List<String>): Long {
-    val (boxes, circuits, distances) = parseInput(input)
-    distances.forEach { (a, b, _) ->
+    val (boxes, circuits, sortedDistances) = parseInput(input)
+    sortedDistances.forEach { (a, b, _) ->
         circuits.merge(a, b)
         if (circuits.size == 1) return 1L * boxes[a].x * boxes[b].x
     }
@@ -74,11 +74,10 @@ private data class PairwiseDistance(val a: Int, val b: Int, val distance: Long)
 
 private fun sortedDistancesBetween(boxes: List<JunctionBox>): Iterable<PairwiseDistance> =
     ArrayList<PairwiseDistance>((boxes.lastIndex * boxes.size) / 2).apply {
-        (0..<boxes.lastIndex).forEach { a ->
-            (a + 1..boxes.lastIndex).forEach { b ->
-                this.add(PairwiseDistance(a, b, boxes[a] distanceTo boxes[b]))
-            }
+        boxes.mapPairwiseIndexed { idx1, idx2, box1, box2 ->
+            add(PairwiseDistance(idx1, idx2, box1 distanceTo box2))
         }
     }.toTypedArray().apply {
+        // Sorting these distances is by far the slowest part of solving this problem - thankfully, parallel sort exists.
         Arrays.parallelSort(this, comparingLong(PairwiseDistance::distance))
     }.asIterable()

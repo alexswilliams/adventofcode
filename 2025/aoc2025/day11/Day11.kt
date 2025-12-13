@@ -30,9 +30,8 @@ private fun part1(input: List<String>): Int {
     fun followMappingsToOut(current: String): Int {
         cache[current]?.also { return it }
         if (current == "out") return 1
-        return mappings[current]!!.sumOf {
-            followMappingsToOut(it)
-        }.also { cache[current] = it }
+        return mappings[current]!!.sumOf { followMappingsToOut(it) }
+            .also { cache[current] = it }
     }
     return followMappingsToOut("you")
 }
