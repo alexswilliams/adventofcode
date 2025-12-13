@@ -484,8 +484,11 @@ fun CharArray.toLongFromIndex(startAt: Int): Long {
     return if (isNegative) -value else value
 }
 
-fun String.splitToInts(delimiter: String, startAt: Int = 0, endAt: Int = lastIndex) = splitMappingRanges(delimiter, startAt, endAt) { s, start, _ -> s.toIntFromIndex(start) }
-fun String.splitToLongs(delimiter: String, startAt: Int = 0, endAt: Int = lastIndex) = splitMappingRanges(delimiter, startAt, endAt) { s, start, _ -> s.toLongFromIndex(start) }
+fun String.splitToInts(delimiter: String, startAt: Int = 0, endAt: Int = lastIndex) =
+    splitMappingRanges(delimiter, startAt, endAt) { s, start, _ -> s.toIntFromIndex(start) }
+
+fun String.splitToLongs(delimiter: String, startAt: Int = 0, endAt: Int = lastIndex) =
+    splitMappingRanges(delimiter, startAt, endAt) { s, start, _ -> s.toLongFromIndex(start) }
 
 // If delim isn't found, the number at the start of the string is passed as both parameters to transform
 fun <T> String.mapIntPair(delimiter: Char, transform: (Int, Int) -> T): T {
@@ -535,6 +538,15 @@ inline fun IntArray.sumOfIndexed(selector: (index: Int, e: Int) -> Int): Int {
 }
 
 inline fun <T> Iterable<T>.sumOfIndexed(selector: (index: Int, T) -> Int): Int {
+    var sum = 0
+    var index = 0
+    for (element in this) {
+        sum += selector(index++, element)
+    }
+    return sum
+}
+
+inline fun CharSequence.sumOfIndexed(selector: (index: Int, Char) -> Int): Int {
     var sum = 0
     var index = 0
     for (element in this) {
