@@ -25,6 +25,9 @@ dependencies {
 
     // https://mvnrepository.com/artifact/com.github.ajalt.mordant/mordant
     implementation("com.github.ajalt.mordant:mordant:3.0.2")
+
+    // https://mvnrepository.com/artifact/org.assertj/assertj-core
+    testImplementation("org.assertj:assertj-core:3.27.7")
 }
 
 tasks.getByName<Test>("test") {
