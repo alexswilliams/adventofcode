@@ -1,5 +1,5 @@
 // https://gradle.org/releases/
-// ./gradlew wrapper --gradle-version=9.2.0 --distribution-type=BIN
+// ./gradlew wrapper --gradle-version=9.4.0 --distribution-type=BIN
 
 plugins {
     // https://mvnrepository.com/artifact/org.jetbrains.kotlin.jvm/org.jetbrains.kotlin.jvm.gradle.plugin
