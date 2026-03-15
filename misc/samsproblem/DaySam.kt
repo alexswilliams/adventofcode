@@ -68,8 +68,7 @@ private fun solveMaxHeightPath(input: List<String>): Int {
         .apply { this[start.row()][start.col()] = grid[start.row()][start.col()] }
 
     while (true) {
-        var weight: Int
-        val u = heap.poll { weight = it } ?: throw Error("No path to end square, shouldn't be possible")
+        val (weight, u) = heap.pollEntry() ?: throw Error("No path to end square, shouldn't be possible")
         val lowestTimeToU = lowestTimes[u.row()][u.col()]
         if (u == end) return lowestTimeToU
 

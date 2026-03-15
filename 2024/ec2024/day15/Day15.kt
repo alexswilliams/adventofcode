@@ -107,8 +107,7 @@ private fun bfsToOtherReachableHerbs(
     val neighboursArray = IntArray(4)
 
     while (true) {
-        val distance: Int
-        val node = work.poll { weight -> distance = weight } ?: break
+        val (distance, node) = work.pollEntry() ?: break
         val u = unpackLocation(node)
         val seenSoFar = unpackSeen(node)
         if (distance >= shortestRouteLength) continue
