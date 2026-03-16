@@ -31,14 +31,14 @@ class FibHeap<Element>(
     var size: Int = 0
         private set
 
-//    val nodes = HashMap<Element, Node<Element>>()
+//    val nodes = HashMap<Int, HashMap<Element, Node<Element>>>()
 
     private fun offer(e: Element, weight: Int, offset: Int) {
         size++
         val next = firstRootNode
         val prev = firstRootNode?.previousSibling
         firstRootNode = Node(weight + offset, e, previousSibling = prev, nextSibling = next)
-//        nodes[e] = firstRootNode!!
+//        nodes.computeIfAbsent(weight + offset) { HashMap() }[e] = firstRootNode!!
 
         if (size == 1) {
             firstRootNode!!.previousSibling = firstRootNode
@@ -69,23 +69,20 @@ class FibHeap<Element>(
         }
 
         // TODO: this is super naive
-//        val foundNode = nodes[e]
+//        val foundNode = nodes[oldWeightAdj]?.remove(e)
         val foundNode = findElement(e, firstRootNode!!, oldWeight)
         if (foundNode === null) {
             offer(e, newWeight)
             return
         }
 
-        if (foundNode.parent === null && newWeightAdj < oldWeightAdj) {
-            foundNode.key = newWeightAdj
-            if (minNode!!.key > newWeightAdj)
-                minNode = foundNode
-        } else if (foundNode.parent!!.key < newWeightAdj && newWeightAdj < oldWeightAdj) {
-            foundNode.key = newWeightAdj
-        } else {
-            foundNode.key = newWeightAdj
+        foundNode.key = newWeightAdj
+        if (foundNode.parent === null) {
+            if (minNode!!.key > newWeightAdj) minNode = foundNode
+        } else if (foundNode.parent!!.key > newWeightAdj) {
             cutSubTreeToRootList(foundNode)
         }
+//        nodes.computeIfAbsent(newWeightAdj) { HashMap() }[e] = foundNode
     }
 
     private fun cutSubTreeToRootList(node: Node<Element>) {
@@ -195,10 +192,11 @@ class FibHeap<Element>(
         assert(nodeToPop.parent === null)
 
         deleteFromList(nodeToPop)
+//        nodes[nodeToPop.key]!!.remove(nodeToPop.value)
+
         if (nodeToPop.firstChild !== null)
             promoteChildrenToRootList(nodeToPop.firstChild!!)
 
-        // Rebalance
         rebalance()
 
         findNewMinNode()
