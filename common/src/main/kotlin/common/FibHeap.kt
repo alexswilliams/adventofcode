@@ -57,7 +57,8 @@ class FibHeap<Element>(
         val offset = weightOffset(e)
         val oldWeightAdj = oldWeight + offset
         val newWeightAdj = newWeight + offset
-        if (oldWeightAdj < newWeightAdj) throw UnsupportedOperationException("Decrease-key operation call with an increase of key")
+        if (oldWeightAdj < newWeightAdj)
+            throw UnsupportedOperationException("Decrease-key operation call with an increase of key: $oldWeight ($oldWeightAdj), $newWeight ($newWeightAdj)")
 
         if (size == 0) {
             offer(e, newWeight, offset)
@@ -71,7 +72,6 @@ class FibHeap<Element>(
             return
         }
 
-
         if (foundNode.parent === null && newWeightAdj < oldWeightAdj) {
             foundNode.key = newWeightAdj
             if (minNode!!.key > newWeightAdj)
@@ -79,14 +79,36 @@ class FibHeap<Element>(
         } else if (foundNode.parent!!.key < newWeightAdj && newWeightAdj < oldWeightAdj) {
             foundNode.key = newWeightAdj
         } else {
-            deleteFromList(foundNode)
-            size--
-            if (foundNode.firstChild !== null) {
-                promoteToRootList(foundNode.firstChild!!)
-                findNewMinNode()
-            }
-            offer(e, newWeight)
+            foundNode.key = newWeightAdj
+            cutSubTreeToRootList(foundNode)
         }
+    }
+
+    private fun cutSubTreeToRootList(node: Node<Element>) {
+        deleteFromList(node)
+        if (firstRootNode === null) {
+            firstRootNode = node
+            node.nextSibling = node
+            node.previousSibling = node
+            minNode = node
+        } else {
+            val next = firstRootNode!!
+            val prev = firstRootNode!!.previousSibling!!
+            firstRootNode = node
+            node.nextSibling = next
+            next.previousSibling = node
+            node.previousSibling = prev
+            prev.nextSibling = node
+            if (minNode!!.key > node.key) minNode = node
+        }
+        val parent = node.parent
+        node.parent = null
+        node.marked = false
+
+        if (parent !== null && parent.marked)
+            cutSubTreeToRootList(parent)
+        else if (parent !== null && parent.parent !== null)
+            parent.marked = true
     }
 
     fun findElement(e: Element, startNode: Node<Element>, oldWeight: Int): Node<Element>? {
@@ -128,7 +150,7 @@ class FibHeap<Element>(
         if (firstRootNode === nodeToDelete) firstRootNode = next
     }
 
-    private fun promoteToRootList(firstNode: Node<Element>) {
+    private fun promoteChildrenToRootList(firstNode: Node<Element>) {
         val nodeAfterSublist = firstRootNode
         val lastNodeInRootList = firstRootNode?.previousSibling
         val lastNode = firstNode.previousSibling!!
@@ -170,7 +192,7 @@ class FibHeap<Element>(
 
         deleteFromList(nodeToPop)
         if (nodeToPop.firstChild !== null)
-            promoteToRootList(nodeToPop.firstChild!!)
+            promoteChildrenToRootList(nodeToPop.firstChild!!)
 
         // Rebalance
         rebalance()
