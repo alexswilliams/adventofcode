@@ -182,29 +182,28 @@ class FibHeap<Element>(
 
         nodeWithDegree.fill(null)
         var node = firstRootNode!!
-        var done = false
         do {
             val existingNode = nodeWithDegree[node.childCount]
-            if (existingNode === null) {
+            if (existingNode === null || existingNode.parent !== null) {
                 nodeWithDegree[node.childCount] = node
             } else if (existingNode !== node) {
                 val staysAtRoot = if (existingNode.key < node.key) existingNode else node
                 val becomesChild = if (existingNode.key >= node.key) existingNode else node
+                val next = becomesChild.nextSibling!!
+
                 rebalance(staysAtRoot, becomesChild)
-
-                node = firstRootNode!!
                 nodeWithDegree[becomesChild.childCount] = null
-                continue;
-            }
 
+                node = next
+                continue
+            }
             node = node.nextSibling!!
-            if (node === firstRootNode) done = true
-        } while (!done)
+        } while (node !== firstRootNode)
     }
 
     private fun rebalance(staysAtRoot: Node<Element>, becomesChild: Node<Element>) {
         staysAtRoot.childCount++
-        if (nodeWithDegree.size <= staysAtRoot.childCount) nodeWithDegree = Array(nodeWithDegree.size shl 1 + nodeWithDegree.size) { null }
+        if (nodeWithDegree.size <= staysAtRoot.childCount) nodeWithDegree = Array(staysAtRoot.childCount shl 1 + staysAtRoot.childCount) { null }
         deleteFromList(becomesChild)
         becomesChild.parent = staysAtRoot
         if (staysAtRoot.firstChild === null) {
