@@ -33,7 +33,6 @@ class FibHeap<Element>(
 
     override fun offer(e: Element, weight: Int) {
         size++
-        if (nodeWithDegree.size < size) nodeWithDegree = Array(nodeWithDegree.size * 2) { null }
         val next = firstRootNode
         val prev = firstRootNode?.previousSibling
         firstRootNode = Node(weight + weightOffset(e), e, previousSibling = prev, nextSibling = next)
@@ -176,7 +175,7 @@ class FibHeap<Element>(
         return nodeToPop
     }
 
-    var nodeWithDegree = Array<Node<Element>?>(100) { null }
+    var nodeWithDegree = Array<Node<Element>?>(32) { null }
 
     private fun rebalance() {
         if (firstRootNode === null || firstRootNode!!.nextSibling === firstRootNode) return
@@ -205,6 +204,7 @@ class FibHeap<Element>(
 
     private fun rebalance(staysAtRoot: Node<Element>, becomesChild: Node<Element>) {
         staysAtRoot.childCount++
+        if (nodeWithDegree.size <= staysAtRoot.childCount) nodeWithDegree = Array(nodeWithDegree.size shl 1 + nodeWithDegree.size) { null }
         deleteFromList(becomesChild)
         becomesChild.parent = staysAtRoot
         if (staysAtRoot.firstChild === null) {
