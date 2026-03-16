@@ -1,7 +1,5 @@
 package common
 
-import java.util.*
-
 class FibHeap<Element>(
     initialValues: Iterable<Pair<Element, Int>>,
     private val weightOffset: (Element) -> Int = { 0 },
@@ -35,9 +33,10 @@ class FibHeap<Element>(
 
     override fun offer(e: Element, weight: Int) {
         size++
+        if (nodeWithDegree.size < size) nodeWithDegree = Array(nodeWithDegree.size * 2) { null }
         val next = firstRootNode
         val prev = firstRootNode?.previousSibling
-        firstRootNode = Node(weight, e, previousSibling = prev, nextSibling = next)
+        firstRootNode = Node(weight + weightOffset(e), e, previousSibling = prev, nextSibling = next)
 
         if (size == 1) {
             firstRootNode!!.previousSibling = firstRootNode
@@ -64,12 +63,16 @@ class FibHeap<Element>(
             return
         }
 
-        if (foundNode.parent === null && newWeight < oldWeight) {
-            foundNode.key = newWeight
-            if (minNode!!.key > newWeight)
+        val hVal = weightOffset(e)
+        val oldWeightAdj = oldWeight + hVal
+        val newWeightAdj = newWeight + hVal
+
+        if (foundNode.parent === null && newWeightAdj < oldWeightAdj) {
+            foundNode.key = newWeightAdj
+            if (minNode!!.key > newWeightAdj)
                 minNode = foundNode
-        } else if (foundNode.parent!!.key < newWeight && newWeight < oldWeight) {
-            foundNode.key = newWeight
+        } else if (foundNode.parent!!.key < newWeightAdj && newWeightAdj < oldWeightAdj) {
+            foundNode.key = newWeightAdj
         } else {
             deleteFromList(foundNode)
             size--
@@ -173,21 +176,25 @@ class FibHeap<Element>(
         return nodeToPop
     }
 
+    var nodeWithDegree = Array<Node<Element>?>(100) { null }
+
     private fun rebalance() {
         if (firstRootNode === null || firstRootNode!!.nextSibling === firstRootNode) return
 
-        var nodeWithDegree = TreeMap<Int, Node<Element>>()
+        nodeWithDegree.fill(null)
         var node = firstRootNode!!
         var done = false
         do {
             val existingNode = nodeWithDegree[node.childCount]
             if (existingNode === null) {
                 nodeWithDegree[node.childCount] = node
-            } else {
-                rebalance(existingNode, node)
+            } else if (existingNode !== node) {
+                val staysAtRoot = if (existingNode.key < node.key) existingNode else node
+                val becomesChild = if (existingNode.key >= node.key) existingNode else node
+                rebalance(staysAtRoot, becomesChild)
 
                 node = firstRootNode!!
-                nodeWithDegree = TreeMap()
+                nodeWithDegree[becomesChild.childCount] = null
                 continue;
             }
 
@@ -196,24 +203,22 @@ class FibHeap<Element>(
         } while (!done)
     }
 
-    private fun rebalance(nodeA: Node<Element>, nodeB: Node<Element>) {
-        val staysAsRoot = if (nodeA.key < nodeB.key) nodeA else nodeB
-        val becomesChild = if (nodeA.key >= nodeB.key) nodeA else nodeB
-        staysAsRoot.childCount++
+    private fun rebalance(staysAtRoot: Node<Element>, becomesChild: Node<Element>) {
+        staysAtRoot.childCount++
         deleteFromList(becomesChild)
-        becomesChild.parent = staysAsRoot
-        if (staysAsRoot.firstChild === null) {
+        becomesChild.parent = staysAtRoot
+        if (staysAtRoot.firstChild === null) {
             becomesChild.previousSibling = becomesChild
             becomesChild.nextSibling = becomesChild
         } else {
-            val next = staysAsRoot.firstChild!!
+            val next = staysAtRoot.firstChild!!
             val prev = next.previousSibling!!
             becomesChild.previousSibling = prev
             prev.nextSibling = becomesChild
             becomesChild.nextSibling = next
             next.previousSibling = becomesChild
         }
-        staysAsRoot.firstChild = becomesChild
+        staysAtRoot.firstChild = becomesChild
     }
 
     // Test functions
