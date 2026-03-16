@@ -31,11 +31,11 @@ class FibHeap<Element>(
     var size: Int = 0
         private set
 
-    override fun offer(e: Element, weight: Int) {
+    private fun offer(e: Element, weight: Int, offset: Int) {
         size++
         val next = firstRootNode
         val prev = firstRootNode?.previousSibling
-        firstRootNode = Node(weight + weightOffset(e), e, previousSibling = prev, nextSibling = next)
+        firstRootNode = Node(weight + offset, e, previousSibling = prev, nextSibling = next)
 
         if (size == 1) {
             firstRootNode!!.previousSibling = firstRootNode
@@ -49,9 +49,18 @@ class FibHeap<Element>(
             minNode = firstRootNode
     }
 
+    override fun offer(e: Element, weight: Int) {
+        offer(e, weight, weightOffset(e))
+    }
+
     override fun offerOrReposition(e: Element, oldWeight: Int, newWeight: Int) {
+        val offset = weightOffset(e)
+        val oldWeightAdj = oldWeight + offset
+        val newWeightAdj = newWeight + offset
+        if (oldWeightAdj < newWeightAdj) throw UnsupportedOperationException("Decrease-key operation call with an increase of key")
+
         if (size == 0) {
-            offer(e, newWeight)
+            offer(e, newWeight, offset)
             return
         }
 
@@ -62,9 +71,6 @@ class FibHeap<Element>(
             return
         }
 
-        val hVal = weightOffset(e)
-        val oldWeightAdj = oldWeight + hVal
-        val newWeightAdj = newWeight + hVal
 
         if (foundNode.parent === null && newWeightAdj < oldWeightAdj) {
             foundNode.key = newWeightAdj
