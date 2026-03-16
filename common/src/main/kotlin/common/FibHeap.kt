@@ -31,11 +31,14 @@ class FibHeap<Element>(
     var size: Int = 0
         private set
 
+//    val nodes = HashMap<Element, Node<Element>>()
+
     private fun offer(e: Element, weight: Int, offset: Int) {
         size++
         val next = firstRootNode
         val prev = firstRootNode?.previousSibling
         firstRootNode = Node(weight + offset, e, previousSibling = prev, nextSibling = next)
+//        nodes[e] = firstRootNode!!
 
         if (size == 1) {
             firstRootNode!!.previousSibling = firstRootNode
@@ -66,6 +69,7 @@ class FibHeap<Element>(
         }
 
         // TODO: this is super naive
+//        val foundNode = nodes[e]
         val foundNode = findElement(e, firstRootNode!!, oldWeight)
         if (foundNode === null) {
             offer(e, newWeight)
@@ -114,7 +118,7 @@ class FibHeap<Element>(
     fun findElement(e: Element, startNode: Node<Element>, oldWeight: Int): Node<Element>? {
         var node = startNode
         do {
-            if (node.value == e)
+            if (node.value === e) // TODO: might not be appropriate to use strict equal, might need to be comparison
                 return node
             if (node.key > oldWeight) return null
             if (node.firstChild !== null) {
