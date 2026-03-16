@@ -152,7 +152,7 @@ private fun aStarCollectingHerbs(
     heuristic: (Location1616) -> Int = { manhattan(it, end) },
 ): Pair<Int, List<String>> {
     val heap = TreeQueue(heuristic)
-    val shortestPaths = Array(grid.size) { Array(grid[0].size) { Int.MAX_VALUE to listOf<String>() } }
+    val shortestPaths = Array(grid.size) { Array(grid[0].size) { Int.MAX_VALUE - grid.size - grid[0].size to listOf<String>() } }
     val offered = mutableSetOf<Location1616>()
     shortestPaths[start.row()][start.col()] = 0 to listOf()
     heap.offer(start, weight = 0)
@@ -201,7 +201,7 @@ private fun aStarSearch(
     heuristic: (Location1616) -> Int = { manhattan(it, end) },
 ): Int {
     val heap = TreeQueue(heuristic)
-    val shortestPath = Array(grid.size) { IntArray(grid[0].size) { Int.MAX_VALUE } }
+    val shortestPath = Array(grid.size) { IntArray(grid[0].size) { Int.MAX_VALUE - grid[0].size - grid.size } }
     val neighboursArray = IntArray(4)
     starts.forEach { (start, distanceSoFar) ->
         shortestPath[start.row()][start.col()] = distanceSoFar

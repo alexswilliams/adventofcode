@@ -31,7 +31,7 @@ private fun solveLinear(input: List<String>): Int {
 
 private fun pathAvailable(grid: List<List<Int>>, passableHeight: Int, start: Location1616, end: Location1616): Boolean {
     val heap = TreeQueue(start to 0) { it: Location1616 -> it.manhattanTo(end) }
-    val shortestPath = Array(grid.size) { IntArray(grid[0].size) { Int.MAX_VALUE } }
+    val shortestPath = Array(grid.size) { IntArray(grid[0].size) { Int.MAX_VALUE - grid.size - grid[0].size } }
         .apply { this[start.row()][start.col()] = 0 }
 
     while (true) {
@@ -64,7 +64,7 @@ private fun solveMaxHeightPath(input: List<String>): Int {
     val end = grid.lastIndex by16 grid[0].lastIndex
 
     val heap = TreeQueue(start to grid[start.row()][start.col()])
-    val lowestTimes = Array(grid.size) { IntArray(grid[0].size) { Int.MAX_VALUE } }
+    val lowestTimes = Array(grid.size) { IntArray(grid[0].size) { Int.MAX_VALUE - 1 } }
         .apply { this[start.row()][start.col()] = grid[start.row()][start.col()] }
 
     while (true) {

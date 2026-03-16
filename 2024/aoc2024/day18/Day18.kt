@@ -43,7 +43,7 @@ private fun populateGrid(input: List<String>, gridSize: Int, startBytesToFall: I
 
 private fun aStarLengthOrMinusOne(grid: Array<CharArray>): Int {
     val target = grid.lastIndex
-    val visited = Array(grid.height) { IntArray(grid.width) { Int.MAX_VALUE } }.apply { this.set(0 by16 0, 0) }
+    val visited = Array(grid.height) { IntArray(grid.width) { Int.MAX_VALUE - grid.height - grid.width } }.apply { this.set(0 by16 0, 0) }
     val work = TreeQueue((0 by16 0) to 0) { (target - it.row()) + (target - it.col()) }
 
     val neighbours = IntArray(4)

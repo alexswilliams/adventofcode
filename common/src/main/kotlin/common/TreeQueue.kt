@@ -38,7 +38,9 @@ class TreeQueue<Element>(initialValues: Iterable<Pair<Element, Int>>, private va
     }
 
     override fun offerOrReposition(e: Element, oldWeight: Int, newWeight: Int) {
-        val weight = oldWeight + weightOffset(e)
+        val offset = weightOffset(e)
+        val weight = oldWeight + offset
+        if (newWeight + offset >= weight) throw UnsupportedOperationException("TreeQueue experienced an increase in key during decrease-key: ${newWeight + offset} ($newWeight), $weight ($oldWeight)")
         val entry = tree.getEntry(weight)
         if (entry != null) {
             if (entry.value.size == 1)

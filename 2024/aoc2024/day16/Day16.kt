@@ -36,7 +36,7 @@ private fun aStarLowestScore(grid: Grid): Int {
 
     data class Work(val pos: Location1616, val direction: Facing)
 
-    val visited = Array(Facing.entries.size) { Array(grid.height) { IntArray(grid.width) { Int.MAX_VALUE } } }
+    val visited = Array(Facing.entries.size) { Array(grid.height) { IntArray(grid.width) { Int.MAX_VALUE - grid.height - grid.width } } }
         .apply { this[Facing.EAST.ordinal][start.row()][start.col()] = 0 }
     val work = TreeQueue<Work> { it.pos.manhattanTo(end) }
         .apply { offer(Work(start, Facing.EAST), 0) }
@@ -67,7 +67,7 @@ private fun aStarAllShortestPathsTileSetSize(grid: Grid): Int {
 
     data class Work(val pos: Location1616, val direction: Facing, val path: PersistentList<Location1616>, val score: Int)
 
-    val visited = Array(Facing.entries.size) { Array(grid.height) { IntArray(grid.width) { Int.MAX_VALUE } } }
+    val visited = Array(Facing.entries.size) { Array(grid.height) { IntArray(grid.width) { Int.MAX_VALUE - grid.height - grid.width } } }
         .apply { this[Facing.EAST.ordinal][start.row()][start.col()] = 0 }
     val work = TreeQueue<Work> { it.pos.manhattanTo(end) }
         .apply { offer(Work(start, Facing.EAST, persistentListOf(start), 0), weight = 0) }

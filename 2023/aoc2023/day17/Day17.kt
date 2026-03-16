@@ -73,7 +73,7 @@ private fun totalHeatLoss(grid: DigitGrid, minStraight: Int, maxStraight: Int): 
         for (key in neighbours) {
             if (key.pos.row() !in grid.rowIndices || key.pos.col() !in grid.colIndices) continue
             val newDistance = totalHeatLoss + sumOfDigitsBetween(grid, key.pos, u.pos) - heatOfU
-            val oldDistance = shortest[key] ?: Int.MAX_VALUE
+            val oldDistance = shortest[key] ?: (Int.MAX_VALUE - grid.height - grid.width)
             if (newDistance < oldDistance) {
                 shortest[key] = newDistance
                 work.offerOrReposition(key, oldDistance, newDistance)
