@@ -2,16 +2,83 @@ package common
 
 class FibHeap<Element>(
     initialValues: Iterable<Pair<Element, Int>>,
+    elementFinder: ElementFinder<Element> = ElementFinder.TreeWalker(),
     private val weightOffset: (Element) -> Int = { 0 },
 ) : PriorityHeap<Element> {
+    private val elementFinderStrategy: ElementFinderStrategy<Element>
+
+    constructor(
+        elementFinder: ElementFinder<Element> = ElementFinder.TreeWalker(),
+        weightOffset: (Element) -> Int = { 0 },
+    ) : this(emptyList(), elementFinder, weightOffset)
+
+    constructor(
+        initialValue: Pair<Element, Int>,
+        elementFinder: ElementFinder<Element> = ElementFinder.TreeWalker(),
+        weightOffset: (Element) -> Int = { 0 },
+    ) : this(listOf(initialValue), elementFinder, weightOffset)
+
     init {
         initialValues.forEach { offer(it.first, it.second) }
+        elementFinderStrategy = when (elementFinder) {
+            is ElementFinder.TreeWalker -> ElementFinderStrategy.TreeWalkLookup { e, weight -> findElement(e, firstRootNode, weight) }
+            is ElementFinder.Dictionary -> ElementFinderStrategy.DictionaryLookup()
+            is ElementFinder.Grid -> ElementFinderStrategy.GridLookup(
+                elementFinder.height,
+                elementFinder.width,
+                elementFinder.row,
+                elementFinder.col
+            )
+        }
     }
 
-    constructor(weightOffset: (Element) -> Int = { 0 }) : this(emptyList(), weightOffset)
-    constructor(initialValue: Pair<Element, Int>, weightOffset: (Element) -> Int = { 0 }) : this(listOf(initialValue), weightOffset)
+    sealed interface ElementFinder<E> {
+        class TreeWalker<E> : ElementFinder<E>
+        class Dictionary<E> : ElementFinder<E>
+        data class Grid<E>(val height: Int, val width: Int, val row: (e: E) -> Int, val col: (e: E) -> Int) : ElementFinder<E>
+    }
 
-    data class Node<Element>(
+    private sealed interface ElementFinderStrategy<E> {
+        fun link(e: E, weight: Int, node: Node<E>)
+        fun unlink(e: E, weight: Int)
+        fun relink(e: E, oldWeight: Int, newWeight: Int, node: Node<E>)
+        fun find(e: E, weight: Int): Node<E>?
+
+        class TreeWalkLookup<E>(private val findNode: (e: E, weight: Int) -> Node<E>?) : ElementFinderStrategy<E> {
+            override fun link(e: E, weight: Int, node: Node<E>) {}
+            override fun unlink(e: E, weight: Int) {}
+            override fun relink(e: E, oldWeight: Int, newWeight: Int, node: Node<E>) {}
+            override fun find(e: E, weight: Int): Node<E>? = findNode(e, weight)
+        }
+
+        class GridLookup<E>(height: Int, width: Int, val row: (e: E) -> Int, val col: (e: E) -> Int) : ElementFinderStrategy<E> {
+            private val grid = Array(height) { Array<Node<E>?>(width) { null } }
+            override fun find(e: E, weight: Int): Node<E>? = grid[row(e)][col(e)]
+            override fun relink(e: E, oldWeight: Int, newWeight: Int, node: Node<E>) {}
+            override fun link(e: E, weight: Int, node: Node<E>) {
+                grid[row(e)][col(e)] = node
+            }
+
+            override fun unlink(e: E, weight: Int) {
+                grid[row(e)][col(e)] = null
+            }
+        }
+
+        class DictionaryLookup<E> : ElementFinderStrategy<E> {
+            private val nodes = HashMap<E, Node<E>>()
+            override fun find(e: E, weight: Int): Node<E>? = nodes[e]
+            override fun relink(e: E, oldWeight: Int, newWeight: Int, node: Node<E>) {}
+            override fun link(e: E, weight: Int, node: Node<E>) {
+                nodes[e] = node
+            }
+
+            override fun unlink(e: E, weight: Int) {
+                nodes.remove(e)
+            }
+        }
+    }
+
+    private data class Node<Element>(
         override var key: Int,
         override val value: Element,
         var parent: Node<Element>? = null,
@@ -31,14 +98,12 @@ class FibHeap<Element>(
     var size: Int = 0
         private set
 
-//    val nodes = HashMap<Int, HashMap<Element, Node<Element>>>()
-
     private fun offer(e: Element, weight: Int, offset: Int) {
         size++
         val next = firstRootNode
         val prev = firstRootNode?.previousSibling
         firstRootNode = Node(weight + offset, e, previousSibling = prev, nextSibling = next)
-//        nodes.computeIfAbsent(weight + offset) { HashMap() }[e] = firstRootNode!!
+        elementFinderStrategy.link(e, weight + offset, firstRootNode!!)
 
         if (size == 1) {
             firstRootNode!!.previousSibling = firstRootNode
@@ -68,9 +133,7 @@ class FibHeap<Element>(
             return
         }
 
-        // TODO: this is super naive
-//        val foundNode = nodes[oldWeightAdj]?.remove(e)
-        val foundNode = findElement(e, firstRootNode!!, oldWeight)
+        val foundNode = elementFinderStrategy.find(e, oldWeightAdj)
         if (foundNode === null) {
             offer(e, newWeight)
             return
@@ -82,7 +145,7 @@ class FibHeap<Element>(
         } else if (foundNode.parent!!.key > newWeightAdj) {
             cutSubTreeToRootList(foundNode)
         }
-//        nodes.computeIfAbsent(newWeightAdj) { HashMap() }[e] = foundNode
+        elementFinderStrategy.relink(e, oldWeightAdj, newWeightAdj, foundNode)
     }
 
     private fun cutSubTreeToRootList(node: Node<Element>) {
@@ -112,8 +175,9 @@ class FibHeap<Element>(
             parent.marked = true
     }
 
-    fun findElement(e: Element, startNode: Node<Element>, oldWeight: Int): Node<Element>? {
-        var node = startNode
+    private fun findElement(e: Element, startNode: Node<Element>?, oldWeight: Int): Node<Element>? {
+        if (startNode === null) return null
+        var node: Node<Element> = startNode
         do {
             if (node.value === e) // TODO: might not be appropriate to use strict equal, might need to be comparison
                 return node
@@ -192,7 +256,7 @@ class FibHeap<Element>(
         assert(nodeToPop.parent === null)
 
         deleteFromList(nodeToPop)
-//        nodes[nodeToPop.key]!!.remove(nodeToPop.value)
+        elementFinderStrategy.unlink(nodeToPop.value, nodeToPop.key)
 
         if (nodeToPop.firstChild !== null)
             promoteChildrenToRootList(nodeToPop.firstChild!!)
@@ -205,7 +269,7 @@ class FibHeap<Element>(
         return nodeToPop
     }
 
-    var nodeWithDegree = Array<Node<Element>?>(32) { null }
+    private var nodeWithDegree = Array<Node<Element>?>(32) { null }
 
     private fun rebalance() {
         if (firstRootNode === null || firstRootNode!!.nextSibling === firstRootNode) return
@@ -252,7 +316,7 @@ class FibHeap<Element>(
 
     // Test functions
 
-    fun entries(): Collection<Map.Entry<Int, Element>> =
+    internal fun entries(): Collection<Map.Entry<Int, Element>> =
         if (firstRootNode === null) emptyList()
         else buildList {
             fun yieldNodes(startNode: Node<Element>) {
