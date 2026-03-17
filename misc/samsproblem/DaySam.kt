@@ -1,6 +1,7 @@
 package ec2025.samsproblem
 
 import common.*
+import common.FibHeap.*
 import kotlin.math.*
 
 private val examples = loadFilesToLines("samsproblem", "example1.txt")
@@ -30,7 +31,10 @@ private fun solveLinear(input: List<String>): Int {
 }
 
 private fun pathAvailable(grid: List<List<Int>>, passableHeight: Int, start: Location1616, end: Location1616): Boolean {
-    val heap = TreeQueue(start to 0) { it: Location1616 -> it.manhattanTo(end) }
+    val heap = FibHeap(
+        start to 0,
+        ElementFinder.Grid(grid.size, grid[0].size, Location1616::row, Location1616::col)
+    ) { it: Location1616 -> it.manhattanTo(end) }
     val shortestPath = Array(grid.size) { IntArray(grid[0].size) { Int.MAX_VALUE - grid.size - grid[0].size } }
         .apply { this[start.row()][start.col()] = 0 }
 
@@ -63,7 +67,10 @@ private fun solveMaxHeightPath(input: List<String>): Int {
     val start = 0 by16 0
     val end = grid.lastIndex by16 grid[0].lastIndex
 
-    val heap = TreeQueue(start to grid[start.row()][start.col()])
+    val heap = FibHeap(
+        start to grid[start.row()][start.col()],
+        ElementFinder.Grid(grid.size, grid[0].size, Location1616::row, Location1616::col)
+    )
     val lowestTimes = Array(grid.size) { IntArray(grid[0].size) { Int.MAX_VALUE - 1 } }
         .apply { this[start.row()][start.col()] = grid[start.row()][start.col()] }
 

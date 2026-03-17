@@ -19,7 +19,6 @@ class FibHeap<Element>(
     ) : this(listOf(initialValue), elementFinder, weightOffset)
 
     init {
-        initialValues.forEach { offer(it.first, it.second) }
         elementFinderStrategy = when (elementFinder) {
             is ElementFinder.TreeWalker -> ElementFinderStrategy.TreeWalkLookup { e, weight -> findElement(e, firstRootNode, weight) }
             is ElementFinder.Dictionary -> ElementFinderStrategy.DictionaryLookup()
@@ -30,6 +29,7 @@ class FibHeap<Element>(
                 elementFinder.col
             )
         }
+        initialValues.forEach { offer(it.first, it.second) }
     }
 
     sealed interface ElementFinder<E> {
