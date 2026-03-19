@@ -20,7 +20,7 @@ class FibHeap<Element>(
 
     init {
         elementFinderStrategy = when (elementFinder) {
-            is ElementFinder.TreeWalker -> ElementFinderStrategy.TreeWalkLookup { e, weight -> findElement(e, firstRootNode, weight) }
+            is ElementFinder.TreeWalker -> ElementFinderStrategy.TreeWalkLookup { e, weight -> findElementByWalkingHeap(e, firstRootNode, weight) }
             is ElementFinder.Dictionary -> ElementFinderStrategy.DictionaryLookup()
             is ElementFinder.Grid -> ElementFinderStrategy.GridLookup(
                 elementFinder.height,
@@ -88,8 +88,24 @@ class FibHeap<Element>(
         var marked: Boolean = false,
         var childCount: Int = 0,
     ) : Map.Entry<Int, Element> {
+
         override fun toString(): String {
             return "Node(key=$key, value=$value)"
+        }
+
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
+            other as Node<*>
+            if (key != other.key) return false
+            if (value != other.value) return false
+            return true
+        }
+
+        override fun hashCode(): Int {
+            var result = key
+            result = 31 * result + (value?.hashCode() ?: 0)
+            return result
         }
     }
 
@@ -99,22 +115,22 @@ class FibHeap<Element>(
         private set
 
     private fun offer(e: Element, weight: Int, offset: Int) {
+        if (debug) println("offer($e, ${weight + offset})")
         size++
-        val next = firstRootNode
-        val prev = firstRootNode?.previousSibling
-        firstRootNode = Node(weight + offset, e, previousSibling = prev, nextSibling = next)
-        elementFinderStrategy.link(e, weight + offset, firstRootNode!!)
+        val node = Node(weight + offset, e)
+        elementFinderStrategy.link(e, weight + offset, node)
 
         if (size == 1) {
-            firstRootNode!!.previousSibling = firstRootNode
-            firstRootNode!!.nextSibling = firstRootNode
+            makeSiblingsInOrder(node, node)
+            minNode = node
         } else {
-            prev!!.nextSibling = firstRootNode
-            next!!.previousSibling = firstRootNode
+            val prev = firstRootNode?.previousSibling
+            makeSiblingsInOrder(node, firstRootNode!!)
+            makeSiblingsInOrder(prev!!, node)
+            if (minNode!!.key > node.key) minNode = node
         }
 
-        if (minNode === null || minNode!!.key > firstRootNode!!.key)
-            minNode = firstRootNode
+        firstRootNode = node
     }
 
     override fun offer(e: Element, weight: Int) {
@@ -123,6 +139,7 @@ class FibHeap<Element>(
 
     override fun offerOrReposition(e: Element, oldWeight: Int, newWeight: Int) {
         val offset = weightOffset(e)
+        if (debug) println("offerOrReposition($e, ${oldWeight + offset}, ${newWeight + offset})")
         val oldWeightAdj = oldWeight + offset
         val newWeightAdj = newWeight + offset
         if (oldWeightAdj < newWeightAdj)
@@ -135,7 +152,7 @@ class FibHeap<Element>(
 
         val foundNode = elementFinderStrategy.find(e, oldWeightAdj)
         if (foundNode === null) {
-            offer(e, newWeight)
+            offer(e, newWeight, offset)
             return
         }
 
@@ -148,42 +165,36 @@ class FibHeap<Element>(
         elementFinderStrategy.relink(e, oldWeightAdj, newWeightAdj, foundNode)
     }
 
-    private fun cutSubTreeToRootList(node: Node<Element>) {
+    private tailrec fun cutSubTreeToRootList(node: Node<Element>) {
         deleteFromList(node)
         if (firstRootNode === null) {
-            firstRootNode = node
-            node.nextSibling = node
-            node.previousSibling = node
+            makeSiblingsInOrder(node, node)
             minNode = node
         } else {
-            val next = firstRootNode!!
             val prev = firstRootNode!!.previousSibling!!
-            firstRootNode = node
-            node.nextSibling = next
-            next.previousSibling = node
-            node.previousSibling = prev
-            prev.nextSibling = node
+            makeSiblingsInOrder(node, firstRootNode!!)
+            makeSiblingsInOrder(prev, node)
             if (minNode!!.key > node.key) minNode = node
         }
-        val parent = node.parent
+        firstRootNode = node
+
+        val originalParent = node.parent
         node.parent = null
         node.marked = false
-
-        if (parent !== null && parent.marked)
-            cutSubTreeToRootList(parent)
-        else if (parent !== null && parent.parent !== null)
-            parent.marked = true
+        if (originalParent !== null && originalParent.marked)
+            cutSubTreeToRootList(originalParent)
+        else if (originalParent !== null && originalParent.parent !== null)
+            originalParent.marked = true
     }
 
-    private fun findElement(e: Element, startNode: Node<Element>?, oldWeight: Int): Node<Element>? {
+    private fun findElementByWalkingHeap(e: Element, startNode: Node<Element>?, oldWeight: Int): Node<Element>? {
         if (startNode === null) return null
         var node: Node<Element> = startNode
         do {
-            if (node.value === e) // TODO: might not be appropriate to use strict equal, might need to be comparison
-                return node
+            if (node.value == e) return node
             if (node.key > oldWeight) return null
             if (node.firstChild !== null) {
-                val foundInChildren = findElement(e, node.firstChild!!, oldWeight)
+                val foundInChildren = findElementByWalkingHeap(e, node.firstChild!!, oldWeight)
                 if (foundInChildren !== null) return foundInChildren
             }
             node = node.nextSibling!!
@@ -193,42 +204,58 @@ class FibHeap<Element>(
 
     // Leaves children orphaned / to be dealt with by the caller
     private fun deleteFromList(nodeToDelete: Node<Element>) {
+        nodeToDelete.parent?.childCount--
+
         if (nodeToDelete.nextSibling === nodeToDelete) { // List size 1
-            assert(nodeToDelete.parent === null || nodeToDelete.parent!!.firstChild === nodeToDelete)
             nodeToDelete.parent?.firstChild = null
             if (firstRootNode === nodeToDelete) firstRootNode = null
             return
         }
 
-        if (nodeToDelete.parent !== null) {
-            nodeToDelete.parent!!.childCount--
-            if (nodeToDelete.parent!!.firstChild === nodeToDelete)
-                nodeToDelete.parent!!.firstChild = nodeToDelete.nextSibling
-        }
+        if (nodeToDelete.parent?.firstChild === nodeToDelete)
+            nodeToDelete.parent!!.firstChild = nodeToDelete.nextSibling
 
         val prev = nodeToDelete.previousSibling!!
         val next = nodeToDelete.nextSibling!!
+        makeSiblingsInOrder(prev, next)
         nodeToDelete.nextSibling = null
         nodeToDelete.previousSibling = null
-        prev.nextSibling = next
-        next.previousSibling = prev
         if (firstRootNode === nodeToDelete) firstRootNode = next
     }
 
-    private fun promoteChildrenToRootList(firstNode: Node<Element>) {
-        val nodeAfterSublist = firstRootNode
-        val lastNodeInRootList = firstRootNode?.previousSibling
-        val lastNode = firstNode.previousSibling!!
+    override fun poll(): Element? = pollEntry()?.value
 
-        firstRootNode = firstNode
+    override fun pollEntry(): Map.Entry<Int, Element>? {
+        val nodeToPop = minNode ?: return null.also { if (debug) println("pollEntry() == ${null}") }
+
+        deleteFromList(nodeToPop)
+        elementFinderStrategy.unlink(nodeToPop.value, nodeToPop.key)
+
+        if (nodeToPop.firstChild !== null)
+            promoteAllSiblingsToRootList(nodeToPop.firstChild!!)
+
+        if (debug) println("pollEntry() == $nodeToPop")
+
+        rebalance()
+
+        findNewMinNode()
+
+        size--
+        return nodeToPop
+    }
+
+    private fun promoteAllSiblingsToRootList(firstSibling: Node<Element>) {
+        val nodeAfterSublist = firstRootNode
+
+        firstRootNode = firstSibling
         if (nodeAfterSublist === null) return
 
-        firstNode.previousSibling = lastNodeInRootList
-        lastNodeInRootList!!.nextSibling = firstNode
-        lastNode.nextSibling = nodeAfterSublist
-        nodeAfterSublist.previousSibling = lastNode
+        val lastNodeInRootList = nodeAfterSublist.previousSibling!!
+        val lastSibling = firstSibling.previousSibling!!
+        makeSiblingsInOrder(lastNodeInRootList, firstSibling)
+        makeSiblingsInOrder(lastSibling, nodeAfterSublist)
 
-        var n = firstNode
+        var n = firstSibling
         do {
             n.parent = null
             n = n.nextSibling!!
@@ -248,74 +275,66 @@ class FibHeap<Element>(
         minNode = newMinNode
     }
 
-
-    override fun poll(): Element? = pollEntry()?.value
-
-    override fun pollEntry(): Map.Entry<Int, Element>? {
-        val nodeToPop = minNode ?: return null
-        assert(nodeToPop.parent === null)
-
-        deleteFromList(nodeToPop)
-        elementFinderStrategy.unlink(nodeToPop.value, nodeToPop.key)
-
-        if (nodeToPop.firstChild !== null)
-            promoteChildrenToRootList(nodeToPop.firstChild!!)
-
-        rebalance()
-
-        findNewMinNode()
-
-        size--
-        return nodeToPop
-    }
-
     private var nodeWithDegree = Array<Node<Element>?>(32) { null }
 
     private fun rebalance() {
-        if (firstRootNode === null || firstRootNode!!.nextSibling === firstRootNode) return
+        if (firstRootNode?.nextSibling === firstRootNode) return // size 0 or 1 is always balanced
 
+        val alreadySeen = mutableSetOf<Node<Element>>()
         nodeWithDegree.fill(null)
-        var node = firstRootNode!!
+        var pointer = firstRootNode!!
         do {
-            val existingNode = nodeWithDegree[node.childCount]
+            if (debug) println("rebalance(): pointer === $pointer; ${nodeWithDegree.contentToString()}")
+//            if (!alreadySeen.add(pointer)) throw Error("Already seen node $pointer")
+            val existingNode = nodeWithDegree[pointer.childCount]
             if (existingNode === null || existingNode.parent !== null) {
-                nodeWithDegree[node.childCount] = node
-            } else if (existingNode !== node) {
-                val staysAtRoot = if (existingNode.key < node.key) existingNode else node
-                val becomesChild = if (existingNode.key >= node.key) existingNode else node
-                val next = becomesChild.nextSibling!!
+                nodeWithDegree[pointer.childCount] = pointer
+            } else if (existingNode !== pointer) {
+                val staysInRootList = if (existingNode.key < pointer.key) existingNode else pointer
+                val becomesChild = if (existingNode.key >= pointer.key) existingNode else pointer
+                val nextPointer = becomesChild.nextSibling!! // TODO: wants to be pointer
 
-                rebalance(staysAtRoot, becomesChild)
+                siblingsToChildren(staysInRootList, becomesChild)
                 nodeWithDegree[becomesChild.childCount] = null
 
-                node = next
+                pointer = nextPointer
                 continue
             }
-            node = node.nextSibling!!
-        } while (node !== firstRootNode)
+            pointer = pointer.nextSibling!!
+        } while (pointer !== firstRootNode)
+
+        // check invariant
+        if (debug) {
+            if (rootListChildCounts().distinct().size != rootListChildCounts().size)
+                throw Exception("Duplicate child count found in root list")
+        }
     }
 
-    private fun rebalance(staysAtRoot: Node<Element>, becomesChild: Node<Element>) {
-        staysAtRoot.childCount++
-        if (nodeWithDegree.size <= staysAtRoot.childCount) nodeWithDegree = Array(staysAtRoot.childCount shl 1 + staysAtRoot.childCount) { null }
+    private fun siblingsToChildren(staysInRootList: Node<Element>, becomesChild: Node<Element>) {
+        if (debug) println("rebalance(staysAtRoot=$staysInRootList, becomesChild=$becomesChild)")
+        staysInRootList.childCount++
+        if (nodeWithDegree.size <= staysInRootList.childCount) nodeWithDegree = nodeWithDegree.copyOf(staysInRootList.childCount shl 1 + staysInRootList.childCount)
         deleteFromList(becomesChild)
-        becomesChild.parent = staysAtRoot
-        if (staysAtRoot.firstChild === null) {
-            becomesChild.previousSibling = becomesChild
-            becomesChild.nextSibling = becomesChild
+        becomesChild.parent = staysInRootList
+        if (staysInRootList.firstChild === null) {
+            makeSiblingsInOrder(becomesChild, becomesChild)
         } else {
-            val next = staysAtRoot.firstChild!!
+            val next = staysInRootList.firstChild!!
             val prev = next.previousSibling!!
-            becomesChild.previousSibling = prev
-            prev.nextSibling = becomesChild
-            becomesChild.nextSibling = next
-            next.previousSibling = becomesChild
+            makeSiblingsInOrder(prev, becomesChild)
+            makeSiblingsInOrder(becomesChild, next)
         }
-        staysAtRoot.firstChild = becomesChild
+        staysInRootList.firstChild = becomesChild
+    }
+
+    private fun makeSiblingsInOrder(firstNode: Node<Element>, nextNode: Node<Element>) {
+        firstNode.nextSibling = nextNode
+        nextNode.previousSibling = firstNode
     }
 
     // Test functions
 
+    private val debug: Boolean = false
     internal fun entries(): Collection<Map.Entry<Int, Element>> =
         if (firstRootNode === null) emptyList()
         else buildList {
@@ -330,5 +349,15 @@ class FibHeap<Element>(
                 } while (node !== startNode)
             }
             yieldNodes(firstRootNode!!)
+        }
+
+    internal fun rootListChildCounts(): Collection<Int> =
+        if (firstRootNode === null) emptyList()
+        else buildList {
+            var rootNode = firstRootNode!!
+            do {
+                add(rootNode.childCount)
+                rootNode = rootNode.nextSibling!!
+            } while (rootNode !== firstRootNode)
         }
 }

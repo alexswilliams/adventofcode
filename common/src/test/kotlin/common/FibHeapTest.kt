@@ -70,4 +70,36 @@ class FibHeapTest {
         assertThat(heap.size).isEqualTo(2)
         assertThat(heap.entries().map { it.key }).containsExactlyInAnyOrder(8, 10)
     }
+
+    @Test
+    fun `Root list contains unique child counts after rebalancing`() {
+        with(FibHeap<String>()) {
+            offer("0R", 24)
+            offer("0D", 24)
+            var polled = pollEntry()
+            assertThat(polled?.key).isEqualTo(24)
+            assertThat(polled?.value).isEqualTo("0R")
+
+            assertThat(rootListChildCounts()).doesNotHaveDuplicates()
+
+            offer("65536D", 26)
+            offer("131072D", 28)
+            offer("196608D", 30)
+            polled = pollEntry()
+            assertThat(polled?.key).isEqualTo(24)
+            assertThat(polled?.value).isEqualTo("0D")
+
+            assertThat(rootListChildCounts()).doesNotHaveDuplicates()
+
+            offer("1R", 27)
+            offer("2R", 27)
+            offer("3R", 29)
+
+            polled = pollEntry()
+            assertThat(polled?.key).isEqualTo(26)
+            assertThat(polled?.value).isEqualTo("65536D")
+
+            assertThat(rootListChildCounts()).doesNotHaveDuplicates()
+        }
+    }
 }

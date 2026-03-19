@@ -43,7 +43,8 @@ private fun totalHeatLoss(grid: DigitGrid, minStraight: Int, maxStraight: Int): 
 
     data class Work(val pos: Location1616, val heading: Heading)
 
-    val work = TreeQueue<Work> { manhattanDistance(target, it.pos) }
+    val finder = FibHeap.ElementFinder.Grid<Work>(grid.height * Heading.entries.size, grid.width, { it.pos.row() + grid.height * it.heading.ordinal }, { it.pos.col() })
+    val work = FibHeap<Work>(finder) { manhattanDistance(target, it.pos) }
     work.offer(Work(start, Heading.Right), 0)
     work.offer(Work(start, Heading.Down), 0)
     val shortest = hashMapOf<Work, Int>()
@@ -73,8 +74,11 @@ private fun totalHeatLoss(grid: DigitGrid, minStraight: Int, maxStraight: Int): 
         for (key in neighbours) {
             if (key.pos.row() !in grid.rowIndices || key.pos.col() !in grid.colIndices) continue
             val newDistance = totalHeatLoss + sumOfDigitsBetween(grid, key.pos, u.pos) - heatOfU
-            val oldDistance = shortest[key] ?: (Int.MAX_VALUE - grid.height - grid.width)
-            if (newDistance < oldDistance) {
+            val oldDistance = shortest[key]
+            if (oldDistance == null) {
+                shortest[key] = newDistance
+                work.offer(key, newDistance)
+            } else if (newDistance < oldDistance) {
                 shortest[key] = newDistance
                 work.offerOrReposition(key, oldDistance, newDistance)
             }
