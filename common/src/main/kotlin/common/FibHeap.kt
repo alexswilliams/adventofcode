@@ -2,25 +2,25 @@ package common
 
 class FibHeap<Element>(
     initialValues: Iterable<Pair<Element, Int>>,
-    elementFinder: ElementFinder<Element> = ElementFinder.TreeWalker(),
+    elementFinder: ElementFinder<Element> = ElementFinder.HeapWalker(),
     private val weightOffset: (Element) -> Int = { 0 },
 ) : PriorityHeap<Element> {
     private val elementFinderStrategy: ElementFinderStrategy<Element>
 
     constructor(
-        elementFinder: ElementFinder<Element> = ElementFinder.TreeWalker(),
+        elementFinder: ElementFinder<Element> = ElementFinder.HeapWalker(),
         weightOffset: (Element) -> Int = { 0 },
     ) : this(emptyList(), elementFinder, weightOffset)
 
     constructor(
         initialValue: Pair<Element, Int>,
-        elementFinder: ElementFinder<Element> = ElementFinder.TreeWalker(),
+        elementFinder: ElementFinder<Element> = ElementFinder.HeapWalker(),
         weightOffset: (Element) -> Int = { 0 },
     ) : this(listOf(initialValue), elementFinder, weightOffset)
 
     init {
         elementFinderStrategy = when (elementFinder) {
-            is ElementFinder.TreeWalker -> ElementFinderStrategy.TreeWalkLookup { e, weight -> findElementByWalkingHeap(e, firstRootNode, weight) }
+            is ElementFinder.HeapWalker -> ElementFinderStrategy.HeapWalkLookup { e, weight -> findElementByWalkingHeap(e, firstRootNode, weight) }
             is ElementFinder.Dictionary -> ElementFinderStrategy.DictionaryLookup()
             is ElementFinder.Grid -> ElementFinderStrategy.GridLookup(
                 elementFinder.height,
@@ -33,7 +33,7 @@ class FibHeap<Element>(
     }
 
     sealed interface ElementFinder<E> {
-        class TreeWalker<E> : ElementFinder<E>
+        class HeapWalker<E> : ElementFinder<E>
         class Dictionary<E> : ElementFinder<E>
         data class Grid<E>(val height: Int, val width: Int, val row: (e: E) -> Int, val col: (e: E) -> Int) : ElementFinder<E>
     }
@@ -44,7 +44,7 @@ class FibHeap<Element>(
         fun relink(e: E, oldWeight: Int, newWeight: Int, node: Node<E>)
         fun find(e: E, weight: Int): Node<E>?
 
-        class TreeWalkLookup<E>(private val findNode: (e: E, weight: Int) -> Node<E>?) : ElementFinderStrategy<E> {
+        class HeapWalkLookup<E>(private val findNode: (e: E, weight: Int) -> Node<E>?) : ElementFinderStrategy<E> {
             override fun link(e: E, weight: Int, node: Node<E>) {}
             override fun unlink(e: E, weight: Int) {}
             override fun relink(e: E, oldWeight: Int, newWeight: Int, node: Node<E>) {}
