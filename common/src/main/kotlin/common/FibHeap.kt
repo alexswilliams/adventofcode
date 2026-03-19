@@ -81,6 +81,7 @@ class FibHeap<Element>(
     private data class Node<Element>(
         override var key: Int,
         override val value: Element,
+        val nodeId: Int,
         var parent: Node<Element>? = null,
         var previousSibling: Node<Element>? = null,
         var nextSibling: Node<Element>? = null,
@@ -109,15 +110,16 @@ class FibHeap<Element>(
         }
     }
 
+    private var nodeCounter = 0
     private var firstRootNode: Node<Element>? = null
     private var minNode: Node<Element>? = null
     var size: Int = 0
         private set
 
     private fun offer(e: Element, weight: Int, offset: Int) {
-        if (debug) println("offer($e, ${weight + offset})")
+//        if (debug) println("offer($e, ${weight + offset})")
         size++
-        val node = Node(weight + offset, e)
+        val node = Node(weight + offset, e, nodeCounter++)
         elementFinderStrategy.link(e, weight + offset, node)
 
         if (size == 1) {
@@ -139,7 +141,6 @@ class FibHeap<Element>(
 
     override fun offerOrReposition(e: Element, oldWeight: Int, newWeight: Int) {
         val offset = weightOffset(e)
-        if (debug) println("offerOrReposition($e, ${oldWeight + offset}, ${newWeight + offset})")
         val oldWeightAdj = oldWeight + offset
         val newWeightAdj = newWeight + offset
         if (oldWeightAdj < newWeightAdj)
@@ -226,15 +227,13 @@ class FibHeap<Element>(
     override fun poll(): Element? = pollEntry()?.value
 
     override fun pollEntry(): Map.Entry<Int, Element>? {
-        val nodeToPop = minNode ?: return null.also { if (debug) println("pollEntry() == ${null}") }
+        val nodeToPop = minNode ?: return null
 
         deleteFromList(nodeToPop)
         elementFinderStrategy.unlink(nodeToPop.value, nodeToPop.key)
 
         if (nodeToPop.firstChild !== null)
             promoteAllSiblingsToRootList(nodeToPop.firstChild!!)
-
-        if (debug) println("pollEntry() == $nodeToPop")
 
         rebalance()
 
@@ -248,18 +247,17 @@ class FibHeap<Element>(
         val nodeAfterSublist = firstRootNode
 
         firstRootNode = firstSibling
-        if (nodeAfterSublist === null) return
-
-        val lastNodeInRootList = nodeAfterSublist.previousSibling!!
-        val lastSibling = firstSibling.previousSibling!!
-        makeSiblingsInOrder(lastNodeInRootList, firstSibling)
-        makeSiblingsInOrder(lastSibling, nodeAfterSublist)
-
+        if (nodeAfterSublist !== null) {
+            val lastNodeInRootList = nodeAfterSublist.previousSibling!!
+            val lastSibling = firstSibling.previousSibling!!
+            makeSiblingsInOrder(lastNodeInRootList, firstSibling)
+            makeSiblingsInOrder(lastSibling, nodeAfterSublist)
+        }
         var n = firstSibling
         do {
             n.parent = null
             n = n.nextSibling!!
-        } while (n !== nodeAfterSublist)
+        } while (n !== nodeAfterSublist && n !== firstSibling)
     }
 
     private fun findNewMinNode() {
@@ -275,45 +273,44 @@ class FibHeap<Element>(
         minNode = newMinNode
     }
 
-    private var nodeWithDegree = Array<Node<Element>?>(32) { null }
+    private var nodesByChildCount = Array<Node<Element>?>(32) { null }
 
     private fun rebalance() {
         if (firstRootNode?.nextSibling === firstRootNode) return // size 0 or 1 is always balanced
 
-        val alreadySeen = mutableSetOf<Node<Element>>()
-        nodeWithDegree.fill(null)
+        nodesByChildCount.fill(null)
         var pointer = firstRootNode!!
+        var isLast: Boolean
         do {
-            if (debug) println("rebalance(): pointer === $pointer; ${nodeWithDegree.contentToString()}")
-//            if (!alreadySeen.add(pointer)) throw Error("Already seen node $pointer")
-            val existingNode = nodeWithDegree[pointer.childCount]
-            if (existingNode === null || existingNode.parent !== null) {
-                nodeWithDegree[pointer.childCount] = pointer
-            } else if (existingNode !== pointer) {
-                val staysInRootList = if (existingNode.key < pointer.key) existingNode else pointer
-                val becomesChild = if (existingNode.key >= pointer.key) existingNode else pointer
-                val nextPointer = becomesChild.nextSibling!! // TODO: wants to be pointer
+            val nextPointer = pointer.nextSibling!!
+            isLast = (nextPointer === firstRootNode)
+            rebalanceRootListSeenSoFar(pointer)
+            pointer = nextPointer
+        } while (!isLast)
+    }
 
-                siblingsToChildren(staysInRootList, becomesChild)
-                nodeWithDegree[becomesChild.childCount] = null
+    private tailrec fun rebalanceRootListSeenSoFar(node: Node<Element>) {
+        val childCount = node.childCount
+        val contender = nodesByChildCount[childCount]
+        if (contender === null || contender.parent !== null) {
+            nodesByChildCount[childCount] = node
+        } else if (contender !== node) {
+            val staysInRootList = if (contender.key <= node.key) contender else node
+            val becomesChild = if (contender.key > node.key) contender else node
 
-                pointer = nextPointer
-                continue
-            }
-            pointer = pointer.nextSibling!!
-        } while (pointer !== firstRootNode)
+            siblingsToChildren(staysInRootList, becomesChild)
 
-        // check invariant
-        if (debug) {
-            if (rootListChildCounts().distinct().size != rootListChildCounts().size)
-                throw Exception("Duplicate child count found in root list")
+            nodesByChildCount[childCount] = null
+            if (nodesByChildCount[childCount + 1] !== null)
+                rebalanceRootListSeenSoFar(staysInRootList)
+            else
+                nodesByChildCount[childCount + 1] = staysInRootList
         }
     }
 
     private fun siblingsToChildren(staysInRootList: Node<Element>, becomesChild: Node<Element>) {
-        if (debug) println("rebalance(staysAtRoot=$staysInRootList, becomesChild=$becomesChild)")
         staysInRootList.childCount++
-        if (nodeWithDegree.size <= staysInRootList.childCount) nodeWithDegree = nodeWithDegree.copyOf(staysInRootList.childCount shl 1 + staysInRootList.childCount)
+        if (nodesByChildCount.size <= staysInRootList.childCount) nodesByChildCount = nodesByChildCount.copyOf(nodesByChildCount.size * 2)
         deleteFromList(becomesChild)
         becomesChild.parent = staysInRootList
         if (staysInRootList.firstChild === null) {
@@ -334,7 +331,6 @@ class FibHeap<Element>(
 
     // Test functions
 
-    private val debug: Boolean = false
     internal fun entries(): Collection<Map.Entry<Int, Element>> =
         if (firstRootNode === null) emptyList()
         else buildList {
