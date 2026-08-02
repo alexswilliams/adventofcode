@@ -1,5 +1,5 @@
 // https://gradle.org/releases/
-// ./gradlew wrapper --gradle-version=9.5.0 --distribution-type=BIN
+// ./gradlew wrapper --gradle-version=9.6.1 --distribution-type=BIN
 
 plugins {
     // https://mvnrepository.com/artifact/org.jetbrains.kotlin.jvm/org.jetbrains.kotlin.jvm.gradle.plugin
@@ -18,10 +18,10 @@ dependencies {
     testImplementation(kotlin("reflect"))
 
     // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-collections-immutable
-    implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.4.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.5.1")
 
     // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
 
     // https://mvnrepository.com/artifact/com.github.ajalt.mordant/mordant
     implementation("com.github.ajalt.mordant:mordant:3.0.2")
@@ -45,5 +45,5 @@ sourceSets.test {
 }
 
 kotlin {
-    jvmToolchain(21)
+    jvmToolchain(25)
 }
