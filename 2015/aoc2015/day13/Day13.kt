@@ -1,9 +1,6 @@
 package aoc2015.day13
 
-import common.Challenge
-import common.benchmark
-import common.loadFilesToLines
-import common.mapMatching
+import common.*
 
 private val example = loadFilesToLines("aoc2015/day13", "example.txt").single()
 private val puzzle = loadFilesToLines("aoc2015/day13", "input.txt").single()
@@ -17,35 +14,39 @@ internal fun main() {
 internal object Day13 : Challenge {
     override fun assertCorrect() {
         check(330, "P1 Example") { part1(example) }
-            .also { println("comparisons = $x") }
+            .also { println("comparisons = $comparisons") }
         check(664, "P1 Puzzle") { part1(puzzle) }
-            .also { println("comparisons = $x") }
+            .also { println("comparisons = $comparisons") }
 
         check(640, "P2 Puzzle") { part2(puzzle) }
-            .also { println("comparisons = $x") }
+            .also { println("comparisons = $comparisons") }
     }
 }
 
 
 private fun part1(input: List<String>): Int {
     val (people, rulesByPerson) = parseInput(input)
-    x = 0
+    comparisons = 0
     return maxApproval(people, rulesByPerson)
 }
 
 private fun part2(input: List<String>): Int {
     val (originalPeople, rulesByPerson) = parseInput(input)
     val people = originalPeople.plus("Me")
-    x = 0
+    comparisons = 0
     return maxApproval(people, rulesByPerson)
 }
 
-private var x: Int = 0
+// Symmetry:
+// - rotation - fixed by arbitrarily choosing on person to remain in a fixed position.
+// - reflection - the guests could reverse the order; the recursive solution below doesn't solve this.
+// Using a recusive approach by picking from the rules for each person, it takes 10 / 1310 / 3537 comparisons.
+private var comparisons: Int = 0
 
 private fun maxApproval(people: List<String>, rulesByPerson: Map<String, Map<String, Int>>): Int {
     val cache = HashMap<Pair<String, Set<String>>, Int>()
     fun maxApproval(lastPerson: String, seatedPeople: List<String>): Int {
-        x++
+        comparisons++
         cache[lastPerson to seatedPeople.toSet()]?.also { return it }
         if (people.size - seatedPeople.size == 1) {
             val remainingPerson = people.first { it !in seatedPeople }
