@@ -33,10 +33,10 @@ private fun tailPositionCount(input: List<String>, numberOfKnots: Int) = input.s
     .visitedTailCoordinates.distinct().size
 
 private tailrec fun State.move(direction: Char, amount: Int): State =
-    if (amount == 0) this.copy(visitedTailCoordinates = visitedTailCoordinates.add(knots.last()))
+    if (amount == 0) this.copy(visitedTailCoordinates = visitedTailCoordinates.adding(knots.last()))
     else State(
         knots.tail().runningFold(knots.first().movedToward(direction)) { previousKnot, knot -> knot.movedToward(previousKnot) },
-        visitedTailCoordinates.add(knots.last())
+        visitedTailCoordinates.adding(knots.last())
     ).move(direction, amount - 1)
 
 
