@@ -1,9 +1,9 @@
 // https://gradle.org/releases/
-// ./gradlew wrapper --gradle-version=9.6.1 --distribution-type=BIN
+// ./gradlew wrapper --gradle-version=9.8.2 --distribution-type=BIN
 
 plugins {
     // https://mvnrepository.com/artifact/org.jetbrains.kotlin.jvm/org.jetbrains.kotlin.jvm.gradle.plugin
-    kotlin("jvm") version "2.3.21"
+    kotlin("jvm") version "2.4.21"
 }
 
 group = "io.github.alexswilliams"
@@ -13,12 +13,19 @@ repositories {
     mavenCentral()
 }
 
+develocity {
+    server.set("https://127.0.0.1")
+    buildScan {
+        publishing.onlyIf { false }
+    }
+}
+
 dependencies {
     implementation(kotlin("test"))
     testImplementation(kotlin("reflect"))
 
     // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-collections-immutable
-    implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.5.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.5.2")
 
     // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
