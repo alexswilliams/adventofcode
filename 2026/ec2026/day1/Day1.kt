@@ -5,16 +5,15 @@ import common.benchmark
 import common.loadFiles
 import common.splitToInts
 import kotlin.math.sqrt
-import kotlin.math.truncate
 
 private val example = loadFiles("ec2026/day1", "example1.txt", "example2.txt", "example3.txt")
 private val puzzle = loadFiles("ec2026/day1", "input1.txt", "input2.txt", "input3.txt")
 
 internal fun main() {
     Day1.assertCorrect()
-    benchmark { part1(puzzle[0]) } // 19.7µs
-    benchmark { part2(puzzle[1]) } // 23.2µs
-    benchmark { part2(puzzle[2]) } // 35.1µs
+    benchmark { part1(puzzle[0]) } // 18.3µs
+    benchmark { part2(puzzle[1]) } // 23.7µs
+    benchmark { part2(puzzle[2]) } // 29.8µs
 }
 
 internal object Day1 : Challenge {
@@ -34,35 +33,33 @@ internal object Day1 : Challenge {
 private fun part1(input: String): Int = input
     .splitToInts(",")
     .sumOf { remainingPineCones ->
-        val lowerBound = truncate(sqrt(remainingPineCones.toDouble())).toInt()
-        if (remainingPineCones == lowerBound * lowerBound) 0
-        else (lowerBound + 1) * (lowerBound + 1) - remainingPineCones
+        val lowerBound = sqrt(remainingPineCones.toDouble()).toInt()
+        val realSize = if (remainingPineCones <= lowerBound * lowerBound) lowerBound else lowerBound + 1
+        realSize * realSize - remainingPineCones
     }
 
 
 private fun part2(input: String): Int = input
     .splitToInts(",")
     .sumOf { remainingPineCones ->
-        val lowerBound = truncate(remainingPineCones.toDouble() / 4.0 + 1.0).toInt()
-        if (lowerBound <= 2) {
-            return@sumOf 4 * 2 - remainingPineCones
-        }
-        if (remainingPineCones == 4 * (lowerBound - 1)) 0
-        else 4 * (lowerBound + 1 - 1) - remainingPineCones
+        val lowerBound = remainingPineCones / 4 + 1
+        val realSize = lowerBound
+            .coerceAtLeast(3)
+            .let { if (remainingPineCones <= 4 * it - 4) it else it + 1 }
+        4 * realSize - 4 - remainingPineCones
     }
 
 
 private fun part3(input: String): Int = input
     .splitToInts(",")
     .sumOf { remainingPineCones ->
-        val lowerBound = truncate(sqrt(remainingPineCones.toDouble() + 1.0)).toInt()
-        if (lowerBound <= 2) {
-            return@sumOf 3 * 3 - 1 - remainingPineCones
-        }
-        if (lowerBound % 2 == 0) {
-            return@sumOf (lowerBound + 1) * (lowerBound + 1) - 1 - remainingPineCones
-        }
-        if (remainingPineCones == lowerBound * lowerBound - 1) 0
-        else (lowerBound + 2) * (lowerBound + 2) - 1 - remainingPineCones
+        val lowerBound = sqrt(remainingPineCones.toDouble() + 1.0).toInt()
+        val realSize = lowerBound
+            .coerceAtLeast(3)
+            .nextOdd()
+            .let { if (remainingPineCones <= it * it - 1) it else it + 2 }
+        realSize * realSize - 1 - remainingPineCones
     }
 
+
+private fun Int.nextOdd(): Int = this + (this + 1) % 2
