@@ -2,7 +2,7 @@
 
 package common
 
-import java.io.*
+import java.io.File
 import java.util.*
 import kotlin.math.*
 
@@ -448,6 +448,23 @@ fun <R> String.splitMappingRanges(
     }
     result.add(transform(this@splitMappingRanges, currentOffset, lastIndex))
     return result
+}
+
+inline fun <R> String.splitForEachRange(
+    delimiter: String,
+    startAt: Int = 0,
+    lastIndex: Int = this.lastIndex,
+    crossinline body: (String, start: Int, end: Int) -> R,
+) {
+    val delimiterLength = delimiter.length
+    var currentOffset = startAt
+    var nextIndex = indexOf(delimiter, currentOffset)
+    while (nextIndex != -1 && nextIndex <= lastIndex) {
+        body(this@splitForEachRange, currentOffset, nextIndex - 1)
+        currentOffset = nextIndex + delimiterLength
+        nextIndex = indexOf(delimiter, currentOffset)
+    }
+    body(this@splitForEachRange, currentOffset, lastIndex)
 }
 
 fun String.toShortFromIndex(startAt: Int) = this.toLongFromIndex(startAt).toShort()
