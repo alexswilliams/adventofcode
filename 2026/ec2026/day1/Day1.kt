@@ -11,9 +11,9 @@ private val puzzle = loadFiles("ec2026/day1", "input1.txt", "input2.txt", "input
 
 internal fun main() {
     Day1.assertCorrect()
-    benchmark { part1(puzzle[0]) } // 18.3µs
-    benchmark { part2(puzzle[1]) } // 23.7µs
-    benchmark { part2(puzzle[2]) } // 29.8µs
+    benchmark { part1(puzzle[0]) } // 16.8µs
+    benchmark { part2(puzzle[1]) } // 22.5µs
+    benchmark { part3(puzzle[2]) } // 43.1µs
 }
 
 internal object Day1 : Challenge {
