@@ -9,9 +9,9 @@ private val puzzle = loadFilesToLines("ec2026/day3", "input1.txt", "input2.txt",
 
 internal fun main() {
     Day3.assertCorrect()
-    benchmark { part1(puzzle[0]) } // 11.1µs
-    benchmark { part2(puzzle[1]) } // 211.8µs
-    benchmark(10) { part3(puzzle[2]) } // 402.9ms
+    benchmark { part1(puzzle[0]) } // 7.0µs
+    benchmark { part2(puzzle[1]) } // 159.3µs
+    benchmark(100) { part3(puzzle[2]) } // 29.3ms
 }
 
 internal object Day3 : Challenge {
@@ -30,41 +30,33 @@ internal object Day3 : Challenge {
 
 private fun part1(input: List<String>): Long = input
     .sumOf { line ->
-        val (bases, multipliers) = line.substring(4).split(' ', limit = 2)
-        bases.reversed()
-            .zip(multipliers.reversed())
-            .foldIndexed(0L) { index, acc, (base, multiplier) ->
-                acc + Math.powExact(base.digitToInt(), index) * multiplier.digitToInt()
-            }
+        val (standard, vote) = line.substring(4).split(' ', limit = 2)
+        decimalVote(preCalculateBases(vote, standard), vote)
     }
 
-
-private fun part2(input: List<String>): Long = input
-    .sumOf { line ->
-        val (bases, multipliers) = line.substring(4).split(' ', limit = 2)
-        bases.reversed().repeat(multipliers.length / bases.length + 1)
-            .zip(multipliers.reversed())
-            .foldIndexed(0L) { index, acc, (base, multiplier) ->
-                acc + Math.powExact(base.digitToInt().toLong(), index) * multiplier.digitToInt().toLong()
-            }
-    }
-
+private fun part2(input: List<String>): Long = part1(input)
 
 private fun part3(input: List<String>): Long = input
     .sumOf { line ->
-        val (bases, multipliers) = line.substring(5).split(' ', limit = 2)
-        val declaredVote = bases.reversed().repeat(multipliers.length / bases.length + 1)
-            .zip(multipliers.reversed())
-            .foldIndexed(0L) { index, acc, (base, multiplier) ->
-                acc + Math.powExact(base.digitToInt().toLong(), index) * multiplier.digitToInt().toLong()
-            }
-        // very naive but fine:
-        if ((0..<multipliers.toLong()).any { candidate ->
-                val newVote: Long = bases.reversed().repeat(candidate.toString().length / bases.length + 1)
-                    .zip(candidate.toString().reversed())
-                    .foldIndexed(0L) { index, acc, (base, multiplier) ->
-                        acc + Math.powExact(base.digitToInt().toLong(), index) * multiplier.digitToInt().toLong()
-                    }
-                newVote == declaredVote
-            }) 0 else declaredVote
+        val (standard, vote) = line.substring(5).split(' ', limit = 2)
+        val bases = preCalculateBases(vote, standard)
+        val declaredVote = decimalVote(bases, vote)
+        if (((vote.toLong() - 1) downTo 2) // lb 0 is certain; lb 1 if standard is > 0; lb 2 if standard AND vote > 0
+                .any { declaredVote == decimalVote(bases, it.toString()) }
+        ) 0 else declaredVote
+    }
+
+
+private fun decimalVote(bases: LongArray, vote: String): Long =
+    vote.indices.fold(0L) { acc, power ->
+        val coefficient = vote[vote.lastIndex - power].digitToInt()
+        val base = bases[vote.lastIndex - power + (bases.size - vote.length)]
+        acc + coefficient * base
+    }
+
+private fun preCalculateBases(vote: String, standard: String): LongArray =
+    LongArray(vote.length) { index ->
+        val power = (vote.lastIndex - index)
+        val base = standard[(standard.lastIndex - power.mod(standard.length))].digitToInt().toLong()
+        Math.powExact(base, power)
     }
