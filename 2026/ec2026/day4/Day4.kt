@@ -1,6 +1,7 @@
 package ec2026.day4
 
 import common.*
+import java.util.*
 
 private val example = loadFilesToLines("ec2026/day4", "example1.txt", "example2.txt", "example3a.txt", "example3b.txt", "example3c.txt")
 private val puzzle = loadFilesToLines("ec2026/day4", "input1.txt", "input2.txt", "input3.txt")
@@ -8,8 +9,8 @@ private val puzzle = loadFilesToLines("ec2026/day4", "input1.txt", "input2.txt",
 internal fun main() {
     Day4.assertCorrect()
     benchmark { part1(puzzle[0]) } // 25.2µs
-    benchmark { part2(puzzle[1]) } // 804.4µs
-    benchmark(100) { part3(puzzle[2]) } // 11.7ms
+    benchmark { part2(puzzle[1]) } // 761.9µs
+    benchmark { part3(puzzle[2]) } // 3.6ms
 }
 
 internal object Day4 : Challenge {
@@ -50,33 +51,35 @@ private fun part2(input: List<String>): Long = input
     .foldIndexed(0L) { index, acc, it -> acc + (index + 1) * it.time }
 
 
-private data class Input(val id: Int, val quest: Int, val part: Int, val time: Long)
-private data class Part(val quest: Int, val part: Int)
 private data class Tally(val id: Int, val points: Long)
 private data class Rank(val rank: Int, val points: Long)
+private data class Timing(val id: Int, val time: Long)
+private data class Part(val quest: Int, val part: Int) : Comparable<Part> {
+    override fun compareTo(other: Part): Int = compareValuesBy(this, other, { it.quest }, { it.part })
+}
 
 private fun part3(input: List<String>): Long {
-    val data = input.mapMatching(INPUT_PATTERN)
-        .map { (id, quest, part, time) -> Input(id.toInt(), quest.toInt(), part.toInt(), time.toLong()) }
-    val rounds = data.map { Part(it.quest, it.part) }.distinct()
-        .sortedWith(compareBy({ it.quest }, { it.part }))
+    val dataByDay = input.asSequence().mapMatching(INPUT_PATTERN)
+        .groupByTo(
+            TreeMap(),
+            { (_, quest, part, _) -> Part(quest.toInt(), part.toInt()) })
+        { (id, _, _, time) -> Timing(id.toInt(), time.toLong()) }
 
-    return rounds.map { it.quest }.distinct().flatMap { quest ->
-        val parts = rounds.filter { it.quest == quest }.map { it.part }
-        parts.flatMap { part ->
-            val participantsForPart = data.filter { it.quest == quest && it.part == part }
-            val participantsInPreviousParts = data.filter { prev -> prev.quest == quest && prev.part < part && prev.id in participantsForPart.map { it.id } }
-            val participants = (participantsForPart + participantsInPreviousParts)
-                .groupingBy { it.id }.summingLong { it.time }
-                .entries.sortedBy { it.value }
-
-            tallies(participants, pointsForPart(part))
-        }
+    return dataByDay.asSequence().flatMap { (day, inputsForPart) ->
+        val participantsForPart = inputsForPart.mapTo(HashSet()) { it.id }
+        val sortedSumOfTimes = (previousParts(day) + day).asSequence()
+            .flatMap { dataByDay[it]!! }
+            .filter { it.id in participantsForPart }
+            .groupingBy { it.id }.summingLong { it.time }
+            .entries.sortedBy { it.value }
+        tallies(sortedSumOfTimes, pointsForPart(day.part))
     }.groupingBy { it.id }.summingLong { it.points }
-        .values.sortedByDescending { it }
+        .values.sortedDescending()
         .let { list -> ranks(list) }
         .fold(0L) { acc, it -> acc + it.rank * it.points }
 }
+
+private fun previousParts(day: Part): List<Part> = (1..<day.part).map { day.copy(part = it) }
 
 private fun ranks(list: List<Long>): List<Rank> {
     var rankToAward = 1
@@ -87,18 +90,13 @@ private fun ranks(list: List<Long>): List<Rank> {
     }
 }
 
-private fun tallies(participants: List<Map.Entry<Int, Long>>, pointsForPart: Long): List<Tally> {
-    var pointsForRank = pointsForPart
-    var pointsToAward = pointsForRank
-    val points: List<Tally> = participants.asSequence().mapIndexed { index, (id, time) ->
-        if (index > 0 && participants[index - 1].value == time) {
-            Tally(id, pointsToAward)
-        } else {
-            pointsToAward = pointsForRank;
-            Tally(id, pointsForRank)
-        }.also { pointsForRank = (pointsForRank - 1).coerceAtLeast(0); }
+private fun tallies(sortedSumOfTimes: List<Map.Entry<Int, Long>>, pointsForPart: Long): List<Tally> {
+    var pointsToAward = 0L
+    return sortedSumOfTimes.asSequence().mapIndexed { index, (id, time) ->
+        if (index == 0 || sortedSumOfTimes[index - 1].value != time)
+            pointsToAward = pointsForPart - index
+        Tally(id, pointsToAward)
     }.takeWhile { it.points > 0 }.toList()
-    return points
 }
 
 fun pointsForPart(part: Int): Long = when (part) {
