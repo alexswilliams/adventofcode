@@ -590,6 +590,12 @@ inline fun <T> Iterable<T>.sumOfIndexed(initial: Long, selector: (index: Int, T)
     return sum
 }
 
+inline fun <T, K> Grouping<T, K>.summingLong(
+    crossinline fieldSelector: (element: T) -> Long
+): Map<K, Long> =
+    aggregate { _, acc, e, first -> if (first) fieldSelector(e) else ((acc as Long) + fieldSelector(e)) }
+
+
 inline fun <R> Collection<String>.mapCartesianNotNull(transform: (row: Int, col: Int, char: Char) -> R?): List<R> {
     val result = ArrayList<R>(this.size * 10)
     this.forEachIndexed { rowNum, row ->
