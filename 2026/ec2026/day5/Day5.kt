@@ -7,9 +7,9 @@ private val puzzle = loadFilesToGrids("ec2026/day5", "input1.txt", "input2.txt",
 
 internal fun main() {
     Day5.assertCorrect()
-    benchmark { part1(puzzle[0]) } // 280.1µs
-    benchmark { part2(puzzle[1]) } // 654.6µs
-    benchmark { part3(puzzle[2]) } // 1.3ms
+    benchmark { part1(puzzle[0]) } // 1.0µs
+    benchmark { part2(puzzle[1]) } // 1.2µs
+    benchmark { part3(puzzle[2]) } // 2.8µs
 }
 
 internal object Day5 : Challenge {
@@ -26,69 +26,79 @@ internal object Day5 : Challenge {
 }
 
 
-private fun part1(input: Grid): Int {
+private fun part1(input: Grid, landLocations: MutableSet<Location1616> = HashSet()): Int {
     input.set((input.height / 2) by16 (input.width / 2), '#')
+    landLocations.add((input.height / 2) by16 (input.width / 2))
     var landSize = 1
     while (true) {
-        val newLandSize = expandLand(input)
+        val newLandSize = expandLand(input, landLocations)
         if (newLandSize == landSize) return newLandSize
         landSize = newLandSize
     }
 }
 
-private fun expandLand(input: Grid): Int {
-    val existingLand = input.allLocationOf('#')
-    val potentialNewLand = existingLand.flatMapTo(HashSet()) { loc ->
-        neighboursOf8(loc, input)
-            .filter { input.at(it) != '#' }
+private fun expandLand(input: Grid, landLocations: MutableSet<Location1616>): Int {
+    val neighbourArray = IntArray(8)
+    val potentialNewLand = landLocations.flatMapTo(HashSet()) { loc ->
+        neighboursOf8(loc, input, neighbourArray)
+            .filter { it != -1 && input.at(it) != '#' }
     }
     val newLand = potentialNewLand.filter { loc ->
-        neighboursOf8(loc, input)
-            .filter { input.at(it) == '#' || input.at(it) == '1' }
-            .size >= 5
+        neighboursOf8(loc, input, neighbourArray)
+            .count { it != -1 && (input.at(it) == '#' || input.at(it) == '1') } >= 5
     }
     newLand.forEach { input.set(it, '#') }
-    return input.countLocationsOf('#')
+    landLocations.addAll(newLand)
+    return landLocations.size
 }
 
 
-private fun part2(input: Grid): Int {
-    part1(input)
-    var sandCount = addSand(input)
+private fun part2(input: Grid, land: MutableSet<Location1616> = HashSet(), sand: MutableSet<Location1616> = HashSet()): Int {
+    part1(input, land)
+    var sandCount = addSand(input, land, sand)
     while (true) {
-        val newSandCount = expandSand(input)
+        val newSandCount = expandSand(input, land, sand)
         if (newSandCount == sandCount) return newSandCount
         sandCount = newSandCount
     }
 }
 
-private fun addSand(input: Grid): Int {
-    val sand = input.allLocationOf('#').filter { loc ->
+private fun addSand(input: Grid, land: MutableSet<Location1616>, sand: MutableSet<Location1616>): Int {
+    val neighbourArray = IntArray(8)
+    val newSand = land.filter { loc ->
         loc.row() == 0 ||
                 loc.row() == input.height - 1 ||
                 loc.col() == 0 ||
                 loc.col() == input.width - 1 ||
-                neighboursOf8(loc, input).any { input.at(it) != '#' }
+                neighboursOf8(loc, input, neighbourArray).any { it != -1 && input.at(it) != '#' }
     }
-    sand.forEach { input.set(it, '=') }
-    return input.countLocationsOf('=')
+    newSand.forEach { input.set(it, '=') }
+    land.removeAll(newSand)
+    sand.addAll(newSand)
+    return sand.size
 }
 
-private fun expandSand(input: Grid): Int {
-    val sand = input.allLocationOf('#').filter { loc ->
-        neighboursOf8(loc, input)
-            .count { input.at(it) == '=' } >= 5
+private fun expandSand(input: Grid, land: MutableSet<Location1616>, sand: MutableSet<Location1616>): Int {
+    val neighbourArray = IntArray(8)
+    val newSand = land.filter { loc ->
+        neighboursOf8(loc, input, neighbourArray)
+            .count { it != -1 && input.at(it) == '=' } >= 5
     }
-    sand.forEach { input.set(it, '=') }
-    return input.countLocationsOf('=')
+    newSand.forEach { input.set(it, '=') }
+    land.removeAll(newSand)
+    sand.addAll(newSand)
+    return sand.size
 }
 
 
 private fun part3(input: Grid): Int {
-    part2(input)
-    addTrees(input)
-    repeat(2) { expandTrees(input) }
-    return input.countLocationsOf('@')
+    val land = HashSet<Location1616>()
+    val sand = HashSet<Location1616>()
+    val trees = HashSet<Location1616>()
+    part2(input, land, sand)
+    addTrees(input, land, sand, trees)
+    repeat(2) { expandTrees(input, land, sand, trees) }
+    return trees.size
 }
 
 private val TREE_TEST_LOCATIONS =
@@ -96,29 +106,37 @@ private val TREE_TEST_LOCATIONS =
         .subtract(setOf(0 by16 0, 0 by16 4, 4 by16 0, 4 by16 4))
         .map { it.minusRow(2).minusCol(2) }
 
-private fun addTrees(input: Grid) {
-    val treeSpots = input.allLocationOf('#')
+private fun addTrees(input: Grid, land: HashSet<Location1616>, sand: HashSet<Location1616>, trees: HashSet<Location1616>) {
+    val treeSpots = land
         .filterNot { it.row() < 2 || it.row() > input.height - 3 || it.col() < 2 || it.col() > input.width - 3 }
-    treeSpots.filter { loc ->
+    val newTrees = treeSpots.filter { loc ->
         TREE_TEST_LOCATIONS.all { input.at(it.plus(loc)) == '#' }
-    }.forEach { input.set(it, '@') }
+    }
+    newTrees.forEach { input.set(it, '@') }
+    land.removeAll(newTrees)
+    trees.addAll(newTrees)
 }
 
-private fun expandTrees(input: Grid) {
-    input.allLocationOf('#').filter { loc ->
-        val n = neighboursOf8(loc, input)
-        n.none { input.at(it) == '=' } && n.count { input.at(it) == '@' } >= 4
-    }.forEach { input.set(it, '@') }
+private fun expandTrees(input: Grid, land: HashSet<Location1616>, sand: HashSet<Location1616>, trees: HashSet<Location1616>) {
+    val neighbourArray = IntArray(8)
+    val newTrees = land.filter { loc ->
+        val n = neighboursOf8(loc, input, neighbourArray)
+        n.none { it != -1 && input.at(it) == '=' } && n.count { it != -1 && input.at(it) == '@' } >= 4
+    }
+    newTrees.forEach { input.set(it, '@') }
+    land.removeAll(newTrees)
+    trees.addAll(newTrees)
 }
 
 
-fun neighboursOf8(loc: Location1616, grid: Grid): List<Location1616> = buildList(8) {
-    if (loc.row() > 0) add(loc.minusSingleRow())
-    if (loc.col() > 0) add(loc.minusSingleCol())
-    if (loc.row() > 0 && loc.col() > 0) add(loc.minusSingleCol().minusSingleRow())
-    if (loc.row() > 0 && loc.col() < grid.width - 1) add(loc.plusSingleCol().minusSingleRow())
-    if (loc.col() < grid.width - 1) add(loc.plusSingleCol())
-    if (loc.row() < grid.height - 1) add(loc.plusSingleRow())
-    if (loc.col() < grid.width - 1 && loc.row() < grid.height - 1) add(loc.plusSingleRow().plusSingleCol())
-    if (loc.col() > 0 && loc.row() < grid.height - 1) add(loc.minusSingleCol().plusSingleRow())
+fun neighboursOf8(loc: Location1616, grid: Grid, results: IntArray = IntArray(8)): IntArray {
+    results[0] = if (loc.row() > 0) loc.minusSingleRow() else -1
+    results[1] = if (loc.col() > 0) loc.minusSingleCol() else -1
+    results[2] = if (loc.row() > 0 && loc.col() > 0) loc.minusSingleCol().minusSingleRow() else -1
+    results[3] = if (loc.row() > 0 && loc.col() < grid.width - 1) loc.plusSingleCol().minusSingleRow() else -1
+    results[4] = if (loc.col() < grid.width - 1) loc.plusSingleCol() else -1
+    results[5] = if (loc.row() < grid.height - 1) loc.plusSingleRow() else -1
+    results[6] = if (loc.col() < grid.width - 1 && loc.row() < grid.height - 1) loc.plusSingleRow().plusSingleCol() else -1
+    results[7] = if (loc.col() > 0 && loc.row() < grid.height - 1) loc.minusSingleCol().plusSingleRow() else -1
+    return results
 }
