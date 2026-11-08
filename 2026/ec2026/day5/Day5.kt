@@ -7,9 +7,9 @@ private val puzzle = loadFilesToGrids("ec2026/day5", "input1.txt", "input2.txt",
 
 internal fun main() {
     Day5.assertCorrect()
-    benchmark { part1(puzzle[0]) } // 1.0µs
-    benchmark { part2(puzzle[1]) } // 1.2µs
-    benchmark { part3(puzzle[2]) } // 2.8µs
+    benchmark { part1(puzzle[0]) } // 989ns
+    benchmark { part2(puzzle[1]) } // 1.1µs
+    benchmark { part3(puzzle[2]) } // 2.3µs
 }
 
 internal object Day5 : Challenge {
@@ -37,9 +37,9 @@ private fun part1(input: Grid, landLocations: MutableSet<Location1616> = HashSet
     }
 }
 
-private fun expandLand(input: Grid, landLocations: MutableSet<Location1616>): Int {
+private fun expandLand(input: Grid, land: MutableSet<Location1616>): Int {
     val neighbourArray = IntArray(8)
-    val potentialNewLand = landLocations.flatMapTo(HashSet()) { loc ->
+    val potentialNewLand = land.flatMapTo(HashSet()) { loc ->
         neighboursOf8(loc, input, neighbourArray)
             .filter { it != -1 && input.at(it) != '#' }
     }
@@ -48,22 +48,22 @@ private fun expandLand(input: Grid, landLocations: MutableSet<Location1616>): In
             .count { it != -1 && (input.at(it) == '#' || input.at(it) == '1') } >= 5
     }
     newLand.forEach { input.set(it, '#') }
-    landLocations.addAll(newLand)
-    return landLocations.size
+    land.addAll(newLand)
+    return land.size
 }
 
 
-private fun part2(input: Grid, land: MutableSet<Location1616> = HashSet(), sand: MutableSet<Location1616> = HashSet()): Int {
+private fun part2(input: Grid, land: MutableSet<Location1616> = HashSet()): Int {
     part1(input, land)
-    var sandCount = addSand(input, land, sand)
+    var sandCount = addSand(input, land)
     while (true) {
-        val newSandCount = expandSand(input, land, sand)
-        if (newSandCount == sandCount) return newSandCount
-        sandCount = newSandCount
+        val newSandCount = expandSand(input, land)
+        if (newSandCount == 0) return sandCount
+        sandCount += newSandCount
     }
 }
 
-private fun addSand(input: Grid, land: MutableSet<Location1616>, sand: MutableSet<Location1616>): Int {
+private fun addSand(input: Grid, land: MutableSet<Location1616>): Int {
     val neighbourArray = IntArray(8)
     val newSand = land.filter { loc ->
         loc.row() == 0 ||
@@ -74,11 +74,10 @@ private fun addSand(input: Grid, land: MutableSet<Location1616>, sand: MutableSe
     }
     newSand.forEach { input.set(it, '=') }
     land.removeAll(newSand)
-    sand.addAll(newSand)
-    return sand.size
+    return newSand.size
 }
 
-private fun expandSand(input: Grid, land: MutableSet<Location1616>, sand: MutableSet<Location1616>): Int {
+private fun expandSand(input: Grid, land: MutableSet<Location1616>): Int {
     val neighbourArray = IntArray(8)
     val newSand = land.filter { loc ->
         neighboursOf8(loc, input, neighbourArray)
@@ -86,19 +85,16 @@ private fun expandSand(input: Grid, land: MutableSet<Location1616>, sand: Mutabl
     }
     newSand.forEach { input.set(it, '=') }
     land.removeAll(newSand)
-    sand.addAll(newSand)
-    return sand.size
+    return newSand.size
 }
 
 
 private fun part3(input: Grid): Int {
     val land = HashSet<Location1616>()
-    val sand = HashSet<Location1616>()
-    val trees = HashSet<Location1616>()
-    part2(input, land, sand)
-    addTrees(input, land, sand, trees)
-    repeat(2) { expandTrees(input, land, sand, trees) }
-    return trees.size
+    part2(input, land)
+    var treeCount: Int = addTrees(input, land)
+    repeat(2) { treeCount += expandTrees(input, land) }
+    return treeCount
 }
 
 private val TREE_TEST_LOCATIONS =
@@ -106,18 +102,18 @@ private val TREE_TEST_LOCATIONS =
         .subtract(setOf(0 by16 0, 0 by16 4, 4 by16 0, 4 by16 4))
         .map { it.minusRow(2).minusCol(2) }
 
-private fun addTrees(input: Grid, land: HashSet<Location1616>, sand: HashSet<Location1616>, trees: HashSet<Location1616>) {
-    val treeSpots = land
-        .filterNot { it.row() < 2 || it.row() > input.height - 3 || it.col() < 2 || it.col() > input.width - 3 }
-    val newTrees = treeSpots.filter { loc ->
-        TREE_TEST_LOCATIONS.all { input.at(it.plus(loc)) == '#' }
-    }
+private fun addTrees(input: Grid, land: MutableSet<Location1616>): Int {
+    val newTrees = land
+        .filter { loc ->
+            loc.row() >= 2 && loc.row() <= input.height - 3 && loc.col() >= 2 && loc.col() <= input.width - 3 &&
+            TREE_TEST_LOCATIONS.all { input.at(it + loc) == '#' }
+        }
     newTrees.forEach { input.set(it, '@') }
     land.removeAll(newTrees)
-    trees.addAll(newTrees)
+    return newTrees.size
 }
 
-private fun expandTrees(input: Grid, land: HashSet<Location1616>, sand: HashSet<Location1616>, trees: HashSet<Location1616>) {
+private fun expandTrees(input: Grid, land: MutableSet<Location1616>): Int {
     val neighbourArray = IntArray(8)
     val newTrees = land.filter { loc ->
         val n = neighboursOf8(loc, input, neighbourArray)
@@ -125,7 +121,7 @@ private fun expandTrees(input: Grid, land: HashSet<Location1616>, sand: HashSet<
     }
     newTrees.forEach { input.set(it, '@') }
     land.removeAll(newTrees)
-    trees.addAll(newTrees)
+    return newTrees.size
 }
 
 
