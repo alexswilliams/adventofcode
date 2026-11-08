@@ -49,6 +49,10 @@ fun Grid.allLocationOf(ch: Char): List<Location1616> {
     return this.mapCartesianNotNull { row, col, char -> if (char == ch) row by16 col else null }
 }
 
+fun Grid.countLocationsOf(ch: Char): Int {
+    return this.sumOf { cols -> cols.count { it == ch } }
+}
+
 fun Grid.render(): String = this.joinToString("\n") { row -> row.joinToString("") }
 
 fun Grid.transpose(): Grid =

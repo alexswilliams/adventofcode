@@ -7,9 +7,9 @@ private val puzzle = loadFilesToGrids("ec2026/day5", "input1.txt", "input2.txt",
 
 internal fun main() {
     Day5.assertCorrect()
-    benchmark { part1(puzzle[0]) } // 339.0µs
-    benchmark { part2(puzzle[1]) } // 1.2ms
-    benchmark { part3(puzzle[2]) } // 2.3ms
+    benchmark { part1(puzzle[0]) } // 280.1µs
+    benchmark { part2(puzzle[1]) } // 654.6µs
+    benchmark { part3(puzzle[2]) } // 1.3ms
 }
 
 internal object Day5 : Challenge {
@@ -30,37 +30,25 @@ private fun part1(input: Grid): Int {
     input.set((input.height / 2) by16 (input.width / 2), '#')
     var landSize = 1
     while (true) {
-        expandLand(input)
-        val newLandSize = input.allLocationOf('#').size
-        if (newLandSize == landSize)
-            return newLandSize
+        val newLandSize = expandLand(input)
+        if (newLandSize == landSize) return newLandSize
         landSize = newLandSize
     }
 }
 
-private fun expandLand(input: Grid) {
+private fun expandLand(input: Grid): Int {
     val existingLand = input.allLocationOf('#')
     val potentialNewLand = existingLand.flatMapTo(HashSet()) { loc ->
-        neighbours(loc, input.height, input.width)
+        neighboursOf8(loc, input)
             .filter { input.at(it) != '#' }
     }
     val newLand = potentialNewLand.filter { loc ->
-        neighbours(loc, input.height, input.width)
+        neighboursOf8(loc, input)
             .filter { input.at(it) == '#' || input.at(it) == '1' }
             .size >= 5
     }
     newLand.forEach { input.set(it, '#') }
-}
-
-fun neighbours(loc: Location1616, height: Int, width: Int): List<Location1616> = buildList {
-    if (loc.row() > 0) add(loc.minusSingleRow())
-    if (loc.col() > 0) add(loc.minusSingleCol())
-    if (loc.row() > 0 && loc.col() > 0) add(loc.minusSingleCol().minusSingleRow())
-    if (loc.row() > 0 && loc.col() < width - 1) add(loc.plusSingleCol().minusSingleRow())
-    if (loc.col() < width - 1) add(loc.plusSingleCol())
-    if (loc.row() < height - 1) add(loc.plusSingleRow())
-    if (loc.col() < width - 1 && loc.row() < height - 1) add(loc.plusSingleRow().plusSingleCol())
-    if (loc.col() > 0 && loc.row() < height - 1) add(loc.minusSingleCol().plusSingleRow())
+    return input.countLocationsOf('#')
 }
 
 
@@ -69,8 +57,7 @@ private fun part2(input: Grid): Int {
     var sandCount = addSand(input)
     while (true) {
         val newSandCount = expandSand(input)
-        if (newSandCount == sandCount)
-            return newSandCount
+        if (newSandCount == sandCount) return newSandCount
         sandCount = newSandCount
     }
 }
@@ -81,42 +68,57 @@ private fun addSand(input: Grid): Int {
                 loc.row() == input.height - 1 ||
                 loc.col() == 0 ||
                 loc.col() == input.width - 1 ||
-                neighbours(loc, input.height, input.width).any { input.at(it) != '#' }
+                neighboursOf8(loc, input).any { input.at(it) != '#' }
     }
     sand.forEach { input.set(it, '=') }
-    return input.allLocationOf('=').size
+    return input.countLocationsOf('=')
 }
 
 private fun expandSand(input: Grid): Int {
     val sand = input.allLocationOf('#').filter { loc ->
-        neighbours(loc, input.height, input.width)
-            .filter { input.at(it) == '=' }
-            .size >= 5
+        neighboursOf8(loc, input)
+            .count { input.at(it) == '=' } >= 5
     }
     sand.forEach { input.set(it, '=') }
-    return input.allLocationOf('=').size
+    return input.countLocationsOf('=')
 }
 
 
 private fun part3(input: Grid): Int {
     part2(input)
-    val primaryTreeSpots = input.allLocationOf('#')
+    addTrees(input)
+    repeat(2) { expandTrees(input) }
+    return input.countLocationsOf('@')
+}
+
+private val TREE_TEST_LOCATIONS =
+    cartesianProductOf(0..4, 0..4).map { (r, c) -> r by16 c }
+        .subtract(setOf(0 by16 0, 0 by16 4, 4 by16 0, 4 by16 4))
+        .map { it.minusRow(2).minusCol(2) }
+
+private fun addTrees(input: Grid) {
+    val treeSpots = input.allLocationOf('#')
         .filterNot { it.row() < 2 || it.row() > input.height - 3 || it.col() < 2 || it.col() > input.width - 3 }
+    treeSpots.filter { loc ->
+        TREE_TEST_LOCATIONS.all { input.at(it.plus(loc)) == '#' }
+    }.forEach { input.set(it, '@') }
+}
 
-    val primaryTrees = primaryTreeSpots.filter { loc ->
-        val subGrid = input.subGrid(loc.row() - 2, loc.col() - 2, 5, 5)
-        subGrid.allLocations().subtract(setOf(0 by16 0, 0 by16 4, 4 by16 0, 4 by16 4))
-            .all { subGrid.at(it) == '#' }
-    }
-    primaryTrees.forEach { input.set(it, '@') }
+private fun expandTrees(input: Grid) {
+    input.allLocationOf('#').filter { loc ->
+        val n = neighboursOf8(loc, input)
+        n.none { input.at(it) == '=' } && n.count { input.at(it) == '@' } >= 4
+    }.forEach { input.set(it, '@') }
+}
 
-    repeat(2) {
-        val newTrees = input.allLocationOf('#').filter { loc ->
-            val n = neighbours(loc, input.height, input.width)
-            n.none { input.at(it) == '=' } && n.filter { input.at(it) == '@' }.size >= 4
-        }
-        newTrees.forEach { input.set(it, '@') }
-    }
 
-    return input.allLocationOf('@').size
+fun neighboursOf8(loc: Location1616, grid: Grid): List<Location1616> = buildList(8) {
+    if (loc.row() > 0) add(loc.minusSingleRow())
+    if (loc.col() > 0) add(loc.minusSingleCol())
+    if (loc.row() > 0 && loc.col() > 0) add(loc.minusSingleCol().minusSingleRow())
+    if (loc.row() > 0 && loc.col() < grid.width - 1) add(loc.plusSingleCol().minusSingleRow())
+    if (loc.col() < grid.width - 1) add(loc.plusSingleCol())
+    if (loc.row() < grid.height - 1) add(loc.plusSingleRow())
+    if (loc.col() < grid.width - 1 && loc.row() < grid.height - 1) add(loc.plusSingleRow().plusSingleCol())
+    if (loc.col() > 0 && loc.row() < grid.height - 1) add(loc.minusSingleCol().plusSingleRow())
 }
