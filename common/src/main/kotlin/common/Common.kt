@@ -762,6 +762,18 @@ fun neighboursOf(pos: Location1616, grid: Grid, walls: CharArray, output: IntArr
     return output
 }
 
+fun neighboursOf8(pos: Location1616, grid: Grid, output: IntArray = IntArray(8)): IntArray {
+    output[0] = if (pos.row() > 0) pos.minusSingleRow() else -1
+    output[1] = if (pos.row() > 0 && pos.col() < grid.width - 1) pos.plusSingleCol().minusSingleRow() else -1
+    output[2] = if (pos.col() < grid.width - 1) pos.plusSingleCol() else -1
+    output[3] = if (pos.col() < grid.width - 1 && pos.row() < grid.height - 1) pos.plusSingleRow().plusSingleCol() else -1
+    output[4] = if (pos.row() < grid.height - 1) pos.plusSingleRow() else -1
+    output[5] = if (pos.col() > 0 && pos.row() < grid.height - 1) pos.minusSingleCol().plusSingleRow() else -1
+    output[6] = if (pos.col() > 0) pos.minusSingleCol() else -1
+    output[7] = if (pos.row() > 0 && pos.col() > 0) pos.minusSingleCol().minusSingleRow() else -1
+    return output
+}
+
 fun fillDeadEnds(grid: Grid, floor: Char = '.', wall: Char = '#'): Grid {
     var changed: Boolean
     do {

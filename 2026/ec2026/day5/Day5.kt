@@ -123,16 +123,3 @@ private fun expandTrees(input: Grid, land: MutableSet<Location1616>): Int {
     land.removeAll(newTrees)
     return newTrees.size
 }
-
-
-fun neighboursOf8(loc: Location1616, grid: Grid, results: IntArray = IntArray(8)): IntArray {
-    results[0] = if (loc.row() > 0) loc.minusSingleRow() else -1
-    results[1] = if (loc.col() > 0) loc.minusSingleCol() else -1
-    results[2] = if (loc.row() > 0 && loc.col() > 0) loc.minusSingleCol().minusSingleRow() else -1
-    results[3] = if (loc.row() > 0 && loc.col() < grid.width - 1) loc.plusSingleCol().minusSingleRow() else -1
-    results[4] = if (loc.col() < grid.width - 1) loc.plusSingleCol() else -1
-    results[5] = if (loc.row() < grid.height - 1) loc.plusSingleRow() else -1
-    results[6] = if (loc.col() < grid.width - 1 && loc.row() < grid.height - 1) loc.plusSingleRow().plusSingleCol() else -1
-    results[7] = if (loc.col() > 0 && loc.row() < grid.height - 1) loc.minusSingleCol().plusSingleRow() else -1
-    return results
-}
