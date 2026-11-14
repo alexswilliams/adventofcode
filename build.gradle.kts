@@ -1,5 +1,5 @@
 // https://gradle.org/releases/
-// ./gradlew wrapper --gradle-version=9.8.2 --distribution-type=BIN
+// ./gradlew wrapper --gradle-version=9.9.1 --distribution-type=BIN
 
 plugins {
     // https://mvnrepository.com/artifact/org.jetbrains.kotlin.jvm/org.jetbrains.kotlin.jvm.gradle.plugin
@@ -13,13 +13,6 @@ repositories {
     mavenCentral()
 }
 
-develocity {
-    server.set("https://127.0.0.1")
-    buildScan {
-        publishing.onlyIf { false }
-    }
-}
-
 dependencies {
     implementation(kotlin("test"))
     testImplementation(kotlin("reflect"))
@@ -31,7 +24,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
 
     // https://mvnrepository.com/artifact/com.github.ajalt.mordant/mordant
-    implementation("com.github.ajalt.mordant:mordant:3.0.2")
+    implementation("com.github.ajalt.mordant:mordant:3.1.1")
 
     // https://mvnrepository.com/artifact/org.assertj/assertj-core
     testImplementation("org.assertj:assertj-core:3.27.7")
