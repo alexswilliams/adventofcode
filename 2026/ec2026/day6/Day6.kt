@@ -1,18 +1,15 @@
 package ec2026.day6
 
-import common.Challenge
-import common.benchmark
-import common.countTrue
-import common.loadFilesToLines
+import common.*
 
 private val example = loadFilesToLines("ec2026/day6", "example1.txt", "example2.txt", "example3.txt")
 private val puzzle = loadFilesToLines("ec2026/day6", "input1.txt", "input2.txt", "input3.txt")
 
 internal fun main() {
     Day6.assertCorrect()
-    benchmark { part1(puzzle[0]) } // 54.0µs
-    benchmark { part2(puzzle[1]) } // 2.7ms
-    benchmark(100) { part3(puzzle[2]) } // 22.3ms
+    benchmark { part1(puzzle[0]) } // 51.2µs
+    benchmark { part2(puzzle[1]) } // 504.4µs
+    benchmark { part3(puzzle[2]) } // 2.3ms
 }
 
 internal object Day6 : Challenge {
@@ -32,58 +29,66 @@ internal object Day6 : Challenge {
 private fun part1(input: List<String>): Int {
     val codex = input.associateBy({ it.substring(0, 4) }) { it.substring(5).split(',') }
 
-    fun uniqueIngredientsMaking(ingredient: String, uniqueIngredientsSoFar: MutableSet<String> = HashSet()): Set<String> {
-        val directIngredients: List<String> = codex[ingredient].orEmpty()
-        val newIngredients = directIngredients.filter { it !in uniqueIngredientsSoFar }
+    fun uniqueIngredientsMaking(product: String, uniqueIngredientsSoFar: MutableSet<String> = HashSet(listOf(product))): Set<String> {
+        val recipe: List<String> = codex[product].orEmpty()
+        val newIngredients = recipe.filter { it !in uniqueIngredientsSoFar }
         uniqueIngredientsSoFar.addAll(newIngredients)
         newIngredients.forEach { uniqueIngredientsMaking(it, uniqueIngredientsSoFar) }
         return uniqueIngredientsSoFar
     }
 
-    return uniqueIngredientsMaking("NULL").minus("NULL").size
+    return uniqueIngredientsMaking("NULL").size - 1
 }
 
 
 private fun part2(input: List<String>): Int {
-    val codex = input.associateBy({ it.substring(0, 4) }) { it.substring(5).split(',') }
+    val reversedCodex = buildReverseCodex(input)
+    val containsNull = allRecipesUsing(reversedCodex, "NULL")
+    return containsNull.size
+}
 
-    fun containsNull(product: String, path: ArrayList<String> = arrayListOf(product)): Boolean {
-        val recipe = codex[product].orEmpty()
-        return recipe.contains("NULL") || recipe.any {
-            if (path.contains(it)) return@any false
-            path.add(it)
-            containsNull(it, path)
-                .also { path.removeLast() }
+private fun allRecipesUsing(
+    reversedCodex: Map<String, List<String>>,
+    ingredientToFind: String
+): HashSet<String> {
+    val containsIngredient = HashSet<String>(reversedCodex.size * 2).apply { add(ingredientToFind) }
+    val thisIteration = ArrayList<String>(20).apply { add(ingredientToFind) }
+    val nextIteration = ArrayList<String>(20)
+    do {
+        nextIteration.clear()
+        thisIteration.forEach { knownToContain ->
+            val allCreatedWith = reversedCodex[knownToContain].orEmpty()
+            allCreatedWith.forEach { createdWith ->
+                val wasNew = containsIngredient.add(createdWith)
+                if (wasNew) nextIteration.add(createdWith)
+            }
+        }
+        thisIteration.clear()
+        thisIteration.addAll(nextIteration)
+    } while (nextIteration.isNotEmpty())
+    containsIngredient.remove(ingredientToFind)
+    return containsIngredient
+}
+
+private fun buildReverseCodex(input: List<String>): Map<String, List<String>> =
+    buildMap<String, MutableList<String>>(input.size * 2) {
+        input.forEach { recipe ->
+            recipe.splitForEachRange(",", 5) { string, start, end ->
+                computeIfAbsent(string.substring(start, end + 1)) { ArrayList(30) }.add(recipe.substring(0, 4))
+            }
         }
     }
-
-    return codex.keys.minus("NULL").count { topLevelProduct ->
-        containsNull(topLevelProduct)
-    }
-
-}
 
 
 private fun part3(input: List<String>): Int {
-    val codex = input.associateBy({ it.substring(0, 4) }) { it.substring(5).split(',') }
+    val reversedCodex = buildReverseCodex(input)
 
-    fun containsMultipleNulls(product: String, nullsSeen: BooleanArray = BooleanArray(3), path: ArrayList<String> = arrayListOf(product)): Boolean {
-        val recipe = codex[product].orEmpty()
-        if (product.startsWith("NULL")) {
-            val nullType = product.last().digitToInt()
-            nullsSeen[nullType - 1] = true
-            if (nullsSeen.countTrue() >= 2) return true
-        }
-        return recipe.any {
-            if (path.contains(it)) return@any false
-            path.add(it)
-            containsMultipleNulls(it, nullsSeen, path)
-                .also { path.removeLast() }
-        }
-    }
+    val null1 = allRecipesUsing(reversedCodex, "NULLv1")
+    val null2 = allRecipesUsing(reversedCodex, "NULLv2")
+    val null3 = allRecipesUsing(reversedCodex, "NULLv3")
 
-    return codex.keys.count { topLevelProduct ->
-        containsMultipleNulls(topLevelProduct)
-    }
-
+    val v12 = null1.intersect(null2)
+    val v23 = null2.intersect(null3)
+    val v13 = null1.intersect(null3)
+    return v12.union(v23).union(v13).size
 }
