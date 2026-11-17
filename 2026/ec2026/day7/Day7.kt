@@ -12,8 +12,8 @@ private val puzzle = loadFilesToLines("ec2026/day7", "input1.txt", "input2.txt",
 
 internal fun main() {
     Day7.assertCorrect()
-    benchmark { part1(puzzle[0]) } // 54.4µs
-    benchmark { part2(puzzle[1]) } // 216.1µs
+    benchmark { part1(puzzle[0]) } // 44.6µs
+    benchmark { part2(puzzle[1]) } // 202.4µs
     benchmark { part3(puzzle[2]) } // 2.3ms parallel, 12.5ms sequential
 }
 
@@ -33,29 +33,13 @@ internal object Day7 : Challenge {
 
 private data class Input(val id: Int, val initialEnergy: Int, val connections: List<Int>)
 
-private fun part1(input: List<String>): Int {
+private fun part1(input: List<String>): Int = totalEnergyWithoutExplosions(input, 5)
+private fun part2(input: List<String>): Int = totalEnergyWithoutExplosions(input, 10)
+
+private fun totalEnergyWithoutExplosions(input: List<String>, initialAmount: Int): Int {
     // noticing that the input is sequential IDs starting from 1, this doesn't need sorting or associating, index === id - 1
     val clouds = input.mapMatching(Regex("id=(\\d+), energy=(\\d+), connections=([\\d,]+)"))
         .map { (id, energy, connections) -> Input(id.toInt(), energy.toInt(), connections.splitToInts(",")) }
-
-    val (totalEnergy, _) = (5 downTo 1).fold(
-        Pair(
-            clouds.sumOf { it.initialEnergy },
-            listOf(clouds.maxBy { it.connections.size }.id)
-        )
-    ) { (prevTotalEnergy, cloudsToPropagateTo), energyToAdd ->
-        val addedAtThisStep = cloudsToPropagateTo.size * energyToAdd
-        val nextClouds = cloudsToPropagateTo.flatMap { clouds[it - 1].connections }
-        Pair(prevTotalEnergy + addedAtThisStep, if (energyToAdd == 1) listOf() else nextClouds)
-    }
-    return totalEnergy
-}
-
-
-private fun part2(input: List<String>): Int {
-    val clouds = input.mapMatching(Regex("id=(\\d+), energy=(\\d+), connections=([\\d,]+)"))
-        .map { (id, energy, connections) -> Input(id.toInt(), energy.toInt(), connections.splitToInts(",")) }
-
     val cache = HashMap<Int, Int>()
     fun addedByImpulse(amount: Int, id: Int): Int {
         if (amount == 1) return 1
@@ -64,8 +48,7 @@ private fun part2(input: List<String>): Int {
                 clouds[id - 1].connections.sumOf { addedByImpulse(amount - 1, it) })
             .also { cache[amount * 100 + id] = it }
     }
-
-    return clouds.sumOf { it.initialEnergy } + addedByImpulse(10, clouds.maxBy { it.connections.size }.id)
+    return clouds.sumOf { it.initialEnergy } + addedByImpulse(initialAmount, clouds.maxBy { it.connections.size }.id)
 }
 
 
