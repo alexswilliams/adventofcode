@@ -33,6 +33,9 @@ dependencies {
 tasks.getByName<Test>("test") {
     useJUnitPlatform()
 }
+tasks.withType<JavaExec> {
+    this.jvmArgs("-Xmx20g", "-XX:+UnlockExperimentalVMOptions", "-XX:+UseEpsilonGC")
+}
 
 sourceSets.main {
     kotlin.srcDirs("2015", "2019/src", "2022", "2023", "2024", "2025", "2026", "misc", "common/src/main/kotlin")
