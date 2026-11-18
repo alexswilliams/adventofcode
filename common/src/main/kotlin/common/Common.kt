@@ -13,6 +13,7 @@ typealias DigitGrid = Array<IntArray>
 typealias BooleanGrid = Array<BooleanArray>
 
 fun Grid.toDigitGrid() = Array(this.height) { r -> IntArray(this.width) { c -> this[r][c].digitToInt() } }
+fun Grid.toDigitGridOr0() = Array(this.height) { r -> IntArray(this.width) { c -> this[r][c].digitToIntOrNull() ?: 0 } }
 
 val Grid.height get() = this.size
 val Grid.width get() = this[0].size
