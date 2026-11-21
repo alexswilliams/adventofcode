@@ -5,16 +5,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
-import java.util.*
 
 private val example = loadFilesToLines("ec2026/day9", "example1.txt", "example2.txt")
 private val puzzle = loadFilesToLines("ec2026/day9", "input1.txt", "input2.txt", "input3.txt")
 
 internal fun main() {
     Day9.assertCorrect()
-    benchmark { part1(puzzle[0]) } // 124.6µs
-    benchmark { part2(puzzle[1]) } // 297.5µs parallel, 327.5µs serial
-    benchmark { part3(puzzle[2]) } // 3.1ms parallel, 20.2ms serial
+    benchmark { part1(puzzle[0]) } // 11.8µs
+    benchmark { part2(puzzle[1]) } // 157.9µs
+    benchmark { part3(puzzle[2]) } // 338.7µs parallel, 1.3ms serial
 }
 
 internal object Day9 : Challenge {
@@ -32,11 +31,11 @@ internal object Day9 : Challenge {
 
 private fun part1(input: List<String>): Int {
     return input.sumOf { line ->
-        val (_, growth, limit) = line.matchingAsIntList(Regex("id=(\\d+), growth=(\\d+), limit=(\\d+)"))!!
+        val (growth, limit) = parseInput(line)
         if (limit == 1) return 1
-        val branches = IntArray(growth + 1).apply { this[0] = 1 }
+        val branches = IntArray(growth + 1).apply { this[1] = 1 }
         var numberOfBranchPoints = 0
-        var seconds = 0
+        var seconds = 1
         while (branches.sumOfIndexed { index, e -> index * e } + numberOfBranchPoints < limit) {
             seconds++
             (branches.lastIndex downTo 1)
@@ -54,18 +53,13 @@ private fun part1(input: List<String>): Int {
 }
 
 
-private fun part2(input: List<String>): Int =
-    runBlocking(Dispatchers.Default) {
-        input.map { async { growTree(it) } }.awaitAll()
-            .sum()
-    }
-//    input.sumOf { growTree(it) }
+private fun part2(input: List<String>): Int = input.sumOf { growTree(it) }
 
 private fun growTree(line: String): Int {
-    val (_, growth, limit) = line.matchingAsIntList(Regex("id=(\\d+), growth=(\\d+), limit=(\\d+)"))!!
+    val (growth, limit) = parseInput(line)
     if (limit == 1) return 1
-    val branches = IntArray(growth + 1).apply { this[0] = 1 }
-    var seconds = 0
+    val branches = IntArray(growth + 1).apply { this[1] = 1 }
+    var seconds = 1
     var numberOfBranchPoints = 0
     while (numberOfBranchPoints + 1 < limit) {
         val longestBranch = branches.indexOfLast { it > 0 }
@@ -83,6 +77,18 @@ private fun growTree(line: String): Int {
     return seconds
 }
 
+private fun parseInput(line: String): Pair<Int, Int> {
+    val growth = line.toIntFromIndex(line.indexOf(',', 4) + 9)
+    val limit = line.toIntFromIndex(line.lastIndexOf('=') + 1)
+    return Pair(growth, limit)
+}
+
+private fun parseLongInput(line: String): Pair<Long, Long> {
+    val growth = line.toLongFromIndex(line.indexOf(',', 4) + 9)
+    val limit = line.toLongFromIndex(line.lastIndexOf('=') + 1)
+    return Pair(growth, limit)
+}
+
 
 private fun part3(input: List<String>): Long =
     runBlocking(Dispatchers.Default) {
@@ -92,20 +98,41 @@ private fun part3(input: List<String>): Long =
 //    input.sumOf { growTreeSparse(it) }
 
 private fun growTreeSparse(line: String): Long {
-    val (_, growth, limit) = line.matchingAsLongList(Regex("id=(\\d+), growth=(\\d+), limit=(\\d+)"))!!
+    val (growth, limit) = parseLongInput(line)
     if (limit == 1L) return 1L
-    var branches = TreeMap<Long, Long>().apply { this[0] = 1L }
+    val branchLengths = LongArray(40).apply { this[0] = 1 } // size determined by trial run, so might need expanding for other people's solutions
+    val branchCounts = LongArray(40).apply { this[0] = 1 }
     var numberOfBranchPoints = 0L
-    var seconds = 0L
+    var seconds = 1L
     while (numberOfBranchPoints + 1 < limit) {
-        val longestBranch = branches.lastKey()
+        val indexOfLongestBranch = branchLengths.indexOfMax()
+        val longestBranch = branchLengths[indexOfLongestBranch]
         val secondsToSkip = growth - longestBranch
         seconds += secondsToSkip
-        branches = branches.mapKeysTo(TreeMap()) { (length) -> length + secondsToSkip }
-        numberOfBranchPoints += branches.lastEntry().value
-        branches.compute(growth / 2) { _, existing -> (existing ?: 0L) + branches.lastEntry().value * 2 }
-        branches.compute(1) { _, existing -> (existing ?: 0L) + branches.lastEntry().value }
-        branches.remove(branches.lastKey())
+        // Grow all branches
+        branchLengths.forEachIndexed { index, oldLength -> if (oldLength > 0) branchLengths[index] = oldLength + secondsToSkip }
+
+        // Add new branch points
+        val longestBranchCount = branchCounts[indexOfLongestBranch]
+        numberOfBranchPoints += longestBranchCount
+
+        // Split longest branches
+        addOrAllocate(growth / 2, longestBranchCount * 2, branchCounts, branchLengths)
+        addOrAllocate(1L, longestBranchCount, branchCounts, branchLengths)
+        branchCounts[indexOfLongestBranch] = 0L
+        branchLengths[indexOfLongestBranch] = 0L
     }
     return seconds
+}
+
+private fun addOrAllocate(length: Long, countToAdd: Long, branchCounts: LongArray, branchLengths: LongArray) {
+    val existingIndex = branchLengths.indexOfFirst { it == length }
+    val index = if (existingIndex == -1) branchLengths.indexOfFirst { it == 0L } else existingIndex
+    branchLengths[index] = length
+    branchCounts[index] += countToAdd
+}
+
+private fun LongArray.indexOfMax(): Int {
+    val max = this.max()
+    return this.indexOf(max)
 }
