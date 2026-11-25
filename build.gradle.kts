@@ -34,7 +34,7 @@ tasks.getByName<Test>("test") {
     useJUnitPlatform()
 }
 tasks.withType<JavaExec> {
-    this.jvmArgs("-Xmx20g", "-XX:+UnlockExperimentalVMOptions", "-XX:+UseEpsilonGC")
+    this.jvmArgs("-Xmx20g")
 }
 
 sourceSets.main {

@@ -304,7 +304,7 @@ fun <R, C> cartesianProductSequenceOf(rows: Iterable<R>, cols: Iterable<C>): Seq
 }
 
 fun <R> triangularExclusiveSequenceOf(min: Int, max: Int, transform: (hi: Int, lo: Int) -> R): Sequence<R> = sequence {
-    for (a in min..max) {
+    for (a in (min + 1)..max) {
         for (b in min..<a) {
             yield(transform(a, b))
         }
