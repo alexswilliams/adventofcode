@@ -12,9 +12,9 @@ private val puzzle = loadFilesToLines("ec2026/day11", "input1.txt", "input2.txt"
 
 internal fun main() {
     Day11.assertCorrect()
-    benchmark(10) { part1(puzzle[0]) } // µs
-    benchmark(1) { part2(puzzle[1]) } // µs
-    benchmark(1) { part3(puzzle[2]) } // µs
+    benchmark(10) { part1(puzzle[0]) } // 6.1ms
+    benchmark(1) { part2(puzzle[1]) } // 187.5ms
+    benchmark(1) { part3(puzzle[2]) } // 12.7s
 }
 
 internal object Day11 : Challenge {
@@ -78,7 +78,7 @@ private fun part2(input: List<String>): Int {
     fun sumOfDistances(shortcutsForRound: Map<Int, List<Pair<Int, Int>>>): Int = (0..<portalCount).sumOf { start ->
         (0..<portalCount).sumOf { end ->
             if (start == end) return@sumOf 0
-            val seen = mutableSetOf(start)
+            val seen = BooleanArray(portalCount)
             val work = TreeQueue(start to 0)
             while (true) {
                 val (distance, position) = work.pollEntry()!!
@@ -125,7 +125,7 @@ private fun part3(input: List<String>): Int {
     fun sumOfDistances(shortcutsForRound: Map<Int, List<Pair<Int, Int>>>): Int = (0..<portalCount).sumOf { start ->
         (0..<portalCount).sumOf { end ->
             if (start == end) return@sumOf 0
-            val seen = mutableSetOf(start)
+            val seen = BooleanArray(portalCount)
             val work = TreeQueue(start to 0)
             while (true) {
                 val (distance, position) = work.pollEntry()!!
@@ -156,7 +156,7 @@ private fun part3(input: List<String>): Int {
             val actualLinks = links.flatMap { (a, b) -> listOf((a * spacing + offset) to (b * spacing + offset), (b * spacing + offset) to (a * spacing + offset)) }
             val newShortcuts = shortcuts.plus(actualLinks).groupBy { it.first }
             sumOfDistances(newShortcuts)
-        }.also { println(index) }
+        }
     }
 
     return withoutShortcuts - withShortcuts
@@ -177,4 +177,10 @@ private fun allPermutationsOfLinks(
         allPermutationsOfLinks(soFar.plus(head to it), tail.minus(it), results)
     }
     return results
+}
+
+private fun BooleanArray.add(x: Int): Boolean {
+    if (this[x]) return false
+    this[x] = true
+    return true
 }

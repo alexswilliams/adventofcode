@@ -1,6 +1,6 @@
 package common
 
-class TreeQueue<Element>(initialValues: Iterable<Pair<Element, Int>>, private val weightOffset: (Element) -> Int = { 0 }) : PriorityHeap<Element> {
+class TreeQueue<Element>(initialValues: Iterable<Pair<Element, Int>>, private val weightOffset: (Element) -> Int = { 0 }, private val sizeHint: Int = 10) : PriorityHeap<Element> {
     // Thoughts on why this might be faster:
     // - it's not a tree of nodes, it's a tree of weights, and many nodes share the same weight
     // - for a grid, it's probably log(k) to delete-min, rather than log(n), where k is height + width, so probably O(log(n^1/2)) ish
@@ -11,10 +11,11 @@ class TreeQueue<Element>(initialValues: Iterable<Pair<Element, Int>>, private va
     }
 
     constructor(weightOffset: (Element) -> Int = { 0 }) : this(emptyList(), weightOffset)
-    constructor(initialValue: Pair<Element, Int>, weightOffset: (Element) -> Int = { 0 }) : this(listOf(initialValue), weightOffset)
+    constructor(initialValue: Pair<Element, Int>, sizeHint: Int = 10, weightOffset: (Element) -> Int = { 0 }) :
+            this(listOf(initialValue), weightOffset, sizeHint)
 
     override fun offer(e: Element, weight: Int) {
-        tree.computeIfAbsent(weight + weightOffset(e)) { arrayListOf() }!!.add(e)
+        tree.computeIfAbsent(weight + weightOffset(e)) { ArrayList(sizeHint) }!!.add(e)
     }
 
     override fun poll(): Element? {
